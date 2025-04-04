@@ -1,0 +1,22 @@
+apiVersion: apps/v1  
+kind: Deployment  
+metadata:  
+  name: derivatives-api  
+spec:  
+  replicas: 3  
+  selector:  
+    matchLabels:  
+      app: derivatives  
+  template:  
+    metadata:  
+      labels:  
+        app: derivatives  
+    spec:  
+      containers:  
+      - name: api  
+        image: derivatives-api:latest  
+        ports:  
+        - containerPort: 8000  
+        envFrom:  
+        - configMapRef:  
+            name: derivatives-config  
