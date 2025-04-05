@@ -1,6 +1,5 @@
-# Decentralized Derivatives Trading Platform  
+# Decentralized Derivatives Trading Platform (Optionix) 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
-[![Build Status](https://github.com/your-org/derivatives-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-org/derivatives-platform/actions)  
 
 ## 📜 Overview  
 Blockchain-based platform for trading futures/options contracts with AI-powered risk management and quantitative pricing models.  
@@ -37,8 +36,8 @@ graph TD
 
 ## ⚙️ Installation  
 ```bash
-git clone https://github.com/your-org/derivatives-platform.git  
-cd derivatives-platform  
+git clone https://github.com/abrar2030/Optionix.git  
+cd Optionix  
 docker-compose up -d postgres redis  # Start dependencies  
 cd blockchain && truffle migrate --network mainnet  # Deploy contracts  
 cd ../backend && uvicorn app:app --reload  # Start API  
