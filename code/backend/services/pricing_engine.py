@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.stats import norm
-from .black_scholes import black_scholes
+import sys
+sys.path.append('../../quantitative')
+from black_scholes import black_scholes
 
 class PricingEngine:
     def calculate_greeks(self, S, K, T, r, sigma):

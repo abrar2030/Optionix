@@ -1,45 +1,80 @@
-# Decentralized Derivatives Trading Platform (Optionix) 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
+# Optionix Project Documentation
 
-## 📜 Overview  
-Blockchain-based platform for trading futures/options contracts with AI-powered risk management and quantitative pricing models.  
+## Overview
+This document provides an overview of the Optionix project structure, components, and improvements made.
 
-## 🚀 Features  
-- On-chain execution of derivatives contracts  
-- Black-Scholes + Monte Carlo pricing engine  
-- LSTM volatility forecasting (30-day predictions)  
-- Chainlink-powered auto-liquidation system  
-- Institutional risk metrics (VaR, Greeks)  
-- Multi-chain deployment (Ethereum/Polygon/Arbitrum)  
-- Interactive D3.js analytics dashboard  
-- Kubernetes-managed microservices  
-- Terraform infrastructure-as-code  
-- CI/CD with GitHub Actions  
+## Project Structure
 
-## 🛠️ Tech Stack  
-**Blockchain**: Solidity, Chainlink, Truffle, web3.js  
-**Backend**: Python, FastAPI, NumPy, SciPy  
-**AI/ML**: TensorFlow, Keras, Pandas  
-**Frontend**: React, D3.js, Ethers.js  
-**Database**: PostgreSQL, TimescaleDB  
-**Infra**: Docker, AWS EKS, Terraform  
-
-## 🏗️ Architecture  
-```mermaid
-graph TD  
-    A[Frontend] -->|HTTP| B[API Gateway]  
-    B -->|gRPC| C[Pricing Engine]  
-    B -->|Web3| D[Blockchain Layer]  
-    C --> E[AI Models]  
-    C --> F[Quant Library]
+```
+optionix_project/
+├── code/
+│   ├── ai_models/            # AI models for volatility prediction
+│   ├── backend/              # FastAPI backend server
+│   ├── blockchain/           # Blockchain contracts and integration
+│   ├── frontend/             # React frontend application
+│   └── quantitative/         # Quantitative finance models
+├── test_backend.sh           # Script for testing backend endpoints
+└── todo.md                   # Project task tracking
 ```
 
-## ⚙️ Installation  
-```bash
-git clone https://github.com/abrar2030/Optionix.git  
-cd Optionix  
-docker-compose up -d postgres redis  # Start dependencies  
-cd blockchain && truffle migrate --network mainnet  # Deploy contracts  
-cd ../backend && uvicorn app:app --reload  # Start API  
-cd ../frontend && npm start  # Launch frontend  
-```
+## Components
+
+### Backend (FastAPI)
+- API endpoints for options pricing and volatility prediction
+- Integration with blockchain contracts
+- Error handling and validation
+
+### Frontend (React)
+- Modern UI with responsive design
+- Dashboard with market overview and portfolio summary
+- Trading interface with option chain and order book
+- Portfolio management with position tracking
+- Analytics with risk assessment and volatility charts
+
+### AI Models
+- Volatility prediction model
+- Training scripts for model generation
+
+### Blockchain Integration
+- Smart contracts for futures trading
+- Web3 integration for contract interaction
+
+## Improvements Made
+
+1. Fixed backend issues:
+   - Created proper requirements.txt with all necessary dependencies
+   - Fixed import paths in the backend services
+   - Created an ABI JSON file for blockchain integration
+   - Implemented a volatility model for predictions
+   - Enhanced error handling in the API endpoints
+
+2. Created a modern UI frontend:
+   - Implemented a responsive design with styled-components
+   - Created a proper directory structure for scalability
+   - Developed dashboard, trading, portfolio, and analytics pages
+   - Added interactive charts and data visualization components
+   - Implemented state management with React Context API
+
+3. Integrated frontend with backend:
+   - Created API service utilities for communication
+   - Implemented proper error handling for API requests
+   - Set up global state management for data sharing
+
+4. Deployed the website:
+   - The application is deployed at: https://hzuesgxl.manus.space
+
+## Getting Started
+
+### Backend Setup
+1. Navigate to the backend directory: `cd code/backend`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Start the server: `uvicorn app:app --host 0.0.0.0 --port 8000`
+
+### Frontend Setup
+1. Navigate to the frontend directory: `cd code/frontend`
+2. Install dependencies: `npm install`
+3. Start development server: `npm start`
+4. Build for production: `npm run build`
+
+## Contact
+For any questions or support, please contact the Optionix team.

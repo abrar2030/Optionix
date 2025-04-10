@@ -8,7 +8,7 @@ def train_model():
     scaled_data = scaler.fit_transform(data[['open', 'high', 'low', 'volume']])  
 
     model = tf.keras.Sequential([  
-        tf.keras.layers.LSTM(64, input_shape=(60, 4),  
+        tf.keras.layers.LSTM(64, input_shape=(60, 4), return_sequences=True),  
         tf.keras.layers.Dense(32, activation='relu'),  
         tf.keras.layers.Dense(1, activation='linear')  
     ])  
