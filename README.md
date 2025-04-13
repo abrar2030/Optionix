@@ -3,6 +3,10 @@
 ## Overview
 This document provides an overview of the Optionix project structure, components, and improvements made.
 
+<div align="center">
+  <img src="Optionix.bmp" alt="Trading Derivatives Platform" width="100%">
+</div>
+
 > **Note**: This Project is currently under active development. Features and functionalities are being added and improved continuously to enhance user experience.
 
 ## Project Structure
