@@ -81,4 +81,3 @@ optionix_project/
 2. Install dependencies: `npm install`
 3. Start development server: `npm start`
 4. Build for production: `npm run build`
-
