@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
-import { marketService } from '../services/api'; // Corrected import path
+import { StyleSheet, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Card, Title, Paragraph, List, Divider, Text as PaperText, useTheme } from 'react-native-paper';
+// Removed unused import: import { marketService } from '../services/api';
 
 const DashboardScreen = () => {
   const [marketOverview, setMarketOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const theme = useTheme(); // Access theme colors
 
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
         setLoading(true);
-        // NOTE: This assumes the backend API endpoint '/market/overview' exists and returns data.
-        // In a real scenario, ensure the backend is running and accessible.
-        // Using placeholder data for now as backend might not be running.
-        // const data = await marketService.getMarketOverview();
+        // Using placeholder data
         const placeholderData = {
           marketStatus: 'Open',
           majorIndices: [
@@ -33,8 +32,8 @@ const DashboardScreen = () => {
         setError(null);
       } catch (err) {
         console.error('Error fetching market overview:', err);
-        setError('Failed to load market data. Please ensure the backend is running.');
-        setMarketOverview(null); // Clear data on error
+        setError('Failed to load market data. Please try again later.');
+        setMarketOverview(null);
       } finally {
         setLoading(false);
       }
@@ -43,41 +42,62 @@ const DashboardScreen = () => {
     fetchMarketData();
   }, []);
 
+  const renderChange = (change) => {
+    const isPositive = change.startsWith('+');
+    return (
+      <PaperText style={isPositive ? styles.positiveChange : styles.negativeChange}>
+        {change}
+      </PaperText>
+    );
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Market Dashboard</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Title style={styles.title}>Market Dashboard</Title>
 
-      {loading && <ActivityIndicator size="large" color="#007AFF" />}
+      {loading && <ActivityIndicator animating={true} size="large" style={styles.loadingIndicator} />}
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
 
       {marketOverview && (
         <View>
-          <Text style={styles.sectionTitle}>Market Status: {marketOverview.marketStatus}</Text>
-          
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Major Indices</Text>
-            {marketOverview.majorIndices.map((index, i) => (
-              <View key={i} style={styles.listItem}>
-                <Text>{index.name}: {index.value}</Text>
-                <Text style={index.change.startsWith('+') ? styles.positiveChange : styles.negativeChange}>
-                  {index.change}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <Card style={styles.card}>
+            <Card.Content>
+              <Title>Market Status: {marketOverview.marketStatus}</Title>
+            </Card.Content>
+          </Card>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Top Movers</Text>
-            {marketOverview.topMovers.map((stock, i) => (
-              <View key={i} style={styles.listItem}>
-                <Text>{stock.symbol}: {stock.price}</Text>
-                <Text style={stock.change.startsWith('+') ? styles.positiveChange : styles.negativeChange}>
-                  {stock.change}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <Card style={styles.card}>
+            <Card.Title title="Major Indices" />
+            <Card.Content>
+              {marketOverview.majorIndices.map((index, i) => (
+                <React.Fragment key={i}>
+                  <List.Item
+                    title={`${index.name}: ${index.value.toFixed(2)}`}
+                    right={() => renderChange(index.change)}
+                    titleStyle={styles.listItemTitle}
+                  />
+                  {i < marketOverview.majorIndices.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </Card.Content>
+          </Card>
+
+          <Card style={styles.card}>
+            <Card.Title title="Top Movers" />
+            <Card.Content>
+              {marketOverview.topMovers.map((stock, i) => (
+                <React.Fragment key={i}>
+                  <List.Item
+                    title={`${stock.symbol}: ${stock.price.toFixed(2)}`}
+                    right={() => renderChange(stock.change)}
+                    titleStyle={styles.listItemTitle}
+                  />
+                  {i < marketOverview.topMovers.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </Card.Content>
+          </Card>
         </View>
       )}
     </ScrollView>
@@ -88,58 +108,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#F5F5F7',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#1C1C1E',
     textAlign: 'center',
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 15,
-    color: '#3A3A3C',
+  loadingIndicator: {
+    marginTop: 30,
+    marginBottom: 30,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2, // for Android shadow
+    elevation: 4, // Added elevation for Paper Card shadow
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+  listItemTitle: {
+    fontSize: 16,
   },
   positiveChange: {
-    color: '#34C759',
-    fontWeight: '600',
+    color: '#34C759', // Green color for positive change
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   negativeChange: {
-    color: '#FF3B30',
-    fontWeight: '600',
+    color: '#FF3B30', // Red color for negative change
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   errorText: {
-    color: '#FF3B30',
+    color: '#FF3B30', // Use theme error color if available
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
+    padding: 10,
   },
 });
 

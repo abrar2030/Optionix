@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, FlatList } from 'react-native';
-import { analyticsService } from '../services/api'; // Corrected import path
+import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
+import { ActivityIndicator, Card, Title, Paragraph, List, Divider, Text as PaperText, useTheme } from 'react-native-paper';
+// Removed unused import: import { analyticsService } from '../services/api';
 
 const AnalyticsScreen = () => {
   const [riskAssessment, setRiskAssessment] = useState(null);
@@ -10,6 +11,7 @@ const AnalyticsScreen = () => {
   const [loadingVolatility, setLoadingVolatility] = useState(true);
   const [loadingSentiment, setLoadingSentiment] = useState(true);
   const [error, setError] = useState(null);
+  const theme = useTheme();
 
   useEffect(() => {
     const fetchAnalyticsData = async () => {
@@ -18,11 +20,7 @@ const AnalyticsScreen = () => {
       setLoadingSentiment(true);
       setError(null);
       try {
-        // Using placeholder data as backend might not be running
-        // const riskData = await analyticsService.getRiskAssessment();
-        // const volatilityData = await analyticsService.getVolatilityAnalysis('AAPL', '1M'); // Example symbol/timeframe
-        // const sentimentData = await analyticsService.getMarketSentiment();
-
+        // Using placeholder data
         const placeholderRisk = {
           overallScore: 75,
           factors: [
@@ -51,7 +49,7 @@ const AnalyticsScreen = () => {
 
       } catch (err) {
         console.error('Error fetching analytics data:', err);
-        setError('Failed to load analytics data. Please ensure the backend is running.');
+        setError('Failed to load analytics data. Please try again later.');
         setRiskAssessment(null);
         setVolatilityAnalysis([]);
         setMarketSentiment(null);
@@ -66,66 +64,85 @@ const AnalyticsScreen = () => {
   }, []);
 
   const renderVolatilityItem = ({ item }) => (
-    <View style={styles.listItem}>
-      <Text>{item.date}</Text>
-      <Text>Implied: {item.impliedVol.toFixed(2)}</Text>
-      <Text>Historical: {item.historicalVol.toFixed(2)}</Text>
-    </View>
+    <List.Item
+      title={item.date}
+      description={`Implied: ${item.impliedVol.toFixed(2)} | Historical: ${item.historicalVol.toFixed(2)}`}
+      titleStyle={styles.listItemTitle}
+    />
   );
 
-  return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Analytics & Insights</Text>
+  const getRiskLevelColor = (level) => {
+    switch (level.toLowerCase()) {
+      case 'high': return theme.colors.error; // Red
+      case 'medium': return '#FFA500'; // Orange (adjust as needed)
+      case 'low': return '#34C759'; // Green
+      default: return theme.colors.text;
+    }
+  };
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Title style={styles.title}>Analytics & Insights</Title>
+
+      {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
 
       {/* Risk Assessment Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Risk Assessment</Text>
-        {loadingRisk ? (
-          <ActivityIndicator size="small" color="#007AFF" />
-        ) : riskAssessment ? (
-          <View>
-            <Text style={styles.metricText}>Overall Score: {riskAssessment.overallScore}</Text>
-            {riskAssessment.factors.map((factor, index) => (
-              <Text key={index} style={styles.factorText}>{factor.name}: {factor.level}</Text>
-            ))}
-            <Text style={styles.recommendationText}>Recommendation: {riskAssessment.recommendation}</Text>
-          </View>
-        ) : (
-          <Text>Could not load risk assessment.</Text>
-        )}
-      </View>
+      <Card style={styles.card}>
+        <Card.Title title="Risk Assessment" />
+        <Card.Content>
+          {loadingRisk ? (
+            <ActivityIndicator animating={true} size="small" style={styles.loadingIndicator} />
+          ) : riskAssessment ? (
+            <View>
+              <Paragraph style={styles.metricText}>Overall Score: {riskAssessment.overallScore}</Paragraph>
+              {riskAssessment.factors.map((factor, index) => (
+                <View key={index} style={styles.factorContainer}>
+                   <Paragraph style={styles.factorText}>{factor.name}: </Paragraph>
+                   <PaperText style={[styles.factorLevel, { color: getRiskLevelColor(factor.level) }]}>{factor.level}</PaperText>
+                </View>
+              ))}
+              <Paragraph style={styles.recommendationText}>Recommendation: {riskAssessment.recommendation}</Paragraph>
+            </View>
+          ) : (
+            <Paragraph>Could not load risk assessment.</Paragraph>
+          )}
+        </Card.Content>
+      </Card>
 
       {/* Volatility Analysis Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Volatility Analysis (AAPL - 1M)</Text>
-        {loadingVolatility ? (
-          <ActivityIndicator size="large" color="#007AFF" />
-        ) : (
-          <FlatList
-            data={volatilityAnalysis}
-            renderItem={renderVolatilityItem}
-            keyExtractor={(item) => item.date}
-            ListEmptyComponent={<Text>No volatility data available.</Text>}
-          />
-        )}
-      </View>
+      <Card style={styles.card}>
+        <Card.Title title="Volatility Analysis (AAPL - 1M)" />
+        <Card.Content>
+          {loadingVolatility ? (
+            <ActivityIndicator animating={true} size="large" style={styles.loadingIndicator} />
+          ) : (
+            <FlatList
+              data={volatilityAnalysis}
+              renderItem={renderVolatilityItem}
+              keyExtractor={(item) => item.date}
+              ItemSeparatorComponent={() => <Divider />}
+              ListEmptyComponent={<Paragraph style={styles.emptyListText}>No volatility data available.</Paragraph>}
+            />
+          )}
+        </Card.Content>
+      </Card>
 
       {/* Market Sentiment Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Market Sentiment</Text>
-        {loadingSentiment ? (
-          <ActivityIndicator size="small" color="#007AFF" />
-        ) : marketSentiment ? (
-          <View>
-            <Text style={styles.metricText}>Index: {marketSentiment.index} ({marketSentiment.status})</Text>
-            <Text style={styles.summaryText}>{marketSentiment.summary}</Text>
-          </View>
-        ) : (
-          <Text>Could not load market sentiment.</Text>
-        )}
-      </View>
+      <Card style={styles.card}>
+        <Card.Title title="Market Sentiment" />
+        <Card.Content>
+          {loadingSentiment ? (
+            <ActivityIndicator animating={true} size="small" style={styles.loadingIndicator} />
+          ) : marketSentiment ? (
+            <View>
+              <Paragraph style={styles.metricText}>Index: {marketSentiment.index} ({marketSentiment.status})</Paragraph>
+              <Paragraph style={styles.summaryText}>{marketSentiment.summary}</Paragraph>
+            </View>
+          ) : (
+            <Paragraph>Could not load market sentiment.</Paragraph>
+          )}
+        </Card.Content>
+      </Card>
 
     </ScrollView>
   );
@@ -135,65 +152,62 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#F5F5F7',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#1C1C1E',
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    elevation: 4,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
+  loadingIndicator: {
+    marginVertical: 20,
   },
   metricText: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 10,
+  },
+  factorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 5,
+    marginLeft: 10,
   },
   factorText: {
     fontSize: 15,
-    marginLeft: 10,
-    marginBottom: 3,
+  },
+  factorLevel: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 5,
   },
   recommendationText: {
     fontSize: 15,
     fontStyle: 'italic',
-    marginTop: 10,
-    color: '#3A3A3C',
+    marginTop: 15,
   },
   summaryText: {
     fontSize: 15,
     marginTop: 5,
-    color: '#3A3A3C',
   },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+  listItemTitle: {
+    fontSize: 16,
   },
   errorText: {
     color: '#FF3B30',
     textAlign: 'center',
     marginVertical: 10,
     fontSize: 16,
+    padding: 10,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    marginVertical: 10,
+    fontStyle: 'italic',
   },
 });
 

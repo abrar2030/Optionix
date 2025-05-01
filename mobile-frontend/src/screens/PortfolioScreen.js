@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, FlatList } from 'react-native';
-import { portfolioService } from '../services/api'; // Corrected import path
+import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
+import { ActivityIndicator, Card, Title, Paragraph, List, Divider, Text as PaperText, useTheme } from 'react-native-paper';
+// Removed unused import: import { portfolioService } from '../services/api';
 
 const PortfolioScreen = () => {
   const [portfolioSummary, setPortfolioSummary] = useState(null);
@@ -10,6 +11,7 @@ const PortfolioScreen = () => {
   const [loadingPositions, setLoadingPositions] = useState(true);
   const [loadingPerformance, setLoadingPerformance] = useState(true);
   const [error, setError] = useState(null);
+  const theme = useTheme();
 
   useEffect(() => {
     const fetchPortfolioData = async () => {
@@ -18,11 +20,7 @@ const PortfolioScreen = () => {
       setLoadingPerformance(true);
       setError(null);
       try {
-        // Using placeholder data as backend might not be running
-        // const summaryData = await portfolioService.getPortfolioSummary();
-        // const positionsData = await portfolioService.getPositions();
-        // const performanceData = await portfolioService.getPerformanceHistory('1M'); // Example timeframe
-
+        // Using placeholder data
         const placeholderSummary = {
           totalValue: 150000.00,
           dayChange: '+1.5%',
@@ -48,7 +46,7 @@ const PortfolioScreen = () => {
 
       } catch (err) {
         console.error('Error fetching portfolio data:', err);
-        setError('Failed to load portfolio data. Please ensure the backend is running.');
+        setError('Failed to load portfolio data. Please try again later.');
         setPortfolioSummary(null);
         setPositions([]);
         setPerformance([]);
@@ -63,71 +61,93 @@ const PortfolioScreen = () => {
   }, []);
 
   const renderPositionItem = ({ item }) => (
-    <View style={styles.listItem}>
-      <Text>{item.symbol} ({item.type})</Text>
-      <Text>Qty: {item.quantity}</Text>
-      <Text>Value: ${item.value.toFixed(2)}</Text>
-    </View>
+    <List.Item
+      title={`${item.symbol} (${item.type})`}
+      description={`Qty: ${item.quantity}`}
+      right={() => <PaperText style={styles.listItemValue}>${item.value.toFixed(2)}</PaperText>}
+      titleStyle={styles.listItemTitle}
+    />
   );
 
   const renderPerformanceItem = ({ item }) => (
-    <View style={styles.listItem}>
-      <Text>{item.date}</Text>
-      <Text>Value: ${item.value.toFixed(2)}</Text>
-    </View>
+    <List.Item
+      title={item.date}
+      right={() => <PaperText style={styles.listItemValue}>${item.value.toFixed(2)}</PaperText>}
+      titleStyle={styles.listItemTitle}
+    />
   );
 
-  return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Portfolio Management</Text>
+  const renderChange = (change) => {
+    const isPositive = change.startsWith('+');
+    return (
+      <PaperText style={isPositive ? styles.positiveChange : styles.negativeChange}>
+        {change}
+      </PaperText>
+    );
+  };
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Title style={styles.title}>Portfolio Management</Title>
+
+      {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
 
       {/* Portfolio Summary Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Summary</Text>
-        {loadingSummary ? (
-          <ActivityIndicator size="small" color="#007AFF" />
-        ) : portfolioSummary ? (
-          <View>
-            <Text style={styles.summaryText}>Total Value: ${portfolioSummary.totalValue.toFixed(2)}</Text>
-            <Text style={styles.summaryText}>Day's Change: {portfolioSummary.dayChange}</Text>
-            <Text style={styles.summaryText}>Cash Balance: ${portfolioSummary.cashBalance.toFixed(2)}</Text>
-          </View>
-        ) : (
-          <Text>Could not load summary.</Text>
-        )}
-      </View>
+      <Card style={styles.card}>
+        <Card.Title title="Summary" />
+        <Card.Content>
+          {loadingSummary ? (
+            <ActivityIndicator animating={true} size="small" style={styles.loadingIndicator} />
+          ) : portfolioSummary ? (
+            <View>
+              <Paragraph style={styles.summaryText}>Total Value: ${portfolioSummary.totalValue.toFixed(2)}</Paragraph>
+              <View style={styles.summaryChangeContainer}>
+                 <Paragraph style={styles.summaryText}>Day's Change: </Paragraph>
+                 {renderChange(portfolioSummary.dayChange)}
+              </View>
+              <Paragraph style={styles.summaryText}>Cash Balance: ${portfolioSummary.cashBalance.toFixed(2)}</Paragraph>
+            </View>
+          ) : (
+            <Paragraph>Could not load summary.</Paragraph>
+          )}
+        </Card.Content>
+      </Card>
 
       {/* Positions Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Positions</Text>
-        {loadingPositions ? (
-          <ActivityIndicator size="large" color="#007AFF" />
-        ) : (
-          <FlatList
-            data={positions}
-            renderItem={renderPositionItem}
-            keyExtractor={(item, index) => `${item.symbol}-${index}`}
-            ListEmptyComponent={<Text>No positions found.</Text>}
-          />
-        )}
-      </View>
+      <Card style={styles.card}>
+        <Card.Title title="Positions" />
+        <Card.Content>
+          {loadingPositions ? (
+            <ActivityIndicator animating={true} size="large" style={styles.loadingIndicator} />
+          ) : (
+            <FlatList
+              data={positions}
+              renderItem={renderPositionItem}
+              keyExtractor={(item, index) => `${item.symbol}-${index}`}
+              ItemSeparatorComponent={() => <Divider />}
+              ListEmptyComponent={<Paragraph style={styles.emptyListText}>No positions found.</Paragraph>}
+            />
+          )}
+        </Card.Content>
+      </Card>
 
       {/* Performance History Section */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Performance (Last Month)</Text>
-        {loadingPerformance ? (
-          <ActivityIndicator size="large" color="#007AFF" />
-        ) : (
-          <FlatList
-            data={performance}
-            renderItem={renderPerformanceItem}
-            keyExtractor={(item) => item.date}
-            ListEmptyComponent={<Text>No performance data available.</Text>}
-          />
-        )}
-      </View>
+      <Card style={styles.card}>
+        <Card.Title title="Performance (Last Month)" />
+        <Card.Content>
+          {loadingPerformance ? (
+            <ActivityIndicator animating={true} size="large" style={styles.loadingIndicator} />
+          ) : (
+            <FlatList
+              data={performance}
+              renderItem={renderPerformanceItem}
+              keyExtractor={(item) => item.date}
+              ItemSeparatorComponent={() => <Divider />}
+              ListEmptyComponent={<Paragraph style={styles.emptyListText}>No performance data available.</Paragraph>}
+            />
+          )}
+        </Card.Content>
+      </Card>
 
     </ScrollView>
   );
@@ -137,46 +157,58 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#F5F5F7',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#1C1C1E',
     textAlign: 'center',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 15,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    elevation: 4,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#007AFF',
+  loadingIndicator: {
+    marginVertical: 20,
   },
   summaryText: {
     fontSize: 16,
-    marginBottom: 5,
+    marginBottom: 8,
   },
-  listItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+   summaryChangeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  listItemTitle: {
+    fontSize: 16,
+  },
+  listItemValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    alignSelf: 'center',
+  },
+  positiveChange: {
+    color: '#34C759',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  negativeChange: {
+    color: '#FF3B30',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   errorText: {
     color: '#FF3B30',
     textAlign: 'center',
     marginVertical: 10,
     fontSize: 16,
+    padding: 10,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    marginVertical: 10,
+    fontStyle: 'italic',
   },
 });
 
