@@ -1,22 +1,23 @@
-# Optionix Project Documentation
+# Optionix
 
-[![CI Status](https://img.shields.io/github/actions/workflow/status/abrar2030/Optionix/ci-cd.yml?branch=main&label=CI&logo=github)](https://github.com/abrar2030/Optionix/actions)
-[![CI Status](https://img.shields.io/github/workflow/status/abrar2030/Optionix/CI/main?label=CI)](https://github.com/abrar2030/Optionix/actions)
+[![CI/CD Status](https://img.shields.io/github/actions/workflow/status/abrar2030/Optionix/ci-cd.yml?branch=main&label=CI/CD&logo=github)](https://github.com/abrar2030/Optionix/actions)
 [![Test Coverage](https://img.shields.io/codecov/c/github/abrar2030/Optionix/main?label=Coverage)](https://codecov.io/gh/abrar2030/Optionix)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/github/license/abrar2030/Optionix)](https://github.com/abrar2030/Optionix/blob/main/LICENSE)
 
-## Overview
-This document provides an overview of the Optionix project structure, components, and improvements made.
+## 📈 Options Trading & Analytics Platform
+
+Optionix is a comprehensive options trading and analytics platform that combines traditional finance with blockchain technology. The platform provides advanced options pricing models, real-time market data, and AI-powered trading signals to help traders make informed decisions.
 
 <div align="center">
-  <img src="docs/Optionix.bmp" alt="Trading Derivatives Platform" width="100%">
+  <img src="resources/optionix_dashboard.png" alt="Optionix Trading Dashboard" width="80%">
 </div>
 
-> **Note**: This Project is currently under active development. Features and functionalities are being added and improved continuously to enhance user experience.
+> **Note**: This project is under active development. Features and functionalities are continuously being enhanced to improve user experience and trading capabilities.
 
 ## Table of Contents
-- [Project Structure](#project-structure)
-- [Components](#components)
+- [Overview](#overview)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
 - [Feature Implementation Status](#feature-implementation-status)
 - [Improvements Made](#improvements-made)
 - [Getting Started](#getting-started)
@@ -25,67 +26,99 @@ This document provides an overview of the Optionix project structure, components
 - [Contributing](#contributing)
 - [License](#license)
 
-## Project Structure
+## Overview
 
-```
-optionix_project/
-├── code/
-│   ├── ai_models/            # AI models for volatility prediction
-│   ├── backend/              # FastAPI backend server
-│   ├── blockchain/           # Blockchain contracts and integration
-│   ├── frontend/             # React frontend application
-│   └── quantitative/         # Quantitative finance models
-├── test_backend.sh           # Script for testing backend endpoints
-└── todo.md                   # Project task tracking
-```
+Optionix is a next-generation options trading platform that leverages advanced algorithms, machine learning, and blockchain technology to provide traders with powerful tools for options analysis and trading. The platform includes:
 
-## Components
+- **Options Pricing Engine**: Advanced mathematical models for accurate options pricing
+- **Market Data Integration**: Real-time market data for informed decision-making
+- **AI Trading Signals**: Machine learning algorithms to identify trading opportunities
+- **Portfolio Management**: Comprehensive tools for tracking and managing options positions
+- **Blockchain Integration**: Smart contracts for decentralized options trading
+- **Risk Analysis**: Sophisticated risk assessment and visualization tools
 
-### Backend (FastAPI)
-- API endpoints for options pricing and volatility prediction
-- Integration with blockchain contracts
-- Error handling and validation
+## Features
 
-### Frontend (React)
-- Modern UI with responsive design
-- Dashboard with market overview and portfolio summary
-- Trading interface with option chain and order book
-- Portfolio management with position tracking
-- Analytics with risk assessment and volatility charts
+### Options Trading
+- Real-time options chain data
+- Multi-leg strategy builder
+- One-click trade execution
+- Position tracking and P&L analysis
+- Historical performance metrics
 
-### AI Models
-- Volatility prediction model
-- Training scripts for model generation
+### Analytics
+- Volatility surface visualization
+- Greeks calculation and visualization
+- Implied volatility analysis
+- Options strategy payoff diagrams
+- Risk/reward ratio calculations
+
+### AI-Powered Insights
+- Volatility prediction models
+- Options mispricing detection
+- Market sentiment analysis
+- Automated trading signals
+- Personalized strategy recommendations
 
 ### Blockchain Integration
-- Smart contracts for futures trading
-- Web3 integration for contract interaction
+- Decentralized options contracts
+- Smart contract settlement
+- On-chain position verification
+- Cross-chain asset collateralization
+- Transparent transaction history
+
+## Technology Stack
+
+### Backend
+- **Language**: Python, Rust (for performance-critical components)
+- **Framework**: FastAPI
+- **Database**: PostgreSQL, TimescaleDB (for time-series data)
+- **Caching**: Redis
+- **Message Queue**: RabbitMQ
+- **ML Framework**: PyTorch, scikit-learn
+- **Blockchain**: Ethereum, Solidity
+
+### Frontend
+- **Framework**: React with TypeScript
+- **State Management**: Redux Toolkit
+- **Styling**: Styled Components, TailwindCSS
+- **Data Visualization**: D3.js, TradingView Charts
+- **Web3**: ethers.js
+
+### Mobile App
+- **Framework**: React Native
+- **State Management**: Redux Toolkit
+- **Navigation**: React Navigation
+- **UI Components**: React Native Paper
+- **Charts**: Victory Native
+
+### DevOps
+- **Containerization**: Docker
+- **Orchestration**: Kubernetes
+- **CI/CD**: GitHub Actions
+- **Monitoring**: Prometheus, Grafana
+- **Logging**: ELK Stack
 
 ## Feature Implementation Status
 
 | Feature | Status | Description | Planned Release |
 |---------|--------|-------------|----------------|
-| **Backend Services** |
-| Options Pricing API | ✅ Implemented | Core pricing engine for options | v1.0 |
-| Volatility Prediction | ✅ Implemented | AI-based volatility forecasting | v1.0 |
-| Blockchain Integration | ✅ Implemented | Smart contract interaction | v1.0 |
-| User Authentication | ✅ Implemented | Secure user login and registration | v1.0 |
-| Market Data API | 🔄 In Progress | Real-time market data integration | v1.1 |
-| Order Execution | 🔄 In Progress | Trade execution and management | v1.1 |
-| Risk Management API | 📅 Planned | Portfolio risk assessment | v1.2 |
-| **Frontend Components** |
-| Responsive Dashboard | ✅ Implemented | Main user interface | v1.0 |
-| Market Overview | ✅ Implemented | Market summary and trends | v1.0 |
-| Portfolio Summary | ✅ Implemented | User portfolio tracking | v1.0 |
-| Option Chain | ✅ Implemented | Options listing and details | v1.0 |
-| Order Book | ✅ Implemented | Current market orders | v1.0 |
-| Position Tracking | 🔄 In Progress | Real-time position monitoring | v1.1 |
-| Risk Assessment | 🔄 In Progress | Portfolio risk visualization | v1.1 |
-| Volatility Charts | ✅ Implemented | Historical and predicted volatility | v1.0 |
-| Strategy Builder | 📅 Planned | Custom options strategy creation | v1.2 |
-| **AI Models** |
-| Volatility Prediction | ✅ Implemented | ML model for volatility forecasting | v1.0 |
-| Price Movement Prediction | 🔄 In Progress | Asset price direction forecasting | v1.1 |
+| **Options Trading** |
+| Options Chain Data | ✅ Implemented | Real-time options data display | v1.0 |
+| Strategy Builder | ✅ Implemented | Multi-leg strategy creation | v1.0 |
+| Trade Execution | ✅ Implemented | Order placement and management | v1.0 |
+| Position Tracking | ✅ Implemented | Portfolio position monitoring | v1.0 |
+| Historical Analysis | 🔄 In Progress | Past performance metrics | v1.1 |
+| **Analytics** |
+| Volatility Surface | ✅ Implemented | 3D visualization of implied volatility | v1.0 |
+| Greeks Calculation | ✅ Implemented | Delta, gamma, theta, vega, rho | v1.0 |
+| Payoff Diagrams | ✅ Implemented | Strategy profit/loss visualization | v1.0 |
+| Risk Analysis | 🔄 In Progress | Advanced risk metrics | v1.1 |
+| Scenario Testing | 📅 Planned | What-if analysis for strategies | v1.2 |
+| **AI Features** |
+| Volatility Prediction | ✅ Implemented | ML-based volatility forecasting | v1.0 |
+| Mispricing Detection | ✅ Implemented | Identify undervalued options | v1.0 |
+| Trading Signals | 🔄 In Progress | Automated buy/sell recommendations | v1.1 |
 | Sentiment Analysis | 📅 Planned | News and social media analysis | v1.2 |
 | Options Strategy Recommendation | 📅 Planned | AI-based strategy suggestions | v1.2 |
 | **Blockchain Integration** |
@@ -126,15 +159,33 @@ optionix_project/
 ## Getting Started
 
 ### Backend Setup
+
 1. Navigate to the backend directory: `cd code/backend`
 2. Install dependencies: `pip install -r requirements.txt`
 3. Start the server: `uvicorn app:app --host 0.0.0.0 --port 8000`
 
 ### Frontend Setup
+
 1. Navigate to the frontend directory: `cd code/frontend`
 2. Install dependencies: `npm install`
 3. Start development server: `npm start`
 4. Build for production: `npm run build`
+
+### Using the Setup Script
+
+For a quick setup of the entire application:
+
+```bash
+# Clone the repository
+git clone https://github.com/abrar2030/Optionix.git
+cd Optionix
+
+# Run the setup script
+./setup_optionix_env.sh
+
+# Start the application
+./run_optionix.sh
+```
 
 ## Testing
 
@@ -191,9 +242,9 @@ Optionix uses GitHub Actions for continuous integration and deployment:
 - Infrastructure updates via Terraform
 
 Current CI/CD Status:
-- Build: ![Build Status](https://img.shields.io/github/workflow/status/abrar2030/Optionix/CI/main?label=build)
+- Build: ![Build Status](https://img.shields.io/github/actions/workflow/status/abrar2030/Optionix/ci-cd.yml?branch=main&label=build)
 - Test Coverage: ![Coverage](https://img.shields.io/codecov/c/github/abrar2030/Optionix/main?label=coverage)
-- Code Quality: ![Code Quality](https://img.shields.io/codacy/grade/abrar2030/Optionix?label=code%20quality)
+- Code Quality: ![Code Quality](https://img.shields.io/lgtm/grade/javascript/g/abrar2030/Optionix?label=code%20quality)
 
 ## Contributing
 
@@ -225,7 +276,6 @@ We welcome contributions to improve Optionix! Here's how you can contribute:
    - Respond to review comments and make necessary adjustments
 
 ### Development Guidelines
-
 - Follow PEP 8 style guide for Python code
 - Use ESLint and Prettier for JavaScript/React code
 - Write unit tests for new features
