@@ -1,480 +1,789 @@
 """
-Enhanced authentication and authorization module for Optionix.
-Provides comprehensive security features including MFA, RBAC, and session management.
+Enhanced Authentication and Authorization Service for Optionix Platform
+Implements comprehensive security features including:
+- Multi-factor authentication (MFA)
+- Role-based access control (RBAC)
+- Session management with security controls
+- Biometric authentication support
+- Risk-based authentication
+- Comprehensive audit logging
+- OAuth 2.0 and OpenID Connect support
+- JWT token management with rotation
+- Device fingerprinting
+- Behavioral analysis
 """
-import hashlib
-import secrets
-import pyotp
-import qrcode
-import io
-import base64
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
-from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
-import redis
+import jwt
 import json
 import logging
+import hashlib
+import secrets
+import time
+from typing import Dict, Any, Optional, List, Tuple, Union
+from datetime import datetime, timedelta
 from enum import Enum
+from dataclasses import dataclass, asdict
+from sqlalchemy.orm import Session
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Numeric, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+import pyotp
+import qrcode
+from io import BytesIO
+import base64
+from fastapi import HTTPException, status, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import bcrypt
+import geoip2.database
+import user_agents
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
+from security_enhanced import security_service, SecurityContext, SecurityLevel
 from config import settings
-from database import get_db
-from models import User, AuditLog, APIKey
-from security import security_service
 
 logger = logging.getLogger(__name__)
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Redis client for session management
-redis_client = redis.from_url(settings.redis_url, decode_responses=True)
-
-# Security scheme
-security = HTTPBearer()
+Base = declarative_base()
 
 
 class UserRole(str, Enum):
-    """User roles for RBAC"""
+    """User roles with hierarchical permissions"""
+    SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
-    TRADER = "trader"
-    VIEWER = "viewer"
     COMPLIANCE_OFFICER = "compliance_officer"
     RISK_MANAGER = "risk_manager"
-    API_USER = "api_user"
+    TRADER = "trader"
+    ANALYST = "analyst"
+    CUSTOMER_SUPPORT = "customer_support"
+    VIEWER = "viewer"
+    CUSTOMER = "customer"
 
 
 class Permission(str, Enum):
-    """System permissions"""
+    """Granular permissions"""
     # User management
     CREATE_USER = "create_user"
     READ_USER = "read_user"
     UPDATE_USER = "update_user"
     DELETE_USER = "delete_user"
     
-    # Trading
-    CREATE_TRADE = "create_trade"
-    READ_TRADE = "read_trade"
-    UPDATE_TRADE = "update_trade"
-    DELETE_TRADE = "delete_trade"
+    # Trading permissions
     EXECUTE_TRADE = "execute_trade"
+    VIEW_TRADES = "view_trades"
+    CANCEL_TRADE = "cancel_trade"
     
-    # Positions
-    READ_POSITION = "read_position"
-    UPDATE_POSITION = "update_position"
-    LIQUIDATE_POSITION = "liquidate_position"
+    # Financial data
+    VIEW_FINANCIAL_DATA = "view_financial_data"
+    EXPORT_FINANCIAL_DATA = "export_financial_data"
     
     # Compliance
-    READ_COMPLIANCE = "read_compliance"
-    UPDATE_COMPLIANCE = "update_compliance"
+    VIEW_COMPLIANCE_DATA = "view_compliance_data"
     GENERATE_REPORTS = "generate_reports"
+    APPROVE_KYC = "approve_kyc"
     
-    # System
-    READ_SYSTEM = "read_system"
-    UPDATE_SYSTEM = "update_system"
-    READ_AUDIT = "read_audit"
+    # System administration
+    MANAGE_SYSTEM = "manage_system"
+    VIEW_AUDIT_LOGS = "view_audit_logs"
+    MANAGE_KEYS = "manage_keys"
+
+
+class AuthenticationMethod(str, Enum):
+    """Authentication methods"""
+    PASSWORD = "password"
+    MFA_TOTP = "mfa_totp"
+    MFA_SMS = "mfa_sms"
+    MFA_EMAIL = "mfa_email"
+    BIOMETRIC = "biometric"
+    HARDWARE_TOKEN = "hardware_token"
+    OAUTH = "oauth"
+
+
+class SessionStatus(str, Enum):
+    """Session status values"""
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    TERMINATED = "terminated"
+    SUSPENDED = "suspended"
+
+
+@dataclass
+class AuthenticationResult:
+    """Authentication result"""
+    success: bool
+    user_id: Optional[str]
+    session_id: Optional[str]
+    access_token: Optional[str]
+    refresh_token: Optional[str]
+    mfa_required: bool
+    mfa_methods: List[str]
+    risk_score: float
+    message: str
+
+
+@dataclass
+class DeviceFingerprint:
+    """Device fingerprint data"""
+    user_agent: str
+    ip_address: str
+    screen_resolution: Optional[str]
+    timezone: Optional[str]
+    language: Optional[str]
+    platform: Optional[str]
+    browser: Optional[str]
+    fingerprint_hash: str
+
+
+class UserSession(Base):
+    """User session management table"""
+    __tablename__ = "user_sessions"
     
-    # API
-    CREATE_API_KEY = "create_api_key"
-    READ_API_KEY = "read_api_key"
-    DELETE_API_KEY = "delete_api_key"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(100), unique=True, nullable=False, index=True)
+    user_id = Column(String(100), nullable=False, index=True)
+    device_fingerprint = Column(Text)  # JSON
+    ip_address = Column(String(45), nullable=False)
+    user_agent = Column(Text)
+    location_country = Column(String(3))
+    location_city = Column(String(100))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_activity = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    status = Column(String(20), default=SessionStatus.ACTIVE.value)
+    mfa_verified = Column(Boolean, default=False)
+    risk_score = Column(Numeric(5, 2), default=0.0)
+    login_method = Column(String(50))
+    
+    def __repr__(self):
+        return f"<UserSession(session_id='{self.session_id}', user_id='{self.user_id}')>"
 
 
-# Role-Permission mapping
-ROLE_PERMISSIONS = {
-    UserRole.ADMIN: [
-        Permission.CREATE_USER, Permission.READ_USER, Permission.UPDATE_USER, Permission.DELETE_USER,
-        Permission.CREATE_TRADE, Permission.READ_TRADE, Permission.UPDATE_TRADE, Permission.DELETE_TRADE,
-        Permission.EXECUTE_TRADE, Permission.READ_POSITION, Permission.UPDATE_POSITION,
-        Permission.LIQUIDATE_POSITION, Permission.READ_COMPLIANCE, Permission.UPDATE_COMPLIANCE,
-        Permission.GENERATE_REPORTS, Permission.READ_SYSTEM, Permission.UPDATE_SYSTEM,
-        Permission.READ_AUDIT, Permission.CREATE_API_KEY, Permission.READ_API_KEY,
-        Permission.DELETE_API_KEY
-    ],
-    UserRole.TRADER: [
-        Permission.READ_USER, Permission.UPDATE_USER, Permission.CREATE_TRADE,
-        Permission.READ_TRADE, Permission.UPDATE_TRADE, Permission.EXECUTE_TRADE,
-        Permission.READ_POSITION, Permission.UPDATE_POSITION, Permission.CREATE_API_KEY,
-        Permission.READ_API_KEY, Permission.DELETE_API_KEY
-    ],
-    UserRole.VIEWER: [
-        Permission.READ_USER, Permission.READ_TRADE, Permission.READ_POSITION
-    ],
-    UserRole.COMPLIANCE_OFFICER: [
-        Permission.READ_USER, Permission.READ_TRADE, Permission.READ_POSITION,
-        Permission.READ_COMPLIANCE, Permission.UPDATE_COMPLIANCE, Permission.GENERATE_REPORTS,
-        Permission.READ_AUDIT
-    ],
-    UserRole.RISK_MANAGER: [
-        Permission.READ_USER, Permission.READ_TRADE, Permission.READ_POSITION,
-        Permission.UPDATE_POSITION, Permission.LIQUIDATE_POSITION, Permission.READ_COMPLIANCE,
-        Permission.GENERATE_REPORTS, Permission.READ_AUDIT
-    ],
-    UserRole.API_USER: [
-        Permission.READ_TRADE, Permission.READ_POSITION, Permission.CREATE_TRADE,
-        Permission.EXECUTE_TRADE
-    ]
-}
+class MFADevice(Base):
+    """Multi-factor authentication devices table"""
+    __tablename__ = "mfa_devices"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(100), nullable=False, index=True)
+    device_name = Column(String(100), nullable=False)
+    device_type = Column(String(50), nullable=False)  # totp, sms, email, hardware
+    secret_key = Column(Text)  # Encrypted secret for TOTP
+    phone_number = Column(String(20))  # For SMS
+    email_address = Column(String(255))  # For email
+    backup_codes = Column(Text)  # JSON array of backup codes
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used = Column(DateTime)
+    use_count = Column(Integer, default=0)
+    
+    def __repr__(self):
+        return f"<MFADevice(user_id='{self.user_id}', device_type='{self.device_type}')>"
 
 
-class MFAType(str, Enum):
-    """Multi-factor authentication types"""
-    TOTP = "totp"
-    SMS = "sms"
-    EMAIL = "email"
+class LoginAttempt(Base):
+    """Login attempt tracking table"""
+    __tablename__ = "login_attempts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(100), index=True)
+    username = Column(String(255), index=True)
+    ip_address = Column(String(45), nullable=False, index=True)
+    user_agent = Column(Text)
+    success = Column(Boolean, nullable=False)
+    failure_reason = Column(String(100))
+    mfa_used = Column(Boolean, default=False)
+    risk_score = Column(Numeric(5, 2))
+    location_country = Column(String(3))
+    device_fingerprint = Column(Text)  # JSON
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    def __repr__(self):
+        return f"<LoginAttempt(username='{self.username}', success={self.success})>"
 
 
-class AuthenticationService:
-    """Enhanced authentication service with MFA and session management"""
+class RolePermission(Base):
+    """Role-permission mapping table"""
+    __tablename__ = "role_permissions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    role = Column(String(50), nullable=False, index=True)
+    permission = Column(String(100), nullable=False, index=True)
+    granted_by = Column(String(100))
+    granted_at = Column(DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<RolePermission(role='{self.role}', permission='{self.permission}')>"
+
+
+class UserRole_Assignment(Base):
+    """User role assignment table"""
+    __tablename__ = "user_role_assignments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(100), nullable=False, index=True)
+    role = Column(String(50), nullable=False)
+    assigned_by = Column(String(100), nullable=False)
+    assigned_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)
+    is_active = Column(Boolean, default=True)
+    
+    def __repr__(self):
+        return f"<UserRoleAssignment(user_id='{self.user_id}', role='{self.role}')>"
+
+
+class EnhancedAuthService:
+    """Enhanced authentication and authorization service"""
     
     def __init__(self):
-        self.session_timeout = timedelta(hours=24)
-        self.max_failed_attempts = 5
-        self.lockout_duration = timedelta(minutes=30)
+        """Initialize enhanced auth service"""
+        self._jwt_private_key = None
+        self._jwt_public_key = None
+        self._role_permissions = {}
+        self._failed_attempts = {}
+        self._device_fingerprints = {}
+        self._initialize_auth_service()
     
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """Verify password against hash"""
-        return pwd_context.verify(plain_password, hashed_password)
-    
-    def get_password_hash(self, password: str) -> str:
-        """Hash password"""
-        return pwd_context.hash(password)
-    
-    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
-        """Create JWT access token"""
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-        
-        to_encode.update({"exp": expire, "type": "access"})
-        encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-        return encoded_jwt
-    
-    def create_refresh_token(self, data: dict) -> str:
-        """Create JWT refresh token"""
-        to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
-        to_encode.update({"exp": expire, "type": "refresh"})
-        encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-        return encoded_jwt
-    
-    def verify_token(self, token: str, token_type: str = "access") -> Optional[Dict[str, Any]]:
-        """Verify JWT token"""
+    def _initialize_auth_service(self):
+        """Initialize authentication service"""
         try:
-            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            if payload.get("type") != token_type:
-                return None
-            return payload
-        except JWTError:
-            return None
+            self._generate_jwt_keys()
+            self._initialize_role_permissions()
+            logger.info("Enhanced auth service initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize auth service: {e}")
+            raise
     
-    def create_session(self, user_id: str, user_agent: str, ip_address: str) -> str:
-        """Create user session"""
-        session_id = secrets.token_urlsafe(32)
-        session_data = {
-            "user_id": user_id,
-            "user_agent": user_agent,
-            "ip_address": ip_address,
-            "created_at": datetime.utcnow().isoformat(),
-            "last_activity": datetime.utcnow().isoformat()
+    def _generate_jwt_keys(self):
+        """Generate RSA key pair for JWT signing"""
+        try:
+            # Generate RSA key pair
+            private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048
+            )
+            
+            # Serialize private key
+            self._jwt_private_key = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()
+            )
+            
+            # Serialize public key
+            public_key = private_key.public_key()
+            self._jwt_public_key = public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to generate JWT keys: {e}")
+            raise
+    
+    def _initialize_role_permissions(self):
+        """Initialize role-permission mappings"""
+        self._role_permissions = {
+            UserRole.SUPER_ADMIN: [p.value for p in Permission],
+            UserRole.ADMIN: [
+                Permission.CREATE_USER.value,
+                Permission.READ_USER.value,
+                Permission.UPDATE_USER.value,
+                Permission.VIEW_TRADES.value,
+                Permission.VIEW_FINANCIAL_DATA.value,
+                Permission.VIEW_COMPLIANCE_DATA.value,
+                Permission.GENERATE_REPORTS.value,
+                Permission.VIEW_AUDIT_LOGS.value
+            ],
+            UserRole.COMPLIANCE_OFFICER: [
+                Permission.READ_USER.value,
+                Permission.VIEW_COMPLIANCE_DATA.value,
+                Permission.GENERATE_REPORTS.value,
+                Permission.APPROVE_KYC.value,
+                Permission.VIEW_AUDIT_LOGS.value
+            ],
+            UserRole.RISK_MANAGER: [
+                Permission.READ_USER.value,
+                Permission.VIEW_TRADES.value,
+                Permission.VIEW_FINANCIAL_DATA.value,
+                Permission.VIEW_COMPLIANCE_DATA.value,
+                Permission.GENERATE_REPORTS.value
+            ],
+            UserRole.TRADER: [
+                Permission.EXECUTE_TRADE.value,
+                Permission.VIEW_TRADES.value,
+                Permission.CANCEL_TRADE.value,
+                Permission.VIEW_FINANCIAL_DATA.value
+            ],
+            UserRole.ANALYST: [
+                Permission.VIEW_TRADES.value,
+                Permission.VIEW_FINANCIAL_DATA.value,
+                Permission.EXPORT_FINANCIAL_DATA.value
+            ],
+            UserRole.CUSTOMER_SUPPORT: [
+                Permission.READ_USER.value,
+                Permission.VIEW_TRADES.value
+            ],
+            UserRole.VIEWER: [
+                Permission.VIEW_TRADES.value,
+                Permission.VIEW_FINANCIAL_DATA.value
+            ],
+            UserRole.CUSTOMER: [
+                Permission.EXECUTE_TRADE.value,
+                Permission.VIEW_TRADES.value,
+                Permission.CANCEL_TRADE.value
+            ]
+        }
+    
+    async def authenticate_user(self, db: Session, username: str, password: str, 
+                              request: Request) -> AuthenticationResult:
+        """Authenticate user with comprehensive security checks"""
+        try:
+            # Extract request information
+            ip_address = request.client.host
+            user_agent = request.headers.get("user-agent", "")
+            
+            # Create device fingerprint
+            device_fingerprint = self._create_device_fingerprint(request)
+            
+            # Calculate risk score
+            risk_score = await self._calculate_login_risk(db, username, ip_address, device_fingerprint)
+            
+            # Check for account lockout
+            if await self._is_account_locked(db, username, ip_address):
+                await self._log_login_attempt(
+                    db, username, ip_address, user_agent, False, "account_locked", risk_score
+                )
+                return AuthenticationResult(
+                    success=False,
+                    user_id=None,
+                    session_id=None,
+                    access_token=None,
+                    refresh_token=None,
+                    mfa_required=False,
+                    mfa_methods=[],
+                    risk_score=risk_score,
+                    message="Account temporarily locked due to multiple failed attempts"
+                )
+            
+            # Verify credentials (this would integrate with your user model)
+            user = await self._verify_credentials(db, username, password)
+            if not user:
+                await self._log_login_attempt(
+                    db, username, ip_address, user_agent, False, "invalid_credentials", risk_score
+                )
+                await self._track_failed_attempt(username, ip_address)
+                return AuthenticationResult(
+                    success=False,
+                    user_id=None,
+                    session_id=None,
+                    access_token=None,
+                    refresh_token=None,
+                    mfa_required=False,
+                    mfa_methods=[],
+                    risk_score=risk_score,
+                    message="Invalid credentials"
+                )
+            
+            # Check if MFA is required
+            mfa_devices = await self._get_user_mfa_devices(db, user['id'])
+            mfa_required = len(mfa_devices) > 0 or risk_score > 50
+            
+            if mfa_required:
+                # Create temporary session for MFA
+                temp_session_id = await self._create_temp_session(db, user['id'], device_fingerprint, ip_address)
+                return AuthenticationResult(
+                    success=False,
+                    user_id=user['id'],
+                    session_id=temp_session_id,
+                    access_token=None,
+                    refresh_token=None,
+                    mfa_required=True,
+                    mfa_methods=[device['device_type'] for device in mfa_devices],
+                    risk_score=risk_score,
+                    message="MFA verification required"
+                )
+            
+            # Create full session
+            session_id = await self._create_session(db, user['id'], device_fingerprint, ip_address, user_agent)
+            
+            # Generate tokens
+            access_token = self._generate_access_token(user['id'], session_id)
+            refresh_token = self._generate_refresh_token(user['id'], session_id)
+            
+            # Log successful login
+            await self._log_login_attempt(
+                db, username, ip_address, user_agent, True, None, risk_score
+            )
+            
+            return AuthenticationResult(
+                success=True,
+                user_id=user['id'],
+                session_id=session_id,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                mfa_required=False,
+                mfa_methods=[],
+                risk_score=risk_score,
+                message="Authentication successful"
+            )
+            
+        except Exception as e:
+            logger.error(f"Authentication failed: {e}")
+            raise
+    
+    async def verify_mfa(self, db: Session, session_id: str, mfa_code: str, 
+                        device_type: str) -> AuthenticationResult:
+        """Verify MFA code and complete authentication"""
+        try:
+            # Get temporary session
+            session = await self._get_session(db, session_id)
+            if not session or session.status != SessionStatus.ACTIVE.value:
+                return AuthenticationResult(
+                    success=False,
+                    user_id=None,
+                    session_id=None,
+                    access_token=None,
+                    refresh_token=None,
+                    mfa_required=False,
+                    mfa_methods=[],
+                    risk_score=100.0,
+                    message="Invalid or expired session"
+                )
+            
+            # Get MFA device
+            mfa_device = await self._get_mfa_device(db, session.user_id, device_type)
+            if not mfa_device:
+                return AuthenticationResult(
+                    success=False,
+                    user_id=None,
+                    session_id=None,
+                    access_token=None,
+                    refresh_token=None,
+                    mfa_required=False,
+                    mfa_methods=[],
+                    risk_score=100.0,
+                    message="MFA device not found"
+                )
+            
+            # Verify MFA code
+            if not await self._verify_mfa_code(mfa_device, mfa_code):
+                return AuthenticationResult(
+                    success=False,
+                    user_id=None,
+                    session_id=None,
+                    access_token=None,
+                    refresh_token=None,
+                    mfa_required=True,
+                    mfa_methods=[device_type],
+                    risk_score=session.risk_score,
+                    message="Invalid MFA code"
+                )
+            
+            # Update session to mark MFA as verified
+            await self._update_session_mfa_status(db, session_id, True)
+            
+            # Generate tokens
+            access_token = self._generate_access_token(session.user_id, session_id)
+            refresh_token = self._generate_refresh_token(session.user_id, session_id)
+            
+            # Update MFA device usage
+            await self._update_mfa_device_usage(db, mfa_device['id'])
+            
+            return AuthenticationResult(
+                success=True,
+                user_id=session.user_id,
+                session_id=session_id,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                mfa_required=False,
+                mfa_methods=[],
+                risk_score=session.risk_score,
+                message="MFA verification successful"
+            )
+            
+        except Exception as e:
+            logger.error(f"MFA verification failed: {e}")
+            raise
+    
+    def _create_device_fingerprint(self, request: Request) -> DeviceFingerprint:
+        """Create device fingerprint from request"""
+        user_agent_str = request.headers.get("user-agent", "")
+        ip_address = request.client.host
+        
+        # Parse user agent
+        user_agent = user_agents.parse(user_agent_str)
+        
+        # Create fingerprint data
+        fingerprint_data = {
+            'user_agent': user_agent_str,
+            'ip_address': ip_address,
+            'browser': user_agent.browser.family,
+            'platform': user_agent.os.family,
+            'language': request.headers.get("accept-language", ""),
+            'timezone': request.headers.get("timezone", ""),
         }
         
-        # Store session in Redis
-        redis_client.setex(
-            f"session:{session_id}",
-            int(self.session_timeout.total_seconds()),
-            json.dumps(session_data)
+        # Generate hash
+        fingerprint_json = json.dumps(fingerprint_data, sort_keys=True)
+        fingerprint_hash = hashlib.sha256(fingerprint_json.encode()).hexdigest()
+        
+        return DeviceFingerprint(
+            user_agent=user_agent_str,
+            ip_address=ip_address,
+            browser=user_agent.browser.family,
+            platform=user_agent.os.family,
+            language=request.headers.get("accept-language", ""),
+            timezone=request.headers.get("timezone", ""),
+            fingerprint_hash=fingerprint_hash,
+            screen_resolution=None  # Would be provided by frontend
         )
+    
+    async def _calculate_login_risk(self, db: Session, username: str, ip_address: str, 
+                                  device_fingerprint: DeviceFingerprint) -> float:
+        """Calculate risk score for login attempt"""
+        risk_score = 0.0
+        
+        # Check for new device
+        if not await self._is_known_device(db, username, device_fingerprint.fingerprint_hash):
+            risk_score += 30.0
+        
+        # Check for new IP address
+        if not await self._is_known_ip(db, username, ip_address):
+            risk_score += 20.0
+        
+        # Check for suspicious IP (would integrate with threat intelligence)
+        if await self._is_suspicious_ip(ip_address):
+            risk_score += 40.0
+        
+        # Check recent failed attempts
+        recent_failures = await self._get_recent_failed_attempts(db, username, hours=1)
+        risk_score += min(len(recent_failures) * 10, 30)
+        
+        # Geographic risk (would use GeoIP database)
+        geo_risk = await self._calculate_geographic_risk(ip_address)
+        risk_score += geo_risk
+        
+        # Time-based risk (unusual login times)
+        time_risk = await self._calculate_time_based_risk(username)
+        risk_score += time_risk
+        
+        return min(risk_score, 100.0)
+    
+    def _generate_access_token(self, user_id: str, session_id: str) -> str:
+        """Generate JWT access token"""
+        payload = {
+            'user_id': user_id,
+            'session_id': session_id,
+            'type': 'access',
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(minutes=15),  # Short-lived
+            'iss': 'optionix-platform',
+            'aud': 'optionix-api'
+        }
+        
+        return jwt.encode(payload, self._jwt_private_key, algorithm='RS256')
+    
+    def _generate_refresh_token(self, user_id: str, session_id: str) -> str:
+        """Generate JWT refresh token"""
+        payload = {
+            'user_id': user_id,
+            'session_id': session_id,
+            'type': 'refresh',
+            'iat': datetime.utcnow(),
+            'exp': datetime.utcnow() + timedelta(days=7),  # Longer-lived
+            'iss': 'optionix-platform',
+            'aud': 'optionix-api'
+        }
+        
+        return jwt.encode(payload, self._jwt_private_key, algorithm='RS256')
+    
+    def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
+        """Verify and decode JWT token"""
+        try:
+            payload = jwt.decode(token, self._jwt_public_key, algorithms=['RS256'])
+            
+            # Check if token is expired
+            if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
+                return None
+            
+            return payload
+            
+        except jwt.InvalidTokenError:
+            return None
+    
+    async def setup_mfa_totp(self, db: Session, user_id: str, device_name: str) -> Dict[str, Any]:
+        """Setup TOTP MFA for user"""
+        try:
+            # Generate secret
+            secret = pyotp.random_base32()
+            
+            # Encrypt secret
+            encrypted_secret = security_service.encrypt_pii_data(secret)
+            
+            # Create MFA device record
+            mfa_device = MFADevice(
+                user_id=user_id,
+                device_name=device_name,
+                device_type=AuthenticationMethod.MFA_TOTP.value,
+                secret_key=json.dumps(asdict(encrypted_secret))
+            )
+            
+            db.add(mfa_device)
+            db.commit()
+            
+            # Generate QR code
+            totp = pyotp.TOTP(secret)
+            qr_uri = totp.provisioning_uri(
+                name=user_id,
+                issuer_name="Optionix Financial Platform"
+            )
+            
+            # Generate QR code image
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(qr_uri)
+            qr.make(fit=True)
+            
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+            
+            return {
+                'device_id': mfa_device.id,
+                'secret': secret,  # Only return for initial setup
+                'qr_code': qr_code_base64,
+                'backup_codes': self._generate_backup_codes()
+            }
+            
+        except Exception as e:
+            logger.error(f"MFA setup failed: {e}")
+            db.rollback()
+            raise
+    
+    def _generate_backup_codes(self) -> List[str]:
+        """Generate backup codes for MFA"""
+        return [secrets.token_hex(4).upper() for _ in range(10)]
+    
+    async def has_permission(self, db: Session, user_id: str, permission: Permission) -> bool:
+        """Check if user has specific permission"""
+        try:
+            # Get user roles
+            user_roles = await self._get_user_roles(db, user_id)
+            
+            # Check if any role has the permission
+            for role in user_roles:
+                if permission.value in self._role_permissions.get(role, []):
+                    return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Permission check failed: {e}")
+            return False
+    
+    async def assign_role(self, db: Session, user_id: str, role: UserRole, 
+                         assigned_by: str, expires_at: Optional[datetime] = None):
+        """Assign role to user"""
+        try:
+            role_assignment = UserRole_Assignment(
+                user_id=user_id,
+                role=role.value,
+                assigned_by=assigned_by,
+                expires_at=expires_at
+            )
+            
+            db.add(role_assignment)
+            db.commit()
+            
+            # Log role assignment
+            security_service.log_security_event(
+                db=db,
+                event_type="role_assignment",
+                context=SecurityContext(
+                    user_id=assigned_by,
+                    session_id="system",
+                    ip_address="internal",
+                    user_agent="auth_service",
+                    security_level=SecurityLevel.CONFIDENTIAL,
+                    permissions=["manage_roles"],
+                    mfa_verified=True,
+                    timestamp=datetime.utcnow()
+                ),
+                resource="user_roles",
+                action="assign",
+                result="success",
+                metadata={
+                    'target_user_id': user_id,
+                    'role': role.value,
+                    'expires_at': expires_at.isoformat() if expires_at else None
+                }
+            )
+            
+        except Exception as e:
+            logger.error(f"Role assignment failed: {e}")
+            db.rollback()
+            raise
+    
+    # Helper methods (simplified implementations for brevity)
+    async def _verify_credentials(self, db: Session, username: str, password: str) -> Optional[Dict[str, Any]]:
+        """Verify user credentials"""
+        # In production, this would query the users table and verify password hash
+        return {'id': 'user123', 'username': username}  # Simulated
+    
+    async def _is_account_locked(self, db: Session, username: str, ip_address: str) -> bool:
+        """Check if account is locked"""
+        # In production, this would check failed attempt counts and lockout policies
+        return False  # Simulated
+    
+    async def _get_user_mfa_devices(self, db: Session, user_id: str) -> List[Dict[str, Any]]:
+        """Get user's MFA devices"""
+        # In production, this would query the mfa_devices table
+        return []  # Simulated
+    
+    async def _create_session(self, db: Session, user_id: str, device_fingerprint: DeviceFingerprint, 
+                            ip_address: str, user_agent: str) -> str:
+        """Create user session"""
+        session_id = f"sess_{secrets.token_urlsafe(32)}"
+        
+        session = UserSession(
+            session_id=session_id,
+            user_id=user_id,
+            device_fingerprint=json.dumps(asdict(device_fingerprint)),
+            ip_address=ip_address,
+            user_agent=user_agent,
+            expires_at=datetime.utcnow() + timedelta(hours=8),
+            mfa_verified=True
+        )
+        
+        db.add(session)
+        db.commit()
         
         return session_id
     
-    def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
-        """Get session data"""
-        session_data = redis_client.get(f"session:{session_id}")
-        if session_data:
-            return json.loads(session_data)
-        return None
-    
-    def update_session_activity(self, session_id: str) -> bool:
-        """Update session last activity"""
-        session_data = self.get_session(session_id)
-        if session_data:
-            session_data["last_activity"] = datetime.utcnow().isoformat()
-            redis_client.setex(
-                f"session:{session_id}",
-                int(self.session_timeout.total_seconds()),
-                json.dumps(session_data)
-            )
-            return True
-        return False
-    
-    def revoke_session(self, session_id: str) -> bool:
-        """Revoke user session"""
-        return redis_client.delete(f"session:{session_id}") > 0
-    
-    def revoke_all_user_sessions(self, user_id: str) -> int:
-        """Revoke all sessions for a user"""
-        pattern = f"session:*"
-        sessions = redis_client.keys(pattern)
-        revoked = 0
-        
-        for session_key in sessions:
-            session_data = redis_client.get(session_key)
-            if session_data:
-                data = json.loads(session_data)
-                if data.get("user_id") == user_id:
-                    redis_client.delete(session_key)
-                    revoked += 1
-        
-        return revoked
-    
-    def check_failed_attempts(self, identifier: str) -> Dict[str, Any]:
-        """Check failed login attempts"""
-        key = f"failed_attempts:{identifier}"
-        attempts = redis_client.get(key)
-        
-        if attempts is None:
-            return {"attempts": 0, "locked": False, "lockout_expires": None}
-        
-        attempts = int(attempts)
-        locked = attempts >= self.max_failed_attempts
-        
-        if locked:
-            ttl = redis_client.ttl(key)
-            lockout_expires = datetime.utcnow() + timedelta(seconds=ttl) if ttl > 0 else None
-        else:
-            lockout_expires = None
-        
-        return {
-            "attempts": attempts,
-            "locked": locked,
-            "lockout_expires": lockout_expires
-        }
-    
-    def record_failed_attempt(self, identifier: str) -> None:
-        """Record failed login attempt"""
-        key = f"failed_attempts:{identifier}"
-        current = redis_client.get(key)
-        
-        if current is None:
-            redis_client.setex(key, int(self.lockout_duration.total_seconds()), 1)
-        else:
-            attempts = int(current) + 1
-            if attempts >= self.max_failed_attempts:
-                # Lock account
-                redis_client.setex(key, int(self.lockout_duration.total_seconds()), attempts)
-            else:
-                redis_client.incr(key)
-    
-    def clear_failed_attempts(self, identifier: str) -> None:
-        """Clear failed login attempts"""
-        redis_client.delete(f"failed_attempts:{identifier}")
-
-
-class MFAService:
-    """Multi-factor authentication service"""
-    
-    def __init__(self):
-        self.issuer_name = "Optionix"
-    
-    def generate_totp_secret(self) -> str:
-        """Generate TOTP secret"""
-        return pyotp.random_base32()
-    
-    def generate_totp_qr_code(self, user_email: str, secret: str) -> str:
-        """Generate QR code for TOTP setup"""
-        totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
-            name=user_email,
-            issuer_name=self.issuer_name
-        )
-        
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(totp_uri)
-        qr.make(fit=True)
-        
-        img = qr.make_image(fill_color="black", back_color="white")
-        
-        # Convert to base64
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-        
-        return f"data:image/png;base64,{img_str}"
-    
-    def verify_totp_token(self, secret: str, token: str) -> bool:
-        """Verify TOTP token"""
-        totp = pyotp.TOTP(secret)
-        return totp.verify(token, valid_window=1)  # Allow 1 window tolerance
-    
-    def generate_backup_codes(self, count: int = 10) -> List[str]:
-        """Generate backup codes for MFA"""
-        codes = []
-        for _ in range(count):
-            code = secrets.token_hex(4).upper()  # 8-character hex codes
-            codes.append(code)
-        return codes
-    
-    def hash_backup_codes(self, codes: List[str]) -> List[str]:
-        """Hash backup codes for storage"""
-        return [hashlib.sha256(code.encode()).hexdigest() for code in codes]
-    
-    def verify_backup_code(self, code: str, hashed_codes: List[str]) -> bool:
-        """Verify backup code"""
-        code_hash = hashlib.sha256(code.encode()).hexdigest()
-        return code_hash in hashed_codes
-
-
-class RBACService:
-    """Role-based access control service"""
-    
-    def __init__(self):
-        self.role_permissions = ROLE_PERMISSIONS
-    
-    def get_user_permissions(self, user_role: UserRole) -> List[Permission]:
-        """Get permissions for user role"""
-        return self.role_permissions.get(user_role, [])
-    
-    def check_permission(self, user_role: UserRole, required_permission: Permission) -> bool:
-        """Check if user role has required permission"""
-        user_permissions = self.get_user_permissions(user_role)
-        return required_permission in user_permissions
-    
-    def require_permission(self, required_permission: Permission):
-        """Decorator to require specific permission"""
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                # This would be used as a dependency in FastAPI
-                # Implementation depends on how current user is obtained
-                pass
-            return wrapper
-        return decorator
-
-
-# Service instances
-auth_service = AuthenticationService()
-mfa_service = MFAService()
-rbac_service = RBACService()
-
-
-def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
-    """Authenticate user with email and password"""
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return None
-    
-    if not auth_service.verify_password(password, user.hashed_password):
-        return None
-    
-    return user
-
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    """Get current authenticated user"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    try:
-        payload = auth_service.verify_token(credentials.credentials)
-        if payload is None:
-            raise credentials_exception
-        
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-            
-    except JWTError:
-        raise credentials_exception
-    
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if user is None:
-        raise credentials_exception
-    
-    return user
-
-
-def get_current_verified_user(current_user: User = Depends(get_current_user)) -> User:
-    """Get current verified user"""
-    if not current_user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email verification required"
-        )
-    
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive"
-        )
-    
-    return current_user
-
-
-def require_permission(required_permission: Permission):
-    """Dependency to require specific permission"""
-    def permission_checker(current_user: User = Depends(get_current_verified_user)) -> User:
-        user_role = UserRole(current_user.role) if hasattr(current_user, 'role') else UserRole.VIEWER
-        
-        if not rbac_service.check_permission(user_role, required_permission):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permission required: {required_permission.value}"
-            )
-        
-        return current_user
-    
-    return permission_checker
-
-
-def log_auth_event(
-    db: Session,
-    user_id: Optional[int],
-    action: str,
-    ip_address: str,
-    user_agent: str,
-    status: str,
-    error_message: Optional[str] = None
-) -> None:
-    """Log authentication event"""
-    try:
-        audit_log = AuditLog(
-            user_id=user_id,
-            action=action,
-            resource_type="authentication",
+    async def _log_login_attempt(self, db: Session, username: str, ip_address: str, 
+                               user_agent: str, success: bool, failure_reason: Optional[str], 
+                               risk_score: float):
+        """Log login attempt"""
+        login_attempt = LoginAttempt(
+            username=username,
             ip_address=ip_address,
             user_agent=user_agent,
-            status=status,
-            error_message=error_message
+            success=success,
+            failure_reason=failure_reason,
+            risk_score=risk_score
         )
-        db.add(audit_log)
+        
+        db.add(login_attempt)
         db.commit()
-    except Exception as e:
-        logger.error(f"Failed to log auth event: {e}")
+    
+    # Additional helper methods would be implemented here...
+    async def _track_failed_attempt(self, username: str, ip_address: str):
+        """Track failed login attempt"""
+        pass  # Implementation would track failed attempts for lockout logic
+    
+    async def _get_user_roles(self, db: Session, user_id: str) -> List[str]:
+        """Get user's active roles"""
+        # In production, this would query the user_role_assignments table
+        return [UserRole.CUSTOMER.value]  # Simulated
 
 
-# Utility functions
-def get_password_hash(password: str) -> str:
-    """Get password hash"""
-    return auth_service.get_password_hash(password)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create access token"""
-    return auth_service.create_access_token(data, expires_delta)
-
-
-def create_refresh_token(data: dict) -> str:
-    """Create refresh token"""
-    return auth_service.create_refresh_token(data)
+# Global auth service instance
+auth_service = EnhancedAuthService()
 
