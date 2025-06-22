@@ -164,17 +164,6 @@ class EnhancedMonitoringService:
             db=config.get('redis_db', 0)
         )
         
-        # Celery for background tasks
-        self.celery_app = Celery(
-            'compliance_monitor',
-            broker=config.get('celery_broker', 'redis://localhost:6379/1'),
-            backend=config.get('celery_backend', 'redis://localhost:6379/2')
-        )
-        
-        # Encryption for sensitive data
-        self.encryption_key = config.get('encryption_key', Fernet.generate_key())
-        self.cipher_suite = Fernet(self.encryption_key)
-        
         # Alert thresholds
         self.alert_thresholds = {
             'large_transaction': config.get('large_transaction_threshold', 10000),
@@ -182,15 +171,8 @@ class EnhancedMonitoringService:
             'risk_score_threshold': config.get('risk_score_threshold', 80),
             'suspicious_pattern_threshold': config.get('suspicious_pattern_threshold', 0.8)
         }
-        
-        # Regulatory endpoints
-        self.regulatory_endpoints = {
-            'mifid_ii': config.get('mifid_ii_endpoint'),
-            'emir': config.get('emir_endpoint'),
-            'dodd_frank': config.get('dodd_frank_endpoint')
-        }
     
-    async def monitor_transaction(self, transaction_data: Dict[str, Any]) -> ComplianceAlert:
+    async def monitor_transaction(self, transaction_data: Dict[str, Any]) -> Optional[ComplianceAlert]:
         """Monitor individual transaction for compliance"""
         try:
             transaction_id = transaction_data.get('transaction_id')
@@ -239,7 +221,6 @@ class EnhancedMonitoringService:
         try:
             user_id = transaction_data.get('user_id')
             amount = transaction_data.get('amount', 0)
-            transaction_type = transaction_data.get('type')
             
             # Base risk score
             risk_score = 0.0
@@ -276,16 +257,6 @@ class EnhancedMonitoringService:
             if total_24h_volume > self.alert_thresholds['velocity_limit']:
                 risk_score += 35.0
             
-            # Geographic risk (if available)
-            user_location = transaction_data.get('location')
-            if user_location and self._is_high_risk_jurisdiction(user_location):
-                risk_score += 20.0
-            
-            # Time-based risk
-            current_hour = datetime.utcnow().hour
-            if current_hour < 6 or current_hour > 22:  # Off-hours trading
-                risk_score += 10.0
-            
             return min(risk_score, 100.0)  # Cap at 100
             
         except Exception as e:
@@ -316,14 +287,6 @@ class EnhancedMonitoringService:
             # Suspicious pattern detection
             if await self._detect_suspicious_patterns(user_id):
                 violations.append("Suspicious trading pattern detected")
-            
-            # Position limits check
-            if await self._check_position_limits(user_id, transaction_data):
-                violations.append("Position limits exceeded")
-            
-            # Market manipulation check
-            if await self._check_market_manipulation(transaction_data):
-                violations.append("Potential market manipulation")
             
             return violations
             
@@ -378,9 +341,6 @@ class EnhancedMonitoringService:
             self.db_session.add(alert_model)
             self.db_session.commit()
             
-            # Send real-time notification
-            await self._send_alert_notification(alert)
-            
             return alert
             
         except Exception as e:
@@ -391,7 +351,6 @@ class EnhancedMonitoringService:
         """Check if user is on sanctions list"""
         try:
             # This would integrate with actual sanctions databases
-            # For now, return False as placeholder
             cached_result = self.redis_client.get(f"sanctions_check:{user_id}")
             if cached_result:
                 return json.loads(cached_result)
@@ -424,182 +383,55 @@ class EnhancedMonitoringService:
             if len(recent_transactions) < 5:
                 return False
             
-            # Convert to DataFrame for analysis
-            df = pd.DataFrame([{
-                'timestamp': t.timestamp,
-                'amount': t.amount or 0,
-                'type': t.transaction_type,
-                'risk_score': t.risk_score or 0
-            } for t in recent_transactions])
+            # Check for unusual patterns
+            amounts = [t.amount or 0 for t in recent_transactions]
             
-            # Pattern detection algorithms
-            suspicious_indicators = 0
+            # Check for round number bias
+            round_numbers = sum(1 for amount in amounts if amount % 1000 == 0)
+            if round_numbers / len(amounts) > 0.8:
+                return True
             
-            # 1. Unusual timing patterns
-            df['hour'] = pd.to_datetime(df['timestamp']).dt.hour
-            off_hours_ratio = len(df[(df['hour'] < 6) | (df['hour'] > 22)]) / len(df)
-            if off_hours_ratio > 0.5:
-                suspicious_indicators += 1
+            # Check for rapid succession trades
+            timestamps = [t.timestamp for t in recent_transactions]
+            timestamps.sort()
             
-            # 2. Round number bias
-            round_amounts = df[df['amount'] % 1000 == 0]
-            if len(round_amounts) / len(df) > 0.7:
-                suspicious_indicators += 1
+            rapid_trades = 0
+            for i in range(1, len(timestamps)):
+                if (timestamps[i] - timestamps[i-1]).total_seconds() < 60:
+                    rapid_trades += 1
             
-            # 3. Rapid succession trades
-            df['time_diff'] = pd.to_datetime(df['timestamp']).diff().dt.total_seconds()
-            rapid_trades = len(df[df['time_diff'] < 60])  # Less than 1 minute apart
-            if rapid_trades > len(df) * 0.3:
-                suspicious_indicators += 1
+            if rapid_trades / len(timestamps) > 0.5:
+                return True
             
-            # 4. Structuring (amounts just below reporting thresholds)
-            structuring_amounts = df[
-                (df['amount'] >= 9000) & (df['amount'] < 10000)
-            ]
-            if len(structuring_amounts) > 3:
-                suspicious_indicators += 1
-            
-            return suspicious_indicators >= 2
+            return False
             
         except Exception as e:
             logger.error(f"Suspicious pattern detection failed: {e}")
             return False
     
-    async def _check_position_limits(self, user_id: str, transaction_data: Dict[str, Any]) -> bool:
-        """Check if transaction would exceed position limits"""
-        try:
-            # This would integrate with position management system
-            # For now, return False as placeholder
-            return False
-            
-        except Exception as e:
-            logger.error(f"Position limits check failed: {e}")
-            return False
-    
-    async def _check_market_manipulation(self, transaction_data: Dict[str, Any]) -> bool:
-        """Check for potential market manipulation"""
-        try:
-            # This would implement sophisticated market manipulation detection
-            # For now, return False as placeholder
-            return False
-            
-        except Exception as e:
-            logger.error(f"Market manipulation check failed: {e}")
-            return False
-    
-    def _is_high_risk_jurisdiction(self, location: str) -> bool:
-        """Check if location is high-risk jurisdiction"""
-        high_risk_countries = [
-            'AF', 'IR', 'KP', 'SY', 'MM'  # Example high-risk country codes
-        ]
-        return location.upper() in high_risk_countries
-    
-    async def _send_alert_notification(self, alert: ComplianceAlert):
-        """Send alert notification to compliance team"""
-        try:
-            # Email notification
-            if self.config.get('smtp_enabled'):
-                await self._send_email_alert(alert)
-            
-            # Slack/Teams notification
-            if self.config.get('slack_webhook'):
-                await self._send_slack_alert(alert)
-            
-            # Real-time dashboard update
-            self.redis_client.publish('compliance_alerts', json.dumps(asdict(alert), default=str))
-            
-        except Exception as e:
-            logger.error(f"Alert notification failed: {e}")
-    
-    async def _send_email_alert(self, alert: ComplianceAlert):
-        """Send email alert"""
-        try:
-            smtp_config = self.config.get('smtp_config', {})
-            
-            msg = MIMEMultipart()
-            msg['From'] = smtp_config.get('from_email')
-            msg['To'] = smtp_config.get('compliance_email')
-            msg['Subject'] = f"Compliance Alert - {alert.severity.value.upper()}: {alert.alert_type}"
-            
-            body = f"""
-            Alert ID: {alert.alert_id}
-            Severity: {alert.severity.value}
-            Type: {alert.alert_type}
-            User ID: {alert.user_id}
-            Transaction ID: {alert.transaction_id}
-            Description: {alert.description}
-            Timestamp: {alert.timestamp}
-            
-            Please review this alert in the compliance dashboard.
-            """
-            
-            msg.attach(MIMEText(body, 'plain'))
-            
-            server = smtplib.SMTP(smtp_config.get('host'), smtp_config.get('port'))
-            server.starttls()
-            server.login(smtp_config.get('username'), smtp_config.get('password'))
-            server.send_message(msg)
-            server.quit()
-            
-        except Exception as e:
-            logger.error(f"Email alert failed: {e}")
-    
-    async def _send_slack_alert(self, alert: ComplianceAlert):
-        """Send Slack alert"""
-        try:
-            webhook_url = self.config.get('slack_webhook')
-            
-            color = {
-                AlertSeverity.LOW: "good",
-                AlertSeverity.MEDIUM: "warning", 
-                AlertSeverity.HIGH: "danger",
-                AlertSeverity.CRITICAL: "danger"
-            }.get(alert.severity, "warning")
-            
-            payload = {
-                "attachments": [{
-                    "color": color,
-                    "title": f"Compliance Alert - {alert.severity.value.upper()}",
-                    "fields": [
-                        {"title": "Alert ID", "value": alert.alert_id, "short": True},
-                        {"title": "Type", "value": alert.alert_type, "short": True},
-                        {"title": "User ID", "value": alert.user_id, "short": True},
-                        {"title": "Transaction ID", "value": alert.transaction_id or "N/A", "short": True},
-                        {"title": "Description", "value": alert.description, "short": False}
-                    ],
-                    "timestamp": alert.timestamp.isoformat()
-                }]
-            }
-            
-            response = requests.post(webhook_url, json=payload)
-            response.raise_for_status()
-            
-        except Exception as e:
-            logger.error(f"Slack alert failed: {e}")
-    
-    async def generate_regulatory_report(self, report_type: str, 
-                                       reporting_period: str) -> RegulatoryReport:
+    def generate_regulatory_report(self, report_type: str, period: str) -> RegulatoryReport:
         """Generate regulatory report"""
         try:
-            report_id = f"REP_{report_type}_{reporting_period}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            report_id = f"REP_{report_type}_{period}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
             
-            # Generate report data based on type
-            if report_type == "MIFID_II":
-                data = await self._generate_mifid_ii_report(reporting_period)
-            elif report_type == "EMIR":
-                data = await self._generate_emir_report(reporting_period)
-            elif report_type == "DODD_FRANK":
-                data = await self._generate_dodd_frank_report(reporting_period)
+            # Get data based on report type
+            if report_type == "mifid_ii":
+                data = self._generate_mifid_ii_report(period)
+            elif report_type == "emir":
+                data = self._generate_emir_report(period)
+            elif report_type == "dodd_frank":
+                data = self._generate_dodd_frank_report(period)
             else:
-                raise ValueError(f"Unsupported report type: {report_type}")
+                raise ValueError(f"Unknown report type: {report_type}")
             
             report = RegulatoryReport(
                 report_id=report_id,
                 report_type=report_type,
-                reporting_period=reporting_period,
+                reporting_period=period,
                 generated_at=datetime.utcnow(),
                 data=data,
-                status="GENERATED"
+                status="generated",
+                file_path=None
             )
             
             # Save to database
@@ -609,18 +441,11 @@ class EnhancedMonitoringService:
                 reporting_period=report.reporting_period,
                 generated_at=report.generated_at,
                 data=report.data,
-                status=report.status
+                status=report.status,
+                file_path=report.file_path
             )
             
             self.db_session.add(report_model)
-            self.db_session.commit()
-            
-            # Generate file
-            file_path = await self._export_report_file(report)
-            report.file_path = file_path
-            
-            # Update database with file path
-            report_model.file_path = file_path
             self.db_session.commit()
             
             return report
@@ -629,227 +454,39 @@ class EnhancedMonitoringService:
             logger.error(f"Regulatory report generation failed: {e}")
             raise
     
-    async def _generate_mifid_ii_report(self, reporting_period: str) -> Dict[str, Any]:
+    def _generate_mifid_ii_report(self, period: str) -> Dict[str, Any]:
         """Generate MiFID II report data"""
-        try:
-            # Parse reporting period
-            start_date, end_date = self._parse_reporting_period(reporting_period)
-            
-            # Get transaction data
-            transactions = self.db_session.query(TransactionLog).filter(
-                TransactionLog.timestamp >= start_date,
-                TransactionLog.timestamp <= end_date
-            ).all()
-            
-            # Aggregate data for MiFID II requirements
-            report_data = {
-                "reporting_period": reporting_period,
-                "total_transactions": len(transactions),
-                "total_volume": sum(t.amount or 0 for t in transactions),
-                "transaction_breakdown": {},
-                "client_breakdown": {},
-                "instrument_breakdown": {},
-                "best_execution_data": {},
-                "systematic_internaliser_data": {}
-            }
-            
-            # Transaction type breakdown
-            for transaction in transactions:
-                tx_type = transaction.transaction_type
-                if tx_type not in report_data["transaction_breakdown"]:
-                    report_data["transaction_breakdown"][tx_type] = {"count": 0, "volume": 0}
-                
-                report_data["transaction_breakdown"][tx_type]["count"] += 1
-                report_data["transaction_breakdown"][tx_type]["volume"] += transaction.amount or 0
-            
-            # Client breakdown
-            client_data = {}
-            for transaction in transactions:
-                user_id = transaction.user_id
-                if user_id not in client_data:
-                    client_data[user_id] = {"count": 0, "volume": 0}
-                
-                client_data[user_id]["count"] += 1
-                client_data[user_id]["volume"] += transaction.amount or 0
-            
-            report_data["client_breakdown"] = client_data
-            
-            return report_data
-            
-        except Exception as e:
-            logger.error(f"MiFID II report generation failed: {e}")
-            raise
+        # Implementation for MiFID II reporting
+        return {
+            "report_type": "mifid_ii",
+            "period": period,
+            "transactions": [],
+            "summary": {}
+        }
     
-    async def _generate_emir_report(self, reporting_period: str) -> Dict[str, Any]:
+    def _generate_emir_report(self, period: str) -> Dict[str, Any]:
         """Generate EMIR report data"""
-        try:
-            # EMIR reporting for derivatives
-            start_date, end_date = self._parse_reporting_period(reporting_period)
-            
-            # Get derivatives transactions
-            derivatives_transactions = self.db_session.query(TransactionLog).filter(
-                TransactionLog.timestamp >= start_date,
-                TransactionLog.timestamp <= end_date,
-                TransactionLog.transaction_type.in_(['OPTION_TRADE', 'FUTURES_TRADE'])
-            ).all()
-            
-            report_data = {
-                "reporting_period": reporting_period,
-                "total_derivatives_transactions": len(derivatives_transactions),
-                "otc_derivatives": [],
-                "exchange_traded_derivatives": [],
-                "clearing_data": {},
-                "risk_mitigation": {}
-            }
-            
-            return report_data
-            
-        except Exception as e:
-            logger.error(f"EMIR report generation failed: {e}")
-            raise
+        # Implementation for EMIR reporting
+        return {
+            "report_type": "emir",
+            "period": period,
+            "derivatives": [],
+            "summary": {}
+        }
     
-    async def _generate_dodd_frank_report(self, reporting_period: str) -> Dict[str, Any]:
+    def _generate_dodd_frank_report(self, period: str) -> Dict[str, Any]:
         """Generate Dodd-Frank report data"""
-        try:
-            # Dodd-Frank reporting requirements
-            start_date, end_date = self._parse_reporting_period(reporting_period)
-            
-            transactions = self.db_session.query(TransactionLog).filter(
-                TransactionLog.timestamp >= start_date,
-                TransactionLog.timestamp <= end_date
-            ).all()
-            
-            report_data = {
-                "reporting_period": reporting_period,
-                "swap_data": {},
-                "volcker_rule_compliance": {},
-                "systemic_risk_data": {},
-                "capital_requirements": {}
-            }
-            
-            return report_data
-            
-        except Exception as e:
-            logger.error(f"Dodd-Frank report generation failed: {e}")
-            raise
-    
-    def _parse_reporting_period(self, reporting_period: str) -> Tuple[datetime, datetime]:
-        """Parse reporting period string to start and end dates"""
-        try:
-            if reporting_period == "daily":
-                end_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                start_date = end_date - timedelta(days=1)
-            elif reporting_period == "weekly":
-                end_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                start_date = end_date - timedelta(weeks=1)
-            elif reporting_period == "monthly":
-                end_date = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                start_date = (end_date - timedelta(days=1)).replace(day=1)
-            else:
-                # Custom period format: YYYY-MM-DD_YYYY-MM-DD
-                start_str, end_str = reporting_period.split('_')
-                start_date = datetime.strptime(start_str, '%Y-%m-%d')
-                end_date = datetime.strptime(end_str, '%Y-%m-%d')
-            
-            return start_date, end_date
-            
-        except Exception as e:
-            logger.error(f"Reporting period parsing failed: {e}")
-            raise
-    
-    async def _export_report_file(self, report: RegulatoryReport) -> str:
-        """Export report to file"""
-        try:
-            import os
-            
-            # Create reports directory if it doesn't exist
-            reports_dir = self.config.get('reports_directory', './reports')
-            os.makedirs(reports_dir, exist_ok=True)
-            
-            # Generate filename
-            filename = f"{report.report_id}.json"
-            file_path = os.path.join(reports_dir, filename)
-            
-            # Export as JSON
-            with open(file_path, 'w') as f:
-                json.dump(asdict(report), f, indent=2, default=str)
-            
-            return file_path
-            
-        except Exception as e:
-            logger.error(f"Report file export failed: {e}")
-            raise
-    
-    async def get_compliance_dashboard_data(self) -> Dict[str, Any]:
-        """Get data for compliance dashboard"""
-        try:
-            # Recent alerts
-            recent_alerts = self.db_session.query(ComplianceAlertModel).filter(
-                ComplianceAlertModel.timestamp >= datetime.utcnow() - timedelta(days=7)
-            ).order_by(ComplianceAlertModel.timestamp.desc()).limit(50).all()
-            
-            # Alert statistics
-            alert_stats = {
-                'total_alerts': len(recent_alerts),
-                'critical_alerts': len([a for a in recent_alerts if a.severity == 'critical']),
-                'high_alerts': len([a for a in recent_alerts if a.severity == 'high']),
-                'open_alerts': len([a for a in recent_alerts if a.status == 'OPEN'])
-            }
-            
-            # Transaction statistics
-            recent_transactions = self.db_session.query(TransactionLog).filter(
-                TransactionLog.timestamp >= datetime.utcnow() - timedelta(days=7)
-            ).all()
-            
-            transaction_stats = {
-                'total_transactions': len(recent_transactions),
-                'flagged_transactions': len([t for t in recent_transactions if t.compliance_status == 'flagged']),
-                'average_risk_score': np.mean([t.risk_score or 0 for t in recent_transactions]),
-                'total_volume': sum(t.amount or 0 for t in recent_transactions)
-            }
-            
-            # Compliance metrics
-            compliance_metrics = {
-                'kyc_completion_rate': 95.5,  # Would be calculated from actual data
-                'aml_screening_rate': 99.8,
-                'regulatory_reporting_status': 'UP_TO_DATE',
-                'last_audit_date': '2024-01-15'
-            }
-            
-            return {
-                'alert_statistics': alert_stats,
-                'transaction_statistics': transaction_stats,
-                'compliance_metrics': compliance_metrics,
-                'recent_alerts': [asdict(ComplianceAlert(
-                    alert_id=a.alert_id,
-                    severity=AlertSeverity(a.severity),
-                    alert_type=a.alert_type,
-                    description=a.description,
-                    user_id=a.user_id,
-                    transaction_id=a.transaction_id,
-                    timestamp=a.timestamp,
-                    status=a.status,
-                    metadata=a.metadata or {}
-                )) for a in recent_alerts[:10]]
-            }
-            
-        except Exception as e:
-            logger.error(f"Dashboard data retrieval failed: {e}")
-            raise
-    
-    def close(self):
-        """Close database connections"""
-        self.db_session.close()
-        self.redis_client.close()
+        # Implementation for Dodd-Frank reporting
+        return {
+            "report_type": "dodd_frank",
+            "period": period,
+            "swaps": [],
+            "summary": {}
+        }
 
 
-# Global monitoring service instance
-monitoring_service = None
-
-def get_monitoring_service(config: Dict[str, Any] = None) -> EnhancedMonitoringService:
-    """Get global monitoring service instance"""
-    global monitoring_service
-    if monitoring_service is None:
-        monitoring_service = EnhancedMonitoringService(config or {})
-    return monitoring_service
+# Initialize monitoring service
+def create_monitoring_service(config: Dict[str, Any]) -> EnhancedMonitoringService:
+    """Create monitoring service instance"""
+    return EnhancedMonitoringService(config)
 

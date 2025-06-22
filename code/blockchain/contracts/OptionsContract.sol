@@ -354,108 +354,34 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
     }
 
     /**
-     * @dev Purchase an existing option
+     * @dev Emergency stop function
      */
-    function purchaseOption(
-        uint256 _optionId
-    ) external 
-        payable 
-        onlyCompliantUser 
-        nonReentrant 
-        notEmergencyStop 
-        validOption(_optionId) 
-    {
-        Option storage option = options[_optionId];
-        require(option.holder == address(0), "Option already sold");
-        
-        uint256 totalCost = option.premium.mul(option.contractSize);
-        require(msg.value >= totalCost, "Insufficient payment");
-
-        // Transfer premium to writer
-        payable(option.writer).transfer(totalCost);
-
-        // Update option
-        option.holder = msg.sender;
-        userOptions[msg.sender].push(_optionId);
-
-        // Update metrics
-        totalVolume = totalVolume.add(totalCost);
-        dailyVolume = dailyVolume.add(totalCost);
-
-        // Update user activity
-        userProfiles[msg.sender].lastActivityTime = block.timestamp;
-
-        emit OptionPurchased(_optionId, msg.sender, option.premium);
-
-        // Refund excess payment
-        if (msg.value > totalCost) {
-            payable(msg.sender).transfer(msg.value.sub(totalCost));
-        }
+    function emergencyStopTrading() external onlyRole(ADMIN_ROLE) {
+        emergencyStop = true;
+        _pause();
+        emit EmergencyAction("EMERGENCY_STOP", msg.sender, block.timestamp);
     }
 
     /**
-     * @dev Exercise an option
+     * @dev Resume trading after emergency stop
      */
-    function exerciseOption(
-        uint256 _optionId
-    ) external 
-        onlyCompliantUser 
-        nonReentrant 
-        notEmergencyStop 
-        validOption(_optionId) 
-    {
-        Option storage option = options[_optionId];
-        require(option.holder == msg.sender, "Not option holder");
-        require(block.timestamp <= option.expirationTime, "Option expired");
-
-        // Get current price
-        uint256 currentPrice = _getAssetPrice(option.underlyingAsset);
-        require(currentPrice > 0, "Invalid price");
-
-        // Calculate payoff
-        uint256 payoff = _calculatePayoff(option, currentPrice);
-        require(payoff > 0, "Option out of money");
-
-        // Update option status
-        option.status = OptionStatus.EXERCISED;
-
-        // Transfer payoff
-        if (option.underlyingAsset == address(0)) {
-            // ETH payoff
-            payable(msg.sender).transfer(payoff);
-        } else {
-            // Token payoff (implementation depends on token contract)
-        }
-
-        // Release writer's collateral (minus payoff)
-        uint256 remainingCollateral = option.collateral.sub(payoff);
-        if (remainingCollateral > 0) {
-            collateralBalances[option.writer][option.underlyingAsset] = 
-                collateralBalances[option.writer][option.underlyingAsset].add(remainingCollateral);
-        }
-
-        // Update exposures
-        uint256 exposure = option.premium.mul(option.contractSize);
-        userProfiles[option.writer].totalExposure = 
-            userProfiles[option.writer].totalExposure.sub(exposure);
-        
-        totalOpenInterest = totalOpenInterest.sub(exposure);
-
-        emit OptionExercised(_optionId, msg.sender, payoff);
+    function resumeTrading() external onlyRole(ADMIN_ROLE) {
+        emergencyStop = false;
+        _unpause();
+        emit EmergencyAction("RESUME_TRADING", msg.sender, block.timestamp);
     }
 
     /**
-     * @dev Get current asset price from oracle
+     * @dev Check daily volume limits
      */
-    function _getAssetPrice(address _asset) internal view returns (uint256) {
-        PriceOracle memory oracle = priceOracles[_asset];
-        require(oracle.isActive, "Oracle inactive");
+    function _checkDailyVolumeLimit(uint256 _volume) internal {
+        // Reset daily volume if new day
+        if (block.timestamp >= lastVolumeResetTime.add(86400)) {
+            dailyVolume = 0;
+            lastVolumeResetTime = block.timestamp;
+        }
 
-        (, int256 price, , uint256 updatedAt, ) = oracle.priceFeed.latestRoundData();
-        require(price > 0, "Invalid price");
-        require(block.timestamp.sub(updatedAt) <= oracle.heartbeat, "Price stale");
-
-        return uint256(price);
+        require(dailyVolume.add(_volume) <= maxDailyVolume, "Daily volume limit exceeded");
     }
 
     /**
@@ -479,22 +405,17 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
     }
 
     /**
-     * @dev Calculate option payoff
+     * @dev Get current asset price from oracle
      */
-    function _calculatePayoff(
-        Option memory _option,
-        uint256 _currentPrice
-    ) internal pure returns (uint256) {
-        if (_option.optionType == OptionType.CALL) {
-            if (_currentPrice > _option.strikePrice) {
-                return (_currentPrice.sub(_option.strikePrice)).mul(_option.contractSize).div(1e18);
-            }
-        } else {
-            if (_option.strikePrice > _currentPrice) {
-                return (_option.strikePrice.sub(_currentPrice)).mul(_option.contractSize).div(1e18);
-            }
-        }
-        return 0;
+    function _getAssetPrice(address _asset) internal view returns (uint256) {
+        PriceOracle memory oracle = priceOracles[_asset];
+        require(oracle.isActive, "Oracle inactive");
+
+        (, int256 price, , uint256 updatedAt, ) = oracle.priceFeed.latestRoundData();
+        require(price > 0, "Invalid price");
+        require(block.timestamp.sub(updatedAt) <= oracle.heartbeat, "Price stale");
+
+        return uint256(price);
     }
 
     /**
@@ -507,36 +428,6 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         address _underlyingAsset
     ) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(_optionType, _strikePrice, _expirationTime, _underlyingAsset));
-    }
-
-    /**
-     * @dev Check daily volume limits
-     */
-    function _checkDailyVolumeLimit(uint256 _volume) internal {
-        if (block.timestamp.sub(lastVolumeResetTime) >= 1 days) {
-            dailyVolume = 0;
-            lastVolumeResetTime = block.timestamp;
-        }
-        
-        require(dailyVolume.add(_volume) <= maxDailyVolume, "Daily volume limit exceeded");
-    }
-
-    /**
-     * @dev Emergency stop function
-     */
-    function emergencyStop() external onlyRole(ADMIN_ROLE) {
-        emergencyStop = true;
-        _pause();
-        emit EmergencyAction("Emergency stop activated", msg.sender, block.timestamp);
-    }
-
-    /**
-     * @dev Resume operations
-     */
-    function resumeOperations() external onlyRole(ADMIN_ROLE) {
-        emergencyStop = false;
-        _unpause();
-        emit EmergencyAction("Operations resumed", msg.sender, block.timestamp);
     }
 
     /**
@@ -555,89 +446,31 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
     }
 
     /**
-     * @dev Update user compliance status
+     * @dev Get option details
      */
-    function updateComplianceStatus(
-        address _user,
-        ComplianceStatus _status
-    ) external onlyRole(COMPLIANCE_ROLE) {
-        ComplianceStatus oldStatus = userProfiles[_user].complianceStatus;
-        userProfiles[_user].complianceStatus = _status;
-
-        emit ComplianceStatusUpdated(_user, oldStatus, _status);
+    function getOption(uint256 _optionId) external view returns (Option memory) {
+        return options[_optionId];
     }
 
     /**
-     * @dev Get user's options
+     * @dev Get user profile
+     */
+    function getUserProfile(address _user) external view returns (UserProfile memory) {
+        return userProfiles[_user];
+    }
+
+    /**
+     * @dev Get user options
      */
     function getUserOptions(address _user) external view returns (uint256[] memory) {
         return userOptions[_user];
     }
 
     /**
-     * @dev Get option details
+     * @dev Get collateral balance
      */
-    function getOptionDetails(uint256 _optionId) external view returns (
-        address writer,
-        address holder,
-        OptionType optionType,
-        uint256 strikePrice,
-        uint256 premium,
-        uint256 expirationTime,
-        OptionStatus status
-    ) {
-        Option memory option = options[_optionId];
-        return (
-            option.writer,
-            option.holder,
-            option.optionType,
-            option.strikePrice,
-            option.premium,
-            option.expirationTime,
-            option.status
-        );
-    }
-
-    /**
-     * @dev Get contract metrics
-     */
-    function getContractMetrics() external view returns (
-        uint256 _totalVolume,
-        uint256 _totalOpenInterest,
-        uint256 _dailyVolume,
-        uint256 _nextOptionId
-    ) {
-        return (totalVolume, totalOpenInterest, dailyVolume, nextOptionId);
-    }
-
-    /**
-     * @dev Withdraw collateral (only available amount)
-     */
-    function withdrawCollateral(
-        address _asset,
-        uint256 _amount
-    ) external onlyCompliantUser nonReentrant {
-        require(_amount > 0, "Amount must be positive");
-        require(
-            collateralBalances[msg.sender][_asset] >= _amount,
-            "Insufficient balance"
-        );
-
-        collateralBalances[msg.sender][_asset] = 
-            collateralBalances[msg.sender][_asset].sub(_amount);
-
-        if (_asset == address(0)) {
-            payable(msg.sender).transfer(_amount);
-        } else {
-            // Transfer tokens (implementation depends on token contract)
-        }
-    }
-
-    /**
-     * @dev Fallback function to receive ETH
-     */
-    receive() external payable {
-        // Allow contract to receive ETH
+    function getCollateralBalance(address _user, address _asset) external view returns (uint256) {
+        return collateralBalances[_user][_asset];
     }
 }
 
