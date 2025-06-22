@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced Validation Script for Optionix Platform
+Validation Script for Optionix Platform
 Validates security, compliance, and financial standards implementation
 """
 
@@ -32,7 +32,7 @@ class ValidationResult:
         self.timestamp = datetime.utcnow()
 
 class EnhancedValidator:
-    """Enhanced validation for Optionix platform"""
+    """validation for Optionix platform"""
     
     def __init__(self, code_directory: str):
         self.code_directory = Path(code_directory)
