@@ -1,47 +1,184 @@
 ---
-# roles/database/tasks/main.yml
-- name: Install database packages
-  yum:
+# Enhanced MySQL/MariaDB security configuration for financial applications
+- name: Install MySQL/MariaDB server
+  package:
     name:
-      - mariadb-server
-      - mariadb
-      - python3-PyMySQL
+      - mysql-server
+      - mysql-client
+      - python3-pymysql
     state: present
+  become: yes
 
-- name: Configure MariaDB
-  template:
-    src: my.cnf.j2
-    dest: /etc/my.cnf.d/server.cnf
-  notify: Restart MariaDB
-
-- name: Start and enable MariaDB
-  systemd:
-    name: mariadb
-    state: started
-    enabled: yes
-
-- name: Set root password
+- name: Secure MySQL installation
   mysql_user:
     name: root
-    password: "{{ db_root_password }}"
-    host_all: yes
-    state: present
-  no_log: true
+    password: "{{ mysql_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  become: yes
 
-- name: Create application database
-  mysql_db:
-    name: "{{ db_name }}"
-    state: present
-    login_user: root
-    login_password: "{{ db_root_password }}"
-
-- name: Create application database user
+- name: Remove anonymous MySQL users
   mysql_user:
-    name: "{{ db_user }}"
-    password: "{{ db_password }}"
-    priv: "{{ db_name }}.*:ALL"
-    host: '%'
+    name: ""
+    host_all: yes
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  become: yes
+
+- name: Remove MySQL test database
+  mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  become: yes
+
+- name: Disallow root login remotely
+  mysql_user:
+    name: root
+    host: "{{ ansible_hostname }}"
+    state: absent
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  become: yes
+
+- name: Create MySQL configuration file with security hardening
+  template:
+    src: my.cnf.j2
+    dest: /etc/mysql/mysql.conf.d/security.cnf
+    owner: root
+    group: root
+    mode: '0600'
+    backup: yes
+  become: yes
+  notify: restart mysql
+
+- name: Create dedicated database user for Optionix application
+  mysql_user:
+    name: "{{ optionix_db_user }}"
+    password: "{{ optionix_db_password }}"
+    priv: "{{ optionix_db_name }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,INDEX,ALTER"
+    host: "{{ optionix_app_host | default('localhost') }}"
     state: present
     login_user: root
-    login_password: "{{ db_root_password }}"
-  no_log: true
+    login_password: "{{ mysql_root_password }}"
+  become: yes
+
+- name: Create Optionix database
+  mysql_db:
+    name: "{{ optionix_db_name }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+  become: yes
+
+- name: Create database backup user with minimal privileges
+  mysql_user:
+    name: "{{ backup_db_user }}"
+    password: "{{ backup_db_password }}"
+    priv: "*.*:SELECT,LOCK TABLES,SHOW VIEW,EVENT,TRIGGER"
+    host: localhost
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  become: yes
+
+- name: Create database monitoring user
+  mysql_user:
+    name: "{{ monitor_db_user }}"
+    password: "{{ monitor_db_password }}"
+    priv: "*.*:PROCESS,REPLICATION CLIENT,SELECT"
+    host: localhost
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  become: yes
+
+- name: Enable MySQL binary logging for audit trail
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^#log_bin'
+    line: 'log_bin = /var/log/mysql/mysql-bin.log'
+    state: present
+  become: yes
+  notify: restart mysql
+
+- name: Configure MySQL slow query log
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^#slow_query_log'
+    line: 'slow_query_log = 1'
+    state: present
+  become: yes
+  notify: restart mysql
+
+- name: Set up MySQL log rotation
+  template:
+    src: mysql-logrotate.j2
+    dest: /etc/logrotate.d/mysql-server
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Create database backup script
+  template:
+    src: db_backup.sh.j2
+    dest: /usr/local/bin/db_backup.sh
+    owner: root
+    group: root
+    mode: '0750'
+  become: yes
+
+- name: Schedule daily database backups
+  cron:
+    name: "Daily database backup"
+    minute: "0"
+    hour: "2"
+    job: "/usr/local/bin/db_backup.sh"
+    user: root
+  become: yes
+
+- name: Install and configure database monitoring tools
+  package:
+    name:
+      - mytop
+      - percona-toolkit
+    state: present
+  become: yes
+
+- name: Configure MySQL performance schema for monitoring
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^#performance_schema'
+    line: 'performance_schema = ON'
+    state: present
+  become: yes
+  notify: restart mysql
+
+- name: Set up database connection encryption
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^#require_secure_transport'
+    line: 'require_secure_transport = ON'
+    state: present
+  become: yes
+  notify: restart mysql
+
+- name: Configure MySQL firewall rules
+  ufw:
+    rule: allow
+    port: '3306'
+    src: "{{ item }}"
+  become: yes
+  loop: "{{ mysql_allowed_hosts | default(['127.0.0.1']) }}"
+
+- name: Ensure MySQL service is running and enabled
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes
+

@@ -1,29 +1,186 @@
 ---
-# roles/webserver/tasks/main.yml
-- name: Install web server packages
-  yum:
+# Enhanced Nginx security configuration for financial applications
+- name: Install Nginx and security modules
+  package:
     name:
       - nginx
-      - nodejs
-      - npm
+      - nginx-module-njs
+      - certbot
+      - python3-certbot-nginx
     state: present
+  become: yes
 
-- name: Create web application directory
+- name: Remove default Nginx configuration
   file:
-    path: /var/www/{{ app_name }}
-    state: directory
-    owner: nginx
-    group: nginx
-    mode: '0755'
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: yes
+  notify: restart nginx
 
-- name: Configure Nginx
+- name: Create Nginx security configuration
   template:
     src: nginx.conf.j2
-    dest: /etc/nginx/conf.d/{{ app_name }}.conf
-  notify: Restart Nginx
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  become: yes
+  notify: restart nginx
 
-- name: Start and enable Nginx
+- name: Create Optionix site configuration
+  template:
+    src: optionix.conf.j2
+    dest: /etc/nginx/sites-available/optionix
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart nginx
+
+- name: Enable Optionix site
+  file:
+    src: /etc/nginx/sites-available/optionix
+    dest: /etc/nginx/sites-enabled/optionix
+    state: link
+  become: yes
+  notify: restart nginx
+
+- name: Create SSL certificate directory
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+  become: yes
+
+- name: Generate strong DH parameters
+  command: openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
+  become: yes
+  creates: /etc/nginx/ssl/dhparam.pem
+
+- name: Create security headers configuration
+  template:
+    src: security_headers.conf.j2
+    dest: /etc/nginx/conf.d/security_headers.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart nginx
+
+- name: Create rate limiting configuration
+  template:
+    src: rate_limiting.conf.j2
+    dest: /etc/nginx/conf.d/rate_limiting.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart nginx
+
+- name: Install ModSecurity for Nginx
+  package:
+    name:
+      - libmodsecurity3
+      - modsecurity-crs
+    state: present
+  become: yes
+
+- name: Configure ModSecurity
+  template:
+    src: modsecurity.conf.j2
+    dest: /etc/nginx/modsec/modsecurity.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart nginx
+
+- name: Create Nginx log directory with proper permissions
+  file:
+    path: /var/log/nginx
+    state: directory
+    owner: www-data
+    group: adm
+    mode: '0755'
+  become: yes
+
+- name: Configure Nginx log rotation
+  template:
+    src: nginx-logrotate.j2
+    dest: /etc/logrotate.d/nginx
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Create fail2ban filter for Nginx
+  template:
+    src: nginx-limit-req.conf.j2
+    dest: /etc/fail2ban/filter.d/nginx-limit-req.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restart fail2ban
+
+- name: Configure firewall for HTTP and HTTPS
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  become: yes
+  loop:
+    - '80'
+    - '443'
+
+- name: Create Nginx monitoring script
+  template:
+    src: nginx_monitor.sh.j2
+    dest: /usr/local/bin/nginx_monitor.sh
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- name: Schedule Nginx monitoring
+  cron:
+    name: "Nginx status monitoring"
+    minute: "*/5"
+    job: "/usr/local/bin/nginx_monitor.sh"
+    user: root
+  become: yes
+
+- name: Create SSL certificate renewal script
+  template:
+    src: ssl_renewal.sh.j2
+    dest: /usr/local/bin/ssl_renewal.sh
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- name: Schedule SSL certificate renewal
+  cron:
+    name: "SSL certificate renewal"
+    minute: "0"
+    hour: "2"
+    day: "1"
+    job: "/usr/local/bin/ssl_renewal.sh"
+    user: root
+  become: yes
+
+- name: Test Nginx configuration
+  command: nginx -t
+  become: yes
+  changed_when: false
+
+- name: Ensure Nginx service is running and enabled
   systemd:
     name: nginx
     state: started
     enabled: yes
+  become: yes
+
