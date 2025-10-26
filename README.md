@@ -98,30 +98,6 @@ Optionix is a next-generation options trading platform that leverages advanced a
 * **Monitoring**: Prometheus, Grafana
 * **Logging**: ELK Stack
 
-## Improvements Made
-
-1. Fixed backend issues:
-   * Created proper requirements.txt with all necessary dependencies
-   * Fixed import paths in the backend services
-   * Created an ABI JSON file for blockchain integration
-   * Implemented a volatility model for predictions
-   * Enhanced error handling in the API endpoints
-
-2. Created a modern UI frontend:
-   * Implemented a responsive design with styled-components
-   * Created a proper directory structure for scalability
-   * Developed dashboard, trading, portfolio, and analytics pages
-   * Added interactive charts and data visualization components
-   * Implemented state management with React Context API
-
-3. Integrated frontend with backend:
-   * Created API service utilities for communication
-   * Implemented proper error handling for API requests
-   * Set up global state management for data sharing
-
-4. Deployed the website:
-   * The application is deployed at: [https://hzuesgxl.manus.space](https://hzuesgxl.manus.space)
-
 ## Getting Started
 
 ### Backend Setup
