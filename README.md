@@ -1,6 +1,6 @@
 # Optionix
 
-[![CI/CD Status](https://img.shields.io/github/actions/workflow/status/abrar2030/Optionix/ci-cd.yml?branch=main&label=CI/CD&logo=github)](https://github.com/abrar2030/Optionix/actions)
+![CI/CD Status](https://img.shields.io/github/actions/workflow/status/abrar2030/Optionix/cicd.yml?branch=main&label=CI/CD&logo=github)
 [![Test Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)](https://github.com/abrar2030/Optionix/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
