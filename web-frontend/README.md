@@ -119,23 +119,3 @@ The web frontend integrates with:
 4. **Accessibility**: Follow WCAG guidelines for accessible web applications
 5. **Error Handling**: Implement comprehensive error handling and user feedback
 6. **Testing**: Write tests for critical components and functionality
-
-## Contributing
-
-When contributing to the web frontend:
-
-1. Follow the existing code style and organization
-2. Write tests for new features or bug fixes
-3. Ensure responsive design across different screen sizes
-4. Document any new components or significant changes
-5. Optimize performance for data-intensive operations
-
-## Troubleshooting
-
-Common issues and their solutions:
-
-1. **Build Errors**: Check for syntax errors or missing dependencies
-2. **State Management Issues**: Debug using React DevTools or Redux DevTools
-3. **API Connection Problems**: Verify API endpoints and network connectivity
-4. **Performance Issues**: Use React Profiler to identify bottlenecks
-5. **Styling Inconsistencies**: Check for CSS conflicts or specificity issues

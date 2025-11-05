@@ -105,22 +105,3 @@ The mobile frontend integrates with:
 4. **Testing**: Write tests for critical components and functionality
 5. **Accessibility**: Ensure the app is accessible to users with disabilities
 6. **Cross-Platform**: Test thoroughly on both iOS and Android platforms
-
-## Contributing
-
-When contributing to the mobile frontend:
-
-1. Follow the existing code style and organization
-2. Write tests for new features or bug fixes
-3. Ensure the app works correctly on both iOS and Android
-4. Document any new components or significant changes
-5. Test performance on lower-end devices when possible
-
-## Troubleshooting
-
-Common issues and their solutions:
-
-1. **Build Errors**: Ensure all dependencies are correctly installed and compatible
-2. **UI Inconsistencies**: Check platform-specific styling and components
-3. **API Connection Issues**: Verify API endpoints and network connectivity
-4. **Performance Problems**: Look for unnecessary re-renders or expensive operations
