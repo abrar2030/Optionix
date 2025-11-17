@@ -14,25 +14,27 @@ Implements comprehensive financial regulatory compliance including:
 - Sanctions screening
 - Regulatory reporting
 """
-import re
+
+import asyncio
+import hashlib
 import json
 import logging
-import hashlib
-import asyncio
-from typing import Dict, Any, Optional, List, Tuple, Union
-from datetime import datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
-from enum import Enum
-from dataclasses import dataclass, asdict
-from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Numeric, ForeignKey, Index
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-import requests
+import re
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from models import User, Trade, Position, Account
-from security_enhanced import security_service, SecurityContext, ComplianceFramework
+import requests
+from models import Account, Position, Trade, User
+from security_enhanced import (ComplianceFramework, SecurityContext,
+                               security_service)
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
+                        Numeric, String, Text)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, relationship
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()
@@ -40,6 +42,7 @@ Base = declarative_base()
 
 class RiskLevel(str, Enum):
     """Risk assessment levels"""
+
     VERY_LOW = "very_low"
     LOW = "low"
     MEDIUM = "medium"
@@ -50,6 +53,7 @@ class RiskLevel(str, Enum):
 
 class ComplianceStatus(str, Enum):
     """Compliance status values"""
+
     COMPLIANT = "compliant"
     NON_COMPLIANT = "non_compliant"
     UNDER_REVIEW = "under_review"
@@ -60,6 +64,7 @@ class ComplianceStatus(str, Enum):
 
 class RegulationType(str, Enum):
     """Types of financial regulations"""
+
     KYC = "kyc"
     AML = "aml"
     MIFID_II = "mifid_ii"
@@ -78,6 +83,7 @@ class RegulationType(str, Enum):
 
 class TransactionType(str, Enum):
     """Transaction types for monitoring"""
+
     DEPOSIT = "deposit"
     WITHDRAWAL = "withdrawal"
     TRADE = "trade"
@@ -91,7 +97,10 @@ class TransactionType(str, Enum):
 
 class SanctionsListType(str, Enum):
     """Types of sanctions lists"""
-    OFAC_SDN = "ofac_sdn"  # Office of Foreign Assets Control - Specially Designated Nationals
+
+    OFAC_SDN = (
+        "ofac_sdn"  # Office of Foreign Assets Control - Specially Designated Nationals
+    )
     EU_SANCTIONS = "eu_sanctions"
     UN_SANCTIONS = "un_sanctions"
     UK_SANCTIONS = "uk_sanctions"
@@ -102,6 +111,7 @@ class SanctionsListType(str, Enum):
 @dataclass
 class KYCData:
     """KYC data structure"""
+
     user_id: str
     full_name: str
     date_of_birth: datetime
@@ -123,6 +133,7 @@ class KYCData:
 @dataclass
 class AMLAlert:
     """AML alert structure"""
+
     alert_id: str
     user_id: str
     transaction_id: Optional[str]
@@ -140,16 +151,21 @@ class AMLAlert:
 
 class KYCDocument(Base):
     """KYC document verification table"""
+
     __tablename__ = "kyc_documents"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), nullable=False, index=True)
-    document_type = Column(String(50), nullable=False)  # passport, driver_license, utility_bill, etc.
+    document_type = Column(
+        String(50), nullable=False
+    )  # passport, driver_license, utility_bill, etc.
     document_number = Column(String(100))
     issuing_country = Column(String(3))  # ISO country code
     issue_date = Column(DateTime)
     expiry_date = Column(DateTime)
-    verification_status = Column(String(20), default="pending")  # pending, verified, rejected
+    verification_status = Column(
+        String(20), default="pending"
+    )  # pending, verified, rejected
     verification_method = Column(String(50))  # manual, automated, third_party
     verification_date = Column(DateTime)
     verified_by = Column(String(100))
@@ -157,16 +173,15 @@ class KYCDocument(Base):
     metadata = Column(Text)  # JSON metadata
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    __table_args__ = (
-        Index('idx_kyc_user_type', 'user_id', 'document_type'),
-    )
+
+    __table_args__ = (Index("idx_kyc_user_type", "user_id", "document_type"),)
 
 
 class SanctionsCheck(Base):
     """Sanctions screening results table"""
+
     __tablename__ = "sanctions_checks"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), nullable=False, index=True)
     check_type = Column(String(50), nullable=False)  # individual, entity, transaction
@@ -181,16 +196,15 @@ class SanctionsCheck(Base):
     reviewed_by = Column(String(100))
     review_date = Column(DateTime)
     review_notes = Column(Text)
-    
-    __table_args__ = (
-        Index('idx_sanctions_user_date', 'user_id', 'screening_date'),
-    )
+
+    __table_args__ = (Index("idx_sanctions_user_date", "user_id", "screening_date"),)
 
 
 class TransactionMonitoring(Base):
     """Transaction monitoring and AML alerts table"""
+
     __tablename__ = "transaction_monitoring"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     transaction_id = Column(String(100), nullable=False, index=True)
     user_id = Column(String(100), nullable=False, index=True)
@@ -209,17 +223,18 @@ class TransactionMonitoring(Base):
     investigated_by = Column(String(100))
     investigation_date = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    
+
     __table_args__ = (
-        Index('idx_monitoring_user_date', 'user_id', 'created_at'),
-        Index('idx_monitoring_risk_score', 'risk_score'),
+        Index("idx_monitoring_user_date", "user_id", "created_at"),
+        Index("idx_monitoring_risk_score", "risk_score"),
     )
 
 
 class ComplianceReport(Base):
     """Regulatory compliance reports table"""
+
     __tablename__ = "compliance_reports"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     report_type = Column(String(100), nullable=False, index=True)
     regulation_type = Column(String(50), nullable=False)
@@ -233,19 +248,22 @@ class ComplianceReport(Base):
     submission_date = Column(DateTime)
     submission_reference = Column(String(100))
     status = Column(String(20), default="draft")  # draft, submitted, acknowledged
-    
+
     __table_args__ = (
-        Index('idx_reports_type_period', 'report_type', 'reporting_period_start'),
+        Index("idx_reports_type_period", "report_type", "reporting_period_start"),
     )
 
 
 class RiskAssessment(Base):
     """Risk assessment results table"""
+
     __tablename__ = "risk_assessments"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), nullable=False, index=True)
-    assessment_type = Column(String(50), nullable=False)  # onboarding, periodic, transaction
+    assessment_type = Column(
+        String(50), nullable=False
+    )  # onboarding, periodic, transaction
     risk_score = Column(Numeric(5, 2), nullable=False)
     risk_level = Column(String(20), nullable=False)
     risk_factors = Column(Text)  # JSON array of risk factors
@@ -254,15 +272,13 @@ class RiskAssessment(Base):
     assessed_by = Column(String(100))
     next_review_date = Column(DateTime)
     status = Column(String(20), default="active")
-    
-    __table_args__ = (
-        Index('idx_risk_user_date', 'user_id', 'assessment_date'),
-    )
+
+    __table_args__ = (Index("idx_risk_user_date", "user_id", "assessment_date"),)
 
 
 class EnhancedComplianceService:
     """Enhanced compliance service implementing comprehensive financial regulations"""
-    
+
     def __init__(self):
         """Initialize enhanced compliance service"""
         self._sanctions_lists = {}
@@ -270,43 +286,43 @@ class EnhancedComplianceService:
         self._risk_models = {}
         self._initialize_compliance_rules()
         self._load_sanctions_lists()
-    
+
     def _initialize_compliance_rules(self):
         """Initialize compliance monitoring rules"""
         self._monitoring_rules = {
             # AML monitoring rules
-            'large_cash_transaction': {
-                'threshold': Decimal('10000'),
-                'currency': 'USD',
-                'timeframe_hours': 24,
-                'risk_score': 75
+            "large_cash_transaction": {
+                "threshold": Decimal("10000"),
+                "currency": "USD",
+                "timeframe_hours": 24,
+                "risk_score": 75,
             },
-            'rapid_movement': {
-                'transaction_count': 5,
-                'timeframe_hours': 1,
-                'risk_score': 60
+            "rapid_movement": {
+                "transaction_count": 5,
+                "timeframe_hours": 1,
+                "risk_score": 60,
             },
-            'unusual_pattern': {
-                'deviation_threshold': 3.0,  # Standard deviations
-                'risk_score': 50
+            "unusual_pattern": {
+                "deviation_threshold": 3.0,  # Standard deviations
+                "risk_score": 50,
             },
-            'high_risk_jurisdiction': {
-                'countries': ['AF', 'IR', 'KP', 'SY'],  # Example high-risk countries
-                'risk_score': 80
+            "high_risk_jurisdiction": {
+                "countries": ["AF", "IR", "KP", "SY"],  # Example high-risk countries
+                "risk_score": 80,
             },
-            'structuring_pattern': {
-                'amount_threshold': Decimal('9000'),
-                'frequency_threshold': 3,
-                'timeframe_days': 7,
-                'risk_score': 85
+            "structuring_pattern": {
+                "amount_threshold": Decimal("9000"),
+                "frequency_threshold": 3,
+                "timeframe_days": 7,
+                "risk_score": 85,
             },
-            'velocity_check': {
-                'daily_limit': Decimal('50000'),
-                'monthly_limit': Decimal('500000'),
-                'risk_score': 70
-            }
+            "velocity_check": {
+                "daily_limit": Decimal("50000"),
+                "monthly_limit": Decimal("500000"),
+                "risk_score": 70,
+            },
         }
-    
+
     def _load_sanctions_lists(self):
         """Load sanctions lists (in production, this would be from external APIs)"""
         # This is a simplified example - in production, you would integrate with
@@ -317,29 +333,37 @@ class EnhancedComplianceService:
             SanctionsListType.UN_SANCTIONS: [],
             SanctionsListType.UK_SANCTIONS: [],
             SanctionsListType.PEP_LIST: [],
-            SanctionsListType.ADVERSE_MEDIA: []
+            SanctionsListType.ADVERSE_MEDIA: [],
         }
-    
-    async def perform_kyc_verification(self, db: Session, user_id: str, kyc_data: KYCData) -> Dict[str, Any]:
+
+    async def perform_kyc_verification(
+        self, db: Session, user_id: str, kyc_data: KYCData
+    ) -> Dict[str, Any]:
         """Perform comprehensive KYC verification"""
         try:
             # Calculate risk score based on KYC data
             risk_score = await self._calculate_kyc_risk_score(kyc_data)
-            
+
             # Perform sanctions screening
-            sanctions_result = await self.screen_against_sanctions(db, user_id, kyc_data.full_name)
-            
+            sanctions_result = await self.screen_against_sanctions(
+                db, user_id, kyc_data.full_name
+            )
+
             # Verify documents
-            document_verification = await self._verify_documents(db, user_id, kyc_data.documents_verified)
-            
+            document_verification = await self._verify_documents(
+                db, user_id, kyc_data.documents_verified
+            )
+
             # Check against PEP lists
-            pep_check = await self._check_pep_status(kyc_data.full_name, kyc_data.nationality)
-            
+            pep_check = await self._check_pep_status(
+                kyc_data.full_name, kyc_data.nationality
+            )
+
             # Determine overall KYC status
             kyc_status = self._determine_kyc_status(
                 risk_score, sanctions_result, document_verification, pep_check
             )
-            
+
             # Log KYC verification
             security_service.log_security_event(
                 db=db,
@@ -352,41 +376,41 @@ class EnhancedComplianceService:
                     security_level="confidential",
                     permissions=["kyc_verification"],
                     mfa_verified=True,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 ),
                 resource="kyc_data",
                 action="verification",
                 result=kyc_status,
                 risk_score=risk_score,
                 metadata={
-                    'sanctions_match': sanctions_result['match_found'],
-                    'pep_status': pep_check['is_pep'],
-                    'document_verification': document_verification['status']
-                }
+                    "sanctions_match": sanctions_result["match_found"],
+                    "pep_status": pep_check["is_pep"],
+                    "document_verification": document_verification["status"],
+                },
             )
-            
+
             return {
-                'status': kyc_status,
-                'risk_score': risk_score,
-                'sanctions_result': sanctions_result,
-                'document_verification': document_verification,
-                'pep_check': pep_check,
-                'verification_date': datetime.utcnow(),
-                'compliance_frameworks': [
+                "status": kyc_status,
+                "risk_score": risk_score,
+                "sanctions_result": sanctions_result,
+                "document_verification": document_verification,
+                "pep_check": pep_check,
+                "verification_date": datetime.utcnow(),
+                "compliance_frameworks": [
                     ComplianceFramework.GDPR.value,
                     ComplianceFramework.AML.value,
-                    RegulationType.KYC.value
-                ]
+                    RegulationType.KYC.value,
+                ],
             }
-            
+
         except Exception as e:
             logger.error(f"KYC verification failed for user {user_id}: {e}")
             raise
-    
+
     async def _calculate_kyc_risk_score(self, kyc_data: KYCData) -> float:
         """Calculate risk score based on KYC data"""
         risk_score = 0.0
-        
+
         # Age factor
         age = (datetime.utcnow() - kyc_data.date_of_birth).days / 365.25
         if age < 18:
@@ -395,57 +419,61 @@ class EnhancedComplianceService:
             risk_score += 10
         elif age > 75:
             risk_score += 5
-        
+
         # Jurisdiction risk
-        high_risk_countries = ['AF', 'IR', 'KP', 'SY', 'MM']  # Example
+        high_risk_countries = ["AF", "IR", "KP", "SY", "MM"]  # Example
         if kyc_data.nationality in high_risk_countries:
             risk_score += 30
         if kyc_data.country_of_residence in high_risk_countries:
             risk_score += 25
-        
+
         # Occupation risk
-        high_risk_occupations = ['politician', 'arms_dealer', 'casino_owner']
+        high_risk_occupations = ["politician", "arms_dealer", "casino_owner"]
         if kyc_data.occupation.lower() in high_risk_occupations:
             risk_score += 40
-        
+
         # Transaction volume risk
-        if kyc_data.expected_transaction_volume > Decimal('1000000'):
+        if kyc_data.expected_transaction_volume > Decimal("1000000"):
             risk_score += 20
-        elif kyc_data.expected_transaction_volume > Decimal('100000'):
+        elif kyc_data.expected_transaction_volume > Decimal("100000"):
             risk_score += 10
-        
+
         # Source of funds risk
-        high_risk_sources = ['cash_business', 'cryptocurrency', 'gambling']
+        high_risk_sources = ["cash_business", "cryptocurrency", "gambling"]
         if kyc_data.source_of_funds.lower() in high_risk_sources:
             risk_score += 25
-        
+
         return min(risk_score, 100.0)  # Cap at 100
-    
-    async def screen_against_sanctions(self, db: Session, user_id: str, full_name: str) -> Dict[str, Any]:
+
+    async def screen_against_sanctions(
+        self, db: Session, user_id: str, full_name: str
+    ) -> Dict[str, Any]:
         """Screen user against sanctions lists"""
         try:
             # In production, this would call external sanctions screening APIs
             # For now, we'll simulate the screening process
-            
+
             screening_results = []
             overall_match = False
             highest_score = 0.0
-            
+
             for list_type in SanctionsListType:
                 # Simulate screening against each list
                 match_score = await self._screen_against_list(full_name, list_type)
-                
-                screening_results.append({
-                    'list_type': list_type.value,
-                    'match_score': match_score,
-                    'match_found': match_score > 80.0
-                })
-                
+
+                screening_results.append(
+                    {
+                        "list_type": list_type.value,
+                        "match_score": match_score,
+                        "match_found": match_score > 80.0,
+                    }
+                )
+
                 if match_score > 80.0:
                     overall_match = True
-                
+
                 highest_score = max(highest_score, match_score)
-            
+
             # Store screening result
             sanctions_check = SanctionsCheck(
                 user_id=user_id,
@@ -454,55 +482,60 @@ class EnhancedComplianceService:
                 match_found=overall_match,
                 match_score=highest_score,
                 match_details=json.dumps(screening_results),
-                screening_provider="internal_system"
+                screening_provider="internal_system",
             )
-            
+
             db.add(sanctions_check)
             db.commit()
-            
+
             return {
-                'match_found': overall_match,
-                'highest_score': highest_score,
-                'screening_results': screening_results,
-                'screening_date': datetime.utcnow()
+                "match_found": overall_match,
+                "highest_score": highest_score,
+                "screening_results": screening_results,
+                "screening_date": datetime.utcnow(),
             }
-            
+
         except Exception as e:
             logger.error(f"Sanctions screening failed for user {user_id}: {e}")
             db.rollback()
             raise
-    
-    async def _screen_against_list(self, name: str, list_type: SanctionsListType) -> float:
+
+    async def _screen_against_list(
+        self, name: str, list_type: SanctionsListType
+    ) -> float:
         """Screen name against specific sanctions list"""
         # This is a simplified fuzzy matching algorithm
         # In production, you would use sophisticated name matching algorithms
-        
+
         # Simulate API call delay
         await asyncio.sleep(0.1)
-        
+
         # For demonstration, return a random score
         # In reality, this would perform fuzzy matching against actual lists
         import random
+
         return random.uniform(0, 100)
-    
-    async def _verify_documents(self, db: Session, user_id: str, documents: List[str]) -> Dict[str, Any]:
+
+    async def _verify_documents(
+        self, db: Session, user_id: str, documents: List[str]
+    ) -> Dict[str, Any]:
         """Verify KYC documents"""
         verification_results = []
         overall_status = "verified"
-        
+
         for doc_type in documents:
             # In production, this would integrate with document verification services
             # like Jumio, Onfido, or similar providers
-            
+
             verification_result = {
-                'document_type': doc_type,
-                'status': 'verified',  # Simulated
-                'confidence_score': 95.0,  # Simulated
-                'verification_method': 'automated'
+                "document_type": doc_type,
+                "status": "verified",  # Simulated
+                "confidence_score": 95.0,  # Simulated
+                "verification_method": "automated",
             }
-            
+
             verification_results.append(verification_result)
-            
+
             # Store document verification record
             kyc_doc = KYCDocument(
                 user_id=user_id,
@@ -510,69 +543,80 @@ class EnhancedComplianceService:
                 verification_status="verified",
                 verification_method="automated",
                 verification_date=datetime.utcnow(),
-                verified_by="system"
+                verified_by="system",
             )
-            
+
             db.add(kyc_doc)
-        
+
         db.commit()
-        
+
         return {
-            'status': overall_status,
-            'verification_results': verification_results,
-            'verification_date': datetime.utcnow()
+            "status": overall_status,
+            "verification_results": verification_results,
+            "verification_date": datetime.utcnow(),
         }
-    
-    async def _check_pep_status(self, full_name: str, nationality: str) -> Dict[str, Any]:
+
+    async def _check_pep_status(
+        self, full_name: str, nationality: str
+    ) -> Dict[str, Any]:
         """Check if person is a Politically Exposed Person (PEP)"""
         # In production, this would check against PEP databases
         # For now, simulate the check
-        
+
         return {
-            'is_pep': False,  # Simulated
-            'pep_category': None,
-            'confidence_score': 0.0,
-            'check_date': datetime.utcnow()
+            "is_pep": False,  # Simulated
+            "pep_category": None,
+            "confidence_score": 0.0,
+            "check_date": datetime.utcnow(),
         }
-    
-    def _determine_kyc_status(self, risk_score: float, sanctions_result: Dict, 
-                             document_verification: Dict, pep_check: Dict) -> str:
+
+    def _determine_kyc_status(
+        self,
+        risk_score: float,
+        sanctions_result: Dict,
+        document_verification: Dict,
+        pep_check: Dict,
+    ) -> str:
         """Determine overall KYC status"""
-        if sanctions_result['match_found']:
+        if sanctions_result["match_found"]:
             return ComplianceStatus.NON_COMPLIANT.value
-        
-        if document_verification['status'] != 'verified':
+
+        if document_verification["status"] != "verified":
             return ComplianceStatus.PENDING.value
-        
-        if pep_check['is_pep']:
+
+        if pep_check["is_pep"]:
             return ComplianceStatus.UNDER_REVIEW.value
-        
+
         if risk_score > 80:
             return ComplianceStatus.UNDER_REVIEW.value
         elif risk_score > 60:
             return ComplianceStatus.REQUIRES_ACTION.value
         else:
             return ComplianceStatus.COMPLIANT.value
-    
-    async def monitor_transaction(self, db: Session, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def monitor_transaction(
+        self, db: Session, transaction_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Monitor transaction for AML compliance"""
         try:
-            user_id = transaction_data['user_id']
-            transaction_id = transaction_data['transaction_id']
-            amount = Decimal(str(transaction_data['amount']))
-            currency = transaction_data['currency']
-            transaction_type = transaction_data['type']
-            
+            user_id = transaction_data["user_id"]
+            transaction_id = transaction_data["transaction_id"]
+            amount = Decimal(str(transaction_data["amount"]))
+            currency = transaction_data["currency"]
+            transaction_type = transaction_data["type"]
+
             # Calculate risk score
-            risk_score = await self._calculate_transaction_risk_score(db, transaction_data)
-            
+            risk_score = await self._calculate_transaction_risk_score(
+                db, transaction_data
+            )
+
             # Check monitoring rules
             triggered_rules = await self._check_monitoring_rules(db, transaction_data)
-            
+
             # Determine if alert should be generated
             alert_generated = risk_score > 70 or len(triggered_rules) > 0
             alert_severity = self._determine_alert_severity(risk_score, triggered_rules)
-            
+
             # Store monitoring record
             monitoring_record = TransactionMonitoring(
                 transaction_id=transaction_id,
@@ -580,103 +624,120 @@ class EnhancedComplianceService:
                 transaction_type=transaction_type,
                 amount=amount,
                 currency=currency,
-                counterparty=transaction_data.get('counterparty'),
+                counterparty=transaction_data.get("counterparty"),
                 risk_score=risk_score,
-                risk_factors=json.dumps(transaction_data.get('risk_factors', [])),
+                risk_factors=json.dumps(transaction_data.get("risk_factors", [])),
                 monitoring_rules_triggered=json.dumps(triggered_rules),
                 alert_generated=alert_generated,
                 alert_severity=alert_severity,
-                alert_status="open" if alert_generated else "none"
+                alert_status="open" if alert_generated else "none",
             )
-            
+
             db.add(monitoring_record)
             db.commit()
-            
+
             # Generate AML alert if needed
             if alert_generated:
                 alert = await self._generate_aml_alert(
                     db, user_id, transaction_id, risk_score, triggered_rules
                 )
-                
+
                 return {
-                    'monitoring_result': 'alert_generated',
-                    'risk_score': risk_score,
-                    'alert': alert,
-                    'triggered_rules': triggered_rules
+                    "monitoring_result": "alert_generated",
+                    "risk_score": risk_score,
+                    "alert": alert,
+                    "triggered_rules": triggered_rules,
                 }
-            
+
             return {
-                'monitoring_result': 'no_alert',
-                'risk_score': risk_score,
-                'triggered_rules': triggered_rules
+                "monitoring_result": "no_alert",
+                "risk_score": risk_score,
+                "triggered_rules": triggered_rules,
             }
-            
+
         except Exception as e:
             logger.error(f"Transaction monitoring failed: {e}")
             db.rollback()
             raise
-    
-    async def _calculate_transaction_risk_score(self, db: Session, transaction_data: Dict[str, Any]) -> float:
+
+    async def _calculate_transaction_risk_score(
+        self, db: Session, transaction_data: Dict[str, Any]
+    ) -> float:
         """Calculate risk score for transaction"""
         risk_score = 0.0
-        amount = Decimal(str(transaction_data['amount']))
-        user_id = transaction_data['user_id']
-        
+        amount = Decimal(str(transaction_data["amount"]))
+        user_id = transaction_data["user_id"]
+
         # Amount-based risk
-        if amount > Decimal('100000'):
+        if amount > Decimal("100000"):
             risk_score += 30
-        elif amount > Decimal('50000'):
+        elif amount > Decimal("50000"):
             risk_score += 20
-        elif amount > Decimal('10000'):
+        elif amount > Decimal("10000"):
             risk_score += 10
-        
+
         # User risk profile
         user_risk = await self._get_user_risk_profile(db, user_id)
         risk_score += user_risk * 0.3
-        
+
         # Transaction pattern analysis
-        pattern_risk = await self._analyze_transaction_patterns(db, user_id, transaction_data)
+        pattern_risk = await self._analyze_transaction_patterns(
+            db, user_id, transaction_data
+        )
         risk_score += pattern_risk
-        
+
         # Geographic risk
-        if 'country' in transaction_data:
-            geo_risk = await self._calculate_geographic_risk(transaction_data['country'])
+        if "country" in transaction_data:
+            geo_risk = await self._calculate_geographic_risk(
+                transaction_data["country"]
+            )
             risk_score += geo_risk
-        
+
         return min(risk_score, 100.0)
-    
-    async def _check_monitoring_rules(self, db: Session, transaction_data: Dict[str, Any]) -> List[str]:
+
+    async def _check_monitoring_rules(
+        self, db: Session, transaction_data: Dict[str, Any]
+    ) -> List[str]:
         """Check transaction against monitoring rules"""
         triggered_rules = []
-        amount = Decimal(str(transaction_data['amount']))
-        user_id = transaction_data['user_id']
-        
+        amount = Decimal(str(transaction_data["amount"]))
+        user_id = transaction_data["user_id"]
+
         # Large cash transaction rule
-        if amount >= self._monitoring_rules['large_cash_transaction']['threshold']:
-            triggered_rules.append('large_cash_transaction')
-        
+        if amount >= self._monitoring_rules["large_cash_transaction"]["threshold"]:
+            triggered_rules.append("large_cash_transaction")
+
         # Rapid movement rule
         recent_transactions = await self._get_recent_transactions(db, user_id, hours=1)
-        if len(recent_transactions) >= self._monitoring_rules['rapid_movement']['transaction_count']:
-            triggered_rules.append('rapid_movement')
-        
+        if (
+            len(recent_transactions)
+            >= self._monitoring_rules["rapid_movement"]["transaction_count"]
+        ):
+            triggered_rules.append("rapid_movement")
+
         # Structuring pattern rule
         if await self._check_structuring_pattern(db, user_id, amount):
-            triggered_rules.append('structuring_pattern')
-        
+            triggered_rules.append("structuring_pattern")
+
         # Velocity check rule
         if await self._check_velocity_limits(db, user_id, amount):
-            triggered_rules.append('velocity_check')
-        
+            triggered_rules.append("velocity_check")
+
         return triggered_rules
-    
-    async def _generate_aml_alert(self, db: Session, user_id: str, transaction_id: str, 
-                                 risk_score: float, triggered_rules: List[str]) -> AMLAlert:
+
+    async def _generate_aml_alert(
+        self,
+        db: Session,
+        user_id: str,
+        transaction_id: str,
+        risk_score: float,
+        triggered_rules: List[str],
+    ) -> AMLAlert:
         """Generate AML alert"""
         alert_id = f"AML_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{user_id[:8]}"
-        
+
         severity = RiskLevel.HIGH if risk_score > 80 else RiskLevel.MEDIUM
-        
+
         alert = AMLAlert(
             alert_id=alert_id,
             user_id=user_id,
@@ -686,34 +747,43 @@ class EnhancedComplianceService:
             description=f"High-risk transaction detected (score: {risk_score})",
             triggered_rules=triggered_rules,
             created_at=datetime.utcnow(),
-            status="open"
+            status="open",
         )
-        
+
         # In production, this would be stored in a dedicated alerts table
         # and trigger notifications to compliance officers
-        
+
         return alert
-    
-    async def generate_regulatory_report(self, db: Session, report_type: str, 
-                                       regulation: RegulationType, 
-                                       start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+
+    async def generate_regulatory_report(
+        self,
+        db: Session,
+        report_type: str,
+        regulation: RegulationType,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> Dict[str, Any]:
         """Generate regulatory compliance report"""
         try:
             report_data = {}
-            
+
             if regulation == RegulationType.SOX:
                 report_data = await self._generate_sox_report(db, start_date, end_date)
             elif regulation == RegulationType.AML:
                 report_data = await self._generate_aml_report(db, start_date, end_date)
             elif regulation == RegulationType.MIFID_II:
-                report_data = await self._generate_mifid_report(db, start_date, end_date)
+                report_data = await self._generate_mifid_report(
+                    db, start_date, end_date
+                )
             elif regulation == RegulationType.DODD_FRANK:
-                report_data = await self._generate_dodd_frank_report(db, start_date, end_date)
-            
+                report_data = await self._generate_dodd_frank_report(
+                    db, start_date, end_date
+                )
+
             # Generate report hash for integrity
             report_json = json.dumps(report_data, sort_keys=True, default=str)
             report_hash = hashlib.sha256(report_json.encode()).hexdigest()
-            
+
             # Store report
             compliance_report = ComplianceReport(
                 report_type=report_type,
@@ -722,111 +792,122 @@ class EnhancedComplianceService:
                 reporting_period_end=end_date,
                 report_data=report_json,
                 report_hash=report_hash,
-                generated_by="system"
+                generated_by="system",
             )
-            
+
             db.add(compliance_report)
             db.commit()
-            
+
             return {
-                'report_id': compliance_report.id,
-                'report_type': report_type,
-                'regulation': regulation.value,
-                'period': {
-                    'start': start_date,
-                    'end': end_date
-                },
-                'data': report_data,
-                'hash': report_hash,
-                'generated_at': datetime.utcnow()
+                "report_id": compliance_report.id,
+                "report_type": report_type,
+                "regulation": regulation.value,
+                "period": {"start": start_date, "end": end_date},
+                "data": report_data,
+                "hash": report_hash,
+                "generated_at": datetime.utcnow(),
             }
-            
+
         except Exception as e:
             logger.error(f"Report generation failed: {e}")
             db.rollback()
             raise
-    
-    async def _generate_sox_report(self, db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+
+    async def _generate_sox_report(
+        self, db: Session, start_date: datetime, end_date: datetime
+    ) -> Dict[str, Any]:
         """Generate SOX compliance report"""
         # SOX requires detailed audit trails and internal controls reporting
         return {
-            'internal_controls_assessment': {
-                'status': 'effective',
-                'deficiencies': [],
-                'remediation_actions': []
+            "internal_controls_assessment": {
+                "status": "effective",
+                "deficiencies": [],
+                "remediation_actions": [],
             },
-            'audit_trail_completeness': {
-                'total_transactions': 0,  # Would be calculated from actual data
-                'audited_transactions': 0,
-                'completeness_percentage': 100.0
+            "audit_trail_completeness": {
+                "total_transactions": 0,  # Would be calculated from actual data
+                "audited_transactions": 0,
+                "completeness_percentage": 100.0,
             },
-            'access_controls': {
-                'privileged_access_reviews': [],
-                'segregation_of_duties': 'compliant'
+            "access_controls": {
+                "privileged_access_reviews": [],
+                "segregation_of_duties": "compliant",
             },
-            'financial_reporting_controls': {
-                'status': 'effective',
-                'testing_results': []
-            }
+            "financial_reporting_controls": {
+                "status": "effective",
+                "testing_results": [],
+            },
         }
-    
-    async def _generate_aml_report(self, db: Session, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+
+    async def _generate_aml_report(
+        self, db: Session, start_date: datetime, end_date: datetime
+    ) -> Dict[str, Any]:
         """Generate AML compliance report"""
         return {
-            'suspicious_activity_reports': {
-                'total_sars_filed': 0,
-                'pending_investigations': 0
+            "suspicious_activity_reports": {
+                "total_sars_filed": 0,
+                "pending_investigations": 0,
             },
-            'customer_due_diligence': {
-                'new_customers_onboarded': 0,
-                'enhanced_due_diligence_cases': 0
+            "customer_due_diligence": {
+                "new_customers_onboarded": 0,
+                "enhanced_due_diligence_cases": 0,
             },
-            'transaction_monitoring': {
-                'total_transactions_monitored': 0,
-                'alerts_generated': 0,
-                'false_positive_rate': 0.0
+            "transaction_monitoring": {
+                "total_transactions_monitored": 0,
+                "alerts_generated": 0,
+                "false_positive_rate": 0.0,
             },
-            'sanctions_screening': {
-                'total_screenings': 0,
-                'matches_found': 0,
-                'false_positives': 0
-            }
+            "sanctions_screening": {
+                "total_screenings": 0,
+                "matches_found": 0,
+                "false_positives": 0,
+            },
         }
-    
+
     # Helper methods (simplified implementations)
     async def _get_user_risk_profile(self, db: Session, user_id: str) -> float:
         """Get user's risk profile score"""
         # In production, this would query the risk assessment table
         return 30.0  # Simulated
-    
-    async def _analyze_transaction_patterns(self, db: Session, user_id: str, transaction_data: Dict) -> float:
+
+    async def _analyze_transaction_patterns(
+        self, db: Session, user_id: str, transaction_data: Dict
+    ) -> float:
         """Analyze transaction patterns for anomalies"""
         # In production, this would use ML models for pattern analysis
         return 15.0  # Simulated
-    
+
     async def _calculate_geographic_risk(self, country_code: str) -> float:
         """Calculate risk based on geographic location"""
-        high_risk_countries = ['AF', 'IR', 'KP', 'SY']
+        high_risk_countries = ["AF", "IR", "KP", "SY"]
         return 25.0 if country_code in high_risk_countries else 0.0
-    
-    async def _get_recent_transactions(self, db: Session, user_id: str, hours: int) -> List[Dict]:
+
+    async def _get_recent_transactions(
+        self, db: Session, user_id: str, hours: int
+    ) -> List[Dict]:
         """Get recent transactions for user"""
         # In production, this would query the transactions table
         return []  # Simulated
-    
-    async def _check_structuring_pattern(self, db: Session, user_id: str, amount: Decimal) -> bool:
+
+    async def _check_structuring_pattern(
+        self, db: Session, user_id: str, amount: Decimal
+    ) -> bool:
         """Check for structuring patterns (breaking large amounts into smaller ones)"""
         # In production, this would analyze transaction history
         return False  # Simulated
-    
-    async def _check_velocity_limits(self, db: Session, user_id: str, amount: Decimal) -> bool:
+
+    async def _check_velocity_limits(
+        self, db: Session, user_id: str, amount: Decimal
+    ) -> bool:
         """Check if transaction exceeds velocity limits"""
         # In production, this would check daily/monthly limits
         return False  # Simulated
-    
-    def _determine_alert_severity(self, risk_score: float, triggered_rules: List[str]) -> str:
+
+    def _determine_alert_severity(
+        self, risk_score: float, triggered_rules: List[str]
+    ) -> str:
         """Determine alert severity based on risk score and rules"""
-        if risk_score > 90 or 'large_cash_transaction' in triggered_rules:
+        if risk_score > 90 or "large_cash_transaction" in triggered_rules:
             return RiskLevel.CRITICAL.value
         elif risk_score > 80:
             return RiskLevel.HIGH.value
@@ -838,4 +919,3 @@ class EnhancedComplianceService:
 
 # Global compliance service instance
 enhanced_compliance_service = EnhancedComplianceService()
-

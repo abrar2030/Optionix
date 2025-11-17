@@ -1,12 +1,14 @@
 """
 Database connection and session management for Optionix backend.
 """
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool
+
+import logging
+
 from config import settings
 from models import Base
-import logging
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import QueuePool
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ def create_tables():
 def get_db() -> Session:
     """
     Dependency to get database session
-    
+
     Yields:
         Session: SQLAlchemy database session
     """
@@ -51,9 +53,8 @@ def get_db() -> Session:
 def get_db_session() -> Session:
     """
     Get a database session for direct use
-    
+
     Returns:
         Session: SQLAlchemy database session
     """
     return SessionLocal()
-

@@ -2,68 +2,57 @@
 Enhanced main FastAPI application for Optionix platform.
 Integrates comprehensive security, compliance, and financial standards.
 """
-from fastapi import FastAPI, HTTPException, Depends, Request, Response, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.security import HTTPBearer
-from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
+
 import logging
-import uvicorn
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List, Optional
 
-# Import configuration and database
-from config import settings
-from database import get_db, create_tables
-
-# Import enhanced models
-from models import (
-    User, Account, Trade, Position, AuditLog, APIKey,
-    KYCDocument, SanctionsCheck, TransactionMonitoring,
-    FinancialAuditLog
-)
-
-# Import enhanced schemas
-from schemas import (
-    UserCreate, UserLogin, UserResponse, TokenResponse,
-    AccountCreate, AccountResponse, TradeRequest, TradeResponse,
-    PositionResponse, PositionHealthResponse, MarketDataRequest,
-    VolatilityResponse, HealthCheckResponse, ErrorResponse,
-    MFASetupResponse, MFAVerifyRequest, KYCDataRequest,
-    ComplianceCheckResponse, RiskMetricsResponse
-)
-
+import uvicorn
 # Import enhanced authentication and authorization
-from auth import (
-    auth_service, mfa_service, rbac_service,
-    get_current_user, get_current_verified_user,
-    require_permission, Permission, UserRole,
-    log_auth_event
-)
-
-# Import enhanced middleware
-from middleware.security import (
-    SecurityHeadersMiddleware, AdvancedRateLimitMiddleware,
-    RequestValidationMiddleware, AuditLoggingMiddleware
-)
-
-# Import services
-from services.blockchain_service import BlockchainService
-from services.model_service import ModelService
-from services.financial_service import FinancialCalculationService
-
+from auth import (Permission, UserRole, auth_service, get_current_user,
+                  get_current_verified_user, log_auth_event, mfa_service,
+                  rbac_service, require_permission)
 # Import enhanced compliance and security
 from compliance_enhanced import enhanced_compliance_service
+# Import configuration and database
+from config import settings
 from data_protection import data_protection_service
+from database import create_tables, get_db
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer
 from financial_standards import financial_standards_service
+# Import enhanced middleware
+from middleware.security import (AdvancedRateLimitMiddleware,
+                                 AuditLoggingMiddleware,
+                                 RequestValidationMiddleware,
+                                 SecurityHeadersMiddleware)
+# Import enhanced models
+from models import (Account, APIKey, AuditLog, FinancialAuditLog, KYCDocument,
+                    Position, SanctionsCheck, Trade, TransactionMonitoring,
+                    User)
+# Import enhanced schemas
+from schemas import (AccountCreate, AccountResponse, ComplianceCheckResponse,
+                     ErrorResponse, HealthCheckResponse, KYCDataRequest,
+                     MarketDataRequest, MFASetupResponse, MFAVerifyRequest,
+                     PositionHealthResponse, PositionResponse,
+                     RiskMetricsResponse, TokenResponse, TradeRequest,
+                     TradeResponse, UserCreate, UserLogin, UserResponse,
+                     VolatilityResponse)
 from security import security_service
+# Import services
+from services.blockchain_service import BlockchainService
+from services.financial_service import FinancialCalculationService
+from services.model_service import ModelService
+from sqlalchemy.orm import Session
 
 # Setup logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -76,23 +65,23 @@ async def lifespan(app: FastAPI):
     try:
         create_tables()
         logger.info("Database tables created/verified")
-        
+
         # Initialize security services
         logger.info("Initializing security services...")
-        
+
         # Initialize compliance services
         logger.info("Initializing compliance services...")
-        
+
         # Initialize financial standards
         logger.info("Initializing financial standards...")
-        
+
         logger.info("Enhanced Optionix API started successfully")
     except Exception as e:
         logger.error(f"Startup failed: {e}")
         raise
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Enhanced Optionix API...")
 
@@ -104,11 +93,13 @@ app = FastAPI(
     version=f"{settings.app_version}-enhanced",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add enhanced security middleware
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])  # Configure for production
+app.add_middleware(
+    TrustedHostMiddleware, allowed_hosts=["*"]
+)  # Configure for production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -144,10 +135,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
                 "client_ip": request.client.host if request.client else "unknown",
                 "user_agent": request.headers.get("user-agent", ""),
                 "endpoint": request.url.path,
-                "method": request.method
-            }
+                "method": request.method,
+            },
         )
-    
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -155,8 +146,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "message": exc.detail,
             "status_code": exc.status_code,
             "timestamp": datetime.utcnow().isoformat(),
-            "request_id": getattr(request.state, "request_id", None)
-        }
+            "request_id": getattr(request.state, "request_id", None),
+        },
     )
 
 
@@ -171,13 +162,15 @@ async def enhanced_health_check():
         "redis": "healthy",
         "compliance_engine": "healthy",
         "security_services": "healthy",
-        "audit_logging": "healthy"
+        "audit_logging": "healthy",
     }
-    
-    overall_status = "healthy" if all(
-        status == "healthy" for status in services_status.values()
-    ) else "degraded"
-    
+
+    overall_status = (
+        "healthy"
+        if all(status == "healthy" for status in services_status.values())
+        else "degraded"
+    )
+
     return HealthCheckResponse(
         status=overall_status,
         version=f"{settings.app_version}-enhanced",
@@ -187,30 +180,28 @@ async def enhanced_health_check():
             "rbac_enabled": True,
             "encryption_enabled": True,
             "audit_logging": True,
-            "compliance_monitoring": True
-        }
+            "compliance_monitoring": True,
+        },
     )
 
 
 # Enhanced authentication endpoints
 @app.post("/auth/register", response_model=UserResponse, tags=["Authentication"])
 async def enhanced_register_user(
-    user_data: UserCreate,
-    request: Request,
-    db: Session = Depends(get_db)
+    user_data: UserCreate, request: Request, db: Session = Depends(get_db)
 ):
     """Enhanced user registration with comprehensive security checks"""
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "")
-    
+
     # Check rate limiting for registration
     failed_attempts = auth_service.check_failed_attempts(f"register_{client_ip}")
     if failed_attempts["locked"]:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many registration attempts. Please try again later."
+            detail="Too many registration attempts. Please try again later.",
         )
-    
+
     try:
         # Check if user already exists
         existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -218,24 +209,26 @@ async def enhanced_register_user(
             auth_service.record_failed_attempt(f"register_{client_ip}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="Email already registered",
             )
-        
+
         # Enhanced password validation
-        password_validation = security_service.validate_password_strength(user_data.password)
+        password_validation = security_service.validate_password_strength(
+            user_data.password
+        )
         if not password_validation["valid"]:
             auth_service.record_failed_attempt(f"register_{client_ip}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Password validation failed: {', '.join(password_validation['issues'])}"
+                detail=f"Password validation failed: {', '.join(password_validation['issues'])}",
             )
-        
+
         # Sanitize input data
         sanitized_data = security_service.sanitize_input(user_data.dict())
-        
+
         # Create user with enhanced security
         hashed_password = auth_service.get_password_hash(user_data.password)
-        
+
         user = User(
             email=sanitized_data["email"],
             hashed_password=hashed_password,
@@ -248,14 +241,20 @@ async def enhanced_register_user(
             risk_score=0,
             data_retention_consent=sanitized_data.get("data_retention_consent", False),
             marketing_consent=sanitized_data.get("marketing_consent", False),
-            data_processing_consent=sanitized_data.get("data_processing_consent", False),
-            consent_date=datetime.utcnow() if sanitized_data.get("data_processing_consent") else None
+            data_processing_consent=sanitized_data.get(
+                "data_processing_consent", False
+            ),
+            consent_date=(
+                datetime.utcnow()
+                if sanitized_data.get("data_processing_consent")
+                else None
+            ),
         )
-        
+
         db.add(user)
         db.commit()
         db.refresh(user)
-        
+
         # Create data processing log for GDPR compliance
         data_protection_service.create_data_processing_log(
             db=db,
@@ -266,20 +265,19 @@ async def enhanced_register_user(
             purpose="Account creation and service provision",
             user_id=user.id,
             retention_period=2555,  # 7 years
-            consent_given=user.data_processing_consent
+            consent_given=user.data_processing_consent,
         )
-        
+
         # Log successful registration
         log_auth_event(
-            db, user.id, "user_registration", 
-            client_ip, user_agent, "success"
+            db, user.id, "user_registration", client_ip, user_agent, "success"
         )
-        
+
         # Clear failed attempts
         auth_service.clear_failed_attempts(f"register_{client_ip}")
-        
+
         return UserResponse.from_orm(user)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -287,7 +285,7 @@ async def enhanced_register_user(
         auth_service.record_failed_attempt(f"register_{client_ip}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail="Registration failed",
         )
 
 
@@ -297,6 +295,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=settings.debug,
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )
-
