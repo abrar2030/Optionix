@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Create an axios instance with default config
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? '/api' 
+  baseURL: process.env.NODE_ENV === 'production'
+    ? '/api'
     : 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json'

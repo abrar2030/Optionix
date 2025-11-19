@@ -340,4 +340,3 @@ spec:
           name: elasticsearch-config
       - name: tmp
         emptyDir: {}
-

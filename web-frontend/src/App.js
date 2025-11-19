@@ -59,7 +59,7 @@ const ContentArea = styled.div`
   flex: 1;
   padding: 20px;
   margin-left: 240px;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     margin-left: 0;
     padding-top: 70px;

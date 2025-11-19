@@ -7,6 +7,7 @@ import asyncio
 import hashlib
 import json
 import os
+
 # Import application modules
 import sys
 from datetime import datetime, timedelta
@@ -23,8 +24,7 @@ sys.path.append("/home/ubuntu/Optionix/code/ai_models")
 
 from app import app
 from auth import AuthService, UserRole
-from black_scholes import (EnhancedBlackScholesModel, OptionParameters,
-                           OptionType)
+from black_scholes import EnhancedBlackScholesModel, OptionParameters, OptionType
 from create_model import EnhancedModelService, ModelType
 from monitoring import EnhancedMonitoringService
 from security import SecurityService

@@ -16,7 +16,7 @@ const TableHead = styled.thead`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
   }
-  
+
   th {
     padding: 10px;
     text-align: center;
@@ -33,16 +33,16 @@ const TableHead = styled.thead`
 const TableBody = styled.tbody`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     &:hover {
       background-color: rgba(42, 46, 57, 0.3);
     }
   }
-  
+
   td {
     padding: 10px;
     font-size: 12px;
@@ -71,16 +71,16 @@ const ExpirySelector = styled.div`
   margin-bottom: 16px;
   overflow-x: auto;
   padding-bottom: 6px;
-  
+
   &::-webkit-scrollbar {
     height: 4px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: ${props => props.theme.colors.backgroundDark};
     border-radius: 2px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: ${props => props.theme.colors.border};
     border-radius: 2px;
@@ -97,7 +97,7 @@ const ExpiryButton = styled.button`
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: ${props => props.active ? props.theme.colors.primary : 'rgba(41, 98, 255, 0.1)'};
     color: ${props => props.active ? 'white' : props.theme.colors.primary};
@@ -106,7 +106,7 @@ const ExpiryButton = styled.button`
 
 const OptionChain = () => {
   const [selectedExpiry, setSelectedExpiry] = React.useState('20250430');
-  
+
   // Sample data
   const expiryDates = [
     { value: '20250430', label: 'Apr 30, 2025' },
@@ -117,7 +117,7 @@ const OptionChain = () => {
     { value: '20250820', label: 'Aug 20, 2025' },
     { value: '20250920', label: 'Sep 20, 2025' }
   ];
-  
+
   const optionChainData = [
     {
       strike: 40000,
@@ -145,13 +145,13 @@ const OptionChain = () => {
       put: { bid: 5675.25, ask: 5700.50, iv: 34.2, volume: 75, oi: 650 }
     }
   ];
-  
+
   return (
     <OptionChainContainer>
       <ExpirySelector>
         {expiryDates.map(date => (
-          <ExpiryButton 
-            key={date.value} 
+          <ExpiryButton
+            key={date.value}
             active={selectedExpiry === date.value}
             onClick={() => setSelectedExpiry(date.value)}
           >
@@ -159,7 +159,7 @@ const OptionChain = () => {
           </ExpiryButton>
         ))}
       </ExpirySelector>
-      
+
       <OptionTable>
         <TableHead>
           <tr>

@@ -29,10 +29,18 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 from models import Account, Position, Trade, User
-from security_enhanced import (ComplianceFramework, SecurityContext,
-                               security_service)
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
-                        Numeric, String, Text)
+from security_enhanced import ComplianceFramework, SecurityContext, security_service
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship
 

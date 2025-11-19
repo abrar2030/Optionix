@@ -19,11 +19,11 @@ const MetricsSection = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
@@ -62,7 +62,7 @@ const MetricIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   svg {
     color: ${props => props.color || props.theme.colors.primary};
     font-size: 20px;
@@ -89,7 +89,7 @@ const VolatilitySection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -102,7 +102,7 @@ const GreeksSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -115,7 +115,7 @@ const RiskSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -128,7 +128,7 @@ const SentimentSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -158,7 +158,7 @@ const Analytics = () => {
           <MetricValue>32.45%</MetricValue>
           <MetricDescription>30-day average for BTC-USD</MetricDescription>
         </MetricCard>
-        
+
         <MetricCard>
           <MetricHeader>
             <MetricTitle>Put/Call Ratio</MetricTitle>
@@ -169,7 +169,7 @@ const Analytics = () => {
           <MetricValue>0.85</MetricValue>
           <MetricDescription>Slightly bullish market sentiment</MetricDescription>
         </MetricCard>
-        
+
         <MetricCard>
           <MetricHeader>
             <MetricTitle>VIX Index</MetricTitle>
@@ -180,7 +180,7 @@ const Analytics = () => {
           <MetricValue>18.32</MetricValue>
           <MetricDescription>Market volatility index</MetricDescription>
         </MetricCard>
-        
+
         <MetricCard>
           <MetricHeader>
             <MetricTitle>Options Volume</MetricTitle>
@@ -192,22 +192,22 @@ const Analytics = () => {
           <MetricDescription>24h trading volume</MetricDescription>
         </MetricCard>
       </MetricsSection>
-      
+
       <VolatilitySection>
         <CardTitle>Historical Volatility Analysis</CardTitle>
         <VolatilityChart />
       </VolatilitySection>
-      
+
       <GreeksSection>
         <CardTitle>Option Greeks</CardTitle>
         <GreeksTable />
       </GreeksSection>
-      
+
       <RiskSection>
         <CardTitle>Risk Matrix</CardTitle>
         <RiskMatrix />
       </RiskSection>
-      
+
       <SentimentSection>
         <CardTitle>Market Sentiment</CardTitle>
         <MarketSentiment />

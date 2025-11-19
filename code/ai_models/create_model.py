@@ -32,21 +32,29 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 import statsmodels.api as sm
+
 # Statistical Libraries
 from scipy import stats
 from scipy.optimize import minimize
+
 # Machine Learning Libraries
-from sklearn.ensemble import (GradientBoostingRegressor, IsolationForest,
-                              RandomForestRegressor)
-from sklearn.feature_selection import (SelectKBest, f_regression,
-                                       mutual_info_regression)
-from sklearn.linear_model import (Lasso, LinearRegression, LogisticRegression,
-                                  Ridge)
-from sklearn.metrics import (accuracy_score, f1_score, mean_absolute_error,
-                             mean_squared_error, precision_score, r2_score,
-                             recall_score)
-from sklearn.model_selection import (TimeSeriesSplit, cross_val_score,
-                                     train_test_split)
+from sklearn.ensemble import (
+    GradientBoostingRegressor,
+    IsolationForest,
+    RandomForestRegressor,
+)
+from sklearn.feature_selection import SelectKBest, f_regression, mutual_info_regression
+from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression, Ridge
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    mean_absolute_error,
+    mean_squared_error,
+    precision_score,
+    r2_score,
+    recall_score,
+)
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score, train_test_split
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
 from sklearn.svm import SVC, SVR

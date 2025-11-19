@@ -26,16 +26,16 @@ const OrderBookContent = styled.div`
 const OrderSection = styled.div`
   flex: 1;
   overflow-y: auto;
-  
+
   &::-webkit-scrollbar {
     width: 4px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: ${props => props.theme.colors.backgroundDark};
     border-radius: 2px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: ${props => props.theme.colors.border};
     border-radius: 2px;
@@ -103,7 +103,7 @@ const OrderBook = () => {
     { price: 42775.25, size: 1.75, total: 74856.69 },
     { price: 42750.00, size: 1.30, total: 55575.00 },
   ].reverse();
-  
+
   const bids = [
     { price: 42700.00, size: 1.50, total: 64050.00 },
     { price: 42675.50, size: 0.90, total: 38407.95 },
@@ -114,11 +114,11 @@ const OrderBook = () => {
     { price: 42550.25, size: 1.40, total: 59570.35 },
     { price: 42525.00, size: 1.05, total: 44651.25 },
   ];
-  
+
   const maxSize = Math.max(...[...asks, ...bids].map(order => order.size));
   const spread = asks[0].price - bids[0].price;
   const spreadPercentage = (spread / asks[0].price) * 100;
-  
+
   return (
     <OrderBookContainer>
       <OrderBookHeader>
@@ -126,7 +126,7 @@ const OrderBook = () => {
         <HeaderItem>Size (BTC)</HeaderItem>
         <HeaderItem>Total (USD)</HeaderItem>
       </OrderBookHeader>
-      
+
       <OrderBookContent>
         <OrderSection>
           {asks.map((ask, index) => (
@@ -134,31 +134,31 @@ const OrderBook = () => {
               <OrderPrice type="ask">{ask.price.toFixed(2)}</OrderPrice>
               <OrderSize>{ask.size.toFixed(2)}</OrderSize>
               <OrderTotal>{ask.total.toFixed(2)}</OrderTotal>
-              <OrderBackground 
-                type="ask" 
-                width={(ask.size / maxSize) * 100} 
+              <OrderBackground
+                type="ask"
+                width={(ask.size / maxSize) * 100}
               />
             </OrderRow>
           ))}
         </OrderSection>
-        
+
         <Divider />
-        
+
         <SpreadRow>
           Spread: ${spread.toFixed(2)} ({spreadPercentage.toFixed(3)}%)
         </SpreadRow>
-        
+
         <Divider />
-        
+
         <OrderSection>
           {bids.map((bid, index) => (
             <OrderRow key={index}>
               <OrderPrice type="bid">{bid.price.toFixed(2)}</OrderPrice>
               <OrderSize>{bid.size.toFixed(2)}</OrderSize>
               <OrderTotal>{bid.total.toFixed(2)}</OrderTotal>
-              <OrderBackground 
-                type="bid" 
-                width={(bid.size / maxSize) * 100} 
+              <OrderBackground
+                type="bid"
+                width={(bid.size / maxSize) * 100}
               />
             </OrderRow>
           ))}

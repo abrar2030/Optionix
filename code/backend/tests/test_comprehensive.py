@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
+
 # Import application and dependencies
 from app import app
 from auth import create_access_token, get_password_hash

@@ -37,7 +37,7 @@ const RiskIcon = styled.div`
   align-items: center;
   justify-content: center;
   margin-right: 12px;
-  
+
   svg {
     color: ${props => {
       if (props.level === 'high') return props.theme.colors.danger;
@@ -112,7 +112,7 @@ const RiskAssessment = () => {
       icon: <FiCheckCircle />
     }
   ];
-  
+
   return (
     <RiskContainer>
       {riskItems.map(item => (
@@ -126,7 +126,7 @@ const RiskAssessment = () => {
           <RiskDescription>{item.description}</RiskDescription>
         </RiskCard>
       ))}
-      
+
       <RiskMetrics>
         <MetricCard>
           <MetricValue>0.75</MetricValue>

@@ -184,4 +184,3 @@ spec:
                   values:
                   - optionix-backend
               topologyKey: kubernetes.io/hostname
-

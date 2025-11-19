@@ -60,10 +60,10 @@ jest.mock('chart.js', () => {
     update: jest.fn(),
   };
   const MockChart = jest.fn().mockImplementation(() => mockChartInstance);
-  MockChart.register = jest.fn(); 
+  MockChart.register = jest.fn();
   return {
     Chart: MockChart,
-    registerables: [], 
+    registerables: [],
   };
 });
 
@@ -96,14 +96,14 @@ jest.mock('../utils/AppContext', () => {
 });
 
 const renderApp = () => {
-  return render(<App />); 
+  return render(<App />);
 };
 
 describe('App Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
-    
+
     mockUserValue = null;
     mockLoadingValue = false;
     mockSetUser.mockImplementation(newUser => { mockUserValue = newUser; });
@@ -123,10 +123,10 @@ describe('App Component', () => {
 
   test('handles successful login', async () => {
     mockApi.login.mockResolvedValueOnce({ token: 'fake-token' });
-    mockApi.getUserProfile.mockResolvedValueOnce({ username: 'testuser' }); 
-    
+    mockApi.getUserProfile.mockResolvedValueOnce({ username: 'testuser' });
+
     const { container } = renderApp(); // Get container for form selection
-    
+
     const usernameInput = await screen.findByLabelText(/username/i);
     const passwordInput = await screen.findByLabelText(/password/i);
     const loginButton = await screen.findByRole('button', { name: /login/i });
@@ -136,13 +136,13 @@ describe('App Component', () => {
       fireEvent.change(usernameInput, { target: { value: 'testuser' } });
       fireEvent.change(passwordInput, { target: { value: 'password123' } });
     });
-    
+
     expect(loginButton).not.toBeDisabled();
 
     await act(async () => {
         fireEvent.submit(loginForm); // Use form element for submit
     });
-        
+
     await waitFor(() => {
       expect(mockApi.login).toHaveBeenCalledWith('testuser', 'password123');
     });
@@ -152,15 +152,15 @@ describe('App Component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByRole("heading", { name: /login/i, level: 2 })).not.toBeInTheDocument(); 
-      expect(screen.getByText(/dashboard/i)).toBeInTheDocument(); 
+      expect(screen.queryByRole("heading", { name: /login/i, level: 2 })).not.toBeInTheDocument();
+      expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
     });
   });
 
   test('handles login error', async () => {
     mockApi.login.mockRejectedValueOnce(new Error('Invalid credentials'));
     const { container } = renderApp();
-    
+
     const usernameInput = await screen.findByLabelText(/username/i);
     const passwordInput = await screen.findByLabelText(/password/i);
     const loginButton = await screen.findByRole('button', { name: /login/i });
@@ -170,12 +170,12 @@ describe('App Component', () => {
         fireEvent.change(usernameInput, { target: { value: 'wronguser' } });
         fireEvent.change(passwordInput, { target: { value: 'wrongpass' } });
     });
-    
+
     expect(loginButton).not.toBeDisabled();
     await act(async () => {
         fireEvent.submit(loginForm);
     });
-    
+
     await waitFor(() => {
       expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
     });
@@ -186,11 +186,11 @@ describe('App Component', () => {
     const { container } = renderApp();
     const loginButton = await screen.findByRole('button', { name: /login/i });
     const loginForm = container.querySelector('form');
-    
+
     await act(async () => {
         fireEvent.submit(loginForm);
     });
-    
+
     await waitFor(() => expect(screen.getByText(/Username and Password are required/i)).toBeInTheDocument());
     expect(mockApi.login).not.toHaveBeenCalled();
   });
@@ -207,30 +207,30 @@ describe('App Component', () => {
   test('handles successful registration', async () => {
     mockApi.register.mockResolvedValueOnce({ success: true });
     const { container } = renderApp();
-    
+
     const registerLink = await screen.findByText(/register/i, { selector: 'span' });
     await act(async () => {
         fireEvent.click(registerLink);
     });
-        
+
     const usernameInput = await screen.findByLabelText(/username/i);
     const emailInput = await screen.findByLabelText(/email/i);
     const passwordInput = await screen.findByLabelText(/password/i);
     const registerButton = await screen.findByRole('button', { name: /register/i });
     // Assuming the registration form is the only form after clicking register link
-    const registrationForm = container.querySelector('form'); 
+    const registrationForm = container.querySelector('form');
 
     await act(async () => {
         fireEvent.change(usernameInput, { target: { value: 'newuser' } });
         fireEvent.change(emailInput, { target: { value: 'newuser@example.com' } });
         fireEvent.change(passwordInput, { target: { value: 'password123' } });
     });
-    
+
     expect(registerButton).not.toBeDisabled();
     await act(async () => {
         fireEvent.submit(registrationForm);
     });
-        
+
     await waitFor(() => {
       expect(mockApi.register).toHaveBeenCalledWith({
         username: 'newuser',
@@ -251,14 +251,14 @@ describe('App Component', () => {
     await act(async () => {
         fireEvent.click(registerLink);
     });
-    
+
     const registerButton = await screen.findByRole('button', { name: /register/i });
     const registrationForm = container.querySelector('form');
 
     await act(async () => {
         fireEvent.submit(registrationForm);
     });
-    
+
     await waitFor(() => expect(screen.getByText(/Username, Email, and Password are required/i)).toBeInTheDocument());
     expect(mockApi.register).not.toHaveBeenCalled();
   });
@@ -269,7 +269,7 @@ describe('App Component', () => {
     await act(async () => {
         fireEvent.click(registerLink);
     });
-    
+
     const usernameInput = await screen.findByLabelText(/username/i);
     const emailInput = await screen.findByLabelText(/email/i);
     const passwordInput = await screen.findByLabelText(/password/i);
@@ -277,18 +277,17 @@ describe('App Component', () => {
     const registrationForm = container.querySelector('form');
 
     await act(async () => {
-        fireEvent.change(usernameInput, { target: { value: 'testuser' } }); 
+        fireEvent.change(usernameInput, { target: { value: 'testuser' } });
         fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-        fireEvent.change(passwordInput, { target: { value: 'password123' } }); 
+        fireEvent.change(passwordInput, { target: { value: 'password123' } });
     });
-    
+
     expect(registerButton).not.toBeDisabled();
     await act(async () => {
         fireEvent.submit(registrationForm);
     });
-    
+
     await waitFor(() => expect(screen.getByText(/invalid email format/i)).toBeInTheDocument());
     expect(mockApi.register).not.toHaveBeenCalled();
   });
 });
-

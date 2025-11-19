@@ -105,7 +105,7 @@ parse_args() {
         ;;
     esac
   done
-  
+
   if [ -z "$COMMAND" ]; then
     step_error "No command specified. Use --help for usage information." "exit"
   fi
@@ -114,7 +114,7 @@ parse_args() {
 # Check requirements
 check_requirements() {
   section_header "Checking Requirements"
-  
+
   # Check PostgreSQL client
   if command_exists psql; then
     PSQL_VERSION=$(psql --version)
@@ -122,20 +122,20 @@ check_requirements() {
   else
     step_error "PostgreSQL client not found. Please install PostgreSQL client." "exit"
   fi
-  
+
   # Check if we can connect to the database
   if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT 1" &>/dev/null; then
     step_success "Successfully connected to PostgreSQL server"
   else
     step_error "Could not connect to PostgreSQL server. Please check connection settings."
-    
+
     # Try with Docker
     if command_exists docker && docker ps | grep -q postgres; then
       step_info "PostgreSQL Docker container found. Using container settings..."
       DB_HOST="localhost"
       DB_PORT="5432"
       step_info "Updated connection settings: $DB_HOST:$DB_PORT"
-      
+
       if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT 1" &>/dev/null; then
         step_success "Successfully connected to PostgreSQL Docker container"
       else
@@ -145,7 +145,7 @@ check_requirements() {
       step_error "Could not find PostgreSQL server. Please start PostgreSQL server." "exit"
     fi
   fi
-  
+
   # Create backup directory if it doesn't exist
   if [ ! -d "$BACKUP_DIR" ]; then
     mkdir -p "$BACKUP_DIR"
@@ -158,7 +158,7 @@ check_requirements() {
 # Setup database
 setup_database() {
   section_header "Setting Up Database"
-  
+
   # Check if database exists
   if PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1; then
     step_info "Database '$DB_NAME' already exists"
@@ -167,10 +167,10 @@ setup_database() {
     PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "CREATE DATABASE $DB_NAME"
     step_success "Database '$DB_NAME' created"
   fi
-  
+
   # Initialize schema
   step_info "Initializing database schema..."
-  
+
   # Check if schema files exist
   SCHEMA_DIR="./code/backend/database/schema"
   if [ -d "$SCHEMA_DIR" ]; then
@@ -183,10 +183,10 @@ setup_database() {
     done
   else
     step_info "Schema directory not found. Creating default schema..."
-    
+
     # Create schema directory
     mkdir -p "$SCHEMA_DIR"
-    
+
     # Create default schema file
     cat > "$SCHEMA_DIR/01_initial_schema.sql" << EOF
 -- Initial schema for Optionix database
@@ -273,26 +273,26 @@ CREATE INDEX idx_options_expiration ON options(expiration_date);
 CREATE INDEX idx_positions_portfolio ON positions(portfolio_id);
 CREATE INDEX idx_strategy_positions_strategy ON strategy_positions(strategy_id);
 EOF
-    
+
     # Apply default schema
     step_info "Applying default schema..."
     PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$SCHEMA_DIR/01_initial_schema.sql"
     step_success "Default schema applied"
   fi
-  
+
   step_success "Database schema initialized"
 }
 
 # Run migrations
 run_migrations() {
   section_header "Running Database Migrations"
-  
+
   # Check if migration files exist
   MIGRATION_DIR="./code/backend/database/migrations"
   if [ -d "$MIGRATION_DIR" ]; then
     # Get list of applied migrations
     APPLIED_MIGRATIONS=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -t -c "SELECT migration_name FROM migrations ORDER BY id" 2>/dev/null || echo "")
-    
+
     # Create migrations table if it doesn't exist
     if ! PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "SELECT 1 FROM information_schema.tables WHERE table_name = 'migrations'" | grep -q 1; then
       step_info "Creating migrations table..."
@@ -305,24 +305,24 @@ run_migrations() {
       "
       step_success "Migrations table created"
     fi
-    
+
     # Apply migrations
     for migration_file in "$MIGRATION_DIR"/*.sql; do
       if [ -f "$migration_file" ]; then
         MIGRATION_NAME=$(basename "$migration_file")
-        
+
         # Check if migration has already been applied
         if echo "$APPLIED_MIGRATIONS" | grep -q "$MIGRATION_NAME"; then
           step_info "Migration already applied: $MIGRATION_NAME"
         else
           step_info "Applying migration: $MIGRATION_NAME"
           PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$migration_file"
-          
+
           # Record migration
           PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -c "
             INSERT INTO migrations (migration_name) VALUES ('$MIGRATION_NAME')
           "
-          
+
           step_success "Migration applied: $MIGRATION_NAME"
         fi
       fi
@@ -333,14 +333,14 @@ run_migrations() {
     step_success "Migration directory created: $MIGRATION_DIR"
     step_info "No migrations to apply"
   fi
-  
+
   step_success "Database migrations completed"
 }
 
 # Seed database
 seed_database() {
   section_header "Seeding Database"
-  
+
   # Check if seed files exist
   SEED_DIR="./code/backend/database/seeds"
   if [ -d "$SEED_DIR" ]; then
@@ -353,10 +353,10 @@ seed_database() {
     done
   else
     step_info "Seed directory not found. Creating directory and default seed data..."
-    
+
     # Create seed directory
     mkdir -p "$SEED_DIR"
-    
+
     # Create default seed file
     cat > "$SEED_DIR/01_test_data.sql" << EOF
 -- Test data for Optionix database
@@ -417,33 +417,33 @@ VALUES
   (3, 2, 1)
 ON CONFLICT DO NOTHING;
 EOF
-    
+
     # Apply default seed
     step_info "Applying default seed data..."
     PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$SEED_DIR/01_test_data.sql"
     step_success "Default seed data applied"
   fi
-  
+
   step_success "Database seeding completed"
 }
 
 # Backup database
 backup_database() {
   section_header "Backing Up Database"
-  
+
   # Create timestamp for backup file
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
   BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_${TIMESTAMP}.sql"
-  
+
   step_info "Creating backup: $BACKUP_FILE"
   PGPASSWORD=$DB_PASSWORD pg_dump -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$BACKUP_FILE"
-  
+
   # Compress backup
   step_info "Compressing backup..."
   gzip "$BACKUP_FILE"
-  
+
   step_success "Database backup completed: ${BACKUP_FILE}.gz"
-  
+
   # List recent backups
   step_info "Recent backups:"
   ls -lh "$BACKUP_DIR" | tail -n 5
@@ -452,27 +452,27 @@ backup_database() {
 # Restore database
 restore_database() {
   section_header "Restoring Database"
-  
+
   # List available backups
   step_info "Available backups:"
   ls -lh "$BACKUP_DIR" | grep -v "^total"
-  
+
   # Prompt for backup file
   step_info "Please specify the backup file to restore:"
   read -p "Backup file: " BACKUP_FILE
-  
+
   # Check if file exists
   if [ ! -f "$BACKUP_DIR/$BACKUP_FILE" ] && [ ! -f "$BACKUP_FILE" ]; then
     step_error "Backup file not found: $BACKUP_FILE" "exit"
   fi
-  
+
   # Use full path if provided, otherwise use backup directory
   if [ -f "$BACKUP_FILE" ]; then
     FULL_BACKUP_PATH="$BACKUP_FILE"
   else
     FULL_BACKUP_PATH="$BACKUP_DIR/$BACKUP_FILE"
   fi
-  
+
   # Check if file is compressed
   if [[ "$FULL_BACKUP_PATH" == *.gz ]]; then
     step_info "Decompressing backup file..."
@@ -480,39 +480,39 @@ restore_database() {
     FULL_BACKUP_PATH="${FULL_BACKUP_PATH%.gz}.tmp"
     step_success "Backup file decompressed"
   fi
-  
+
   # Restore database
   step_info "Restoring database from backup..."
-  
+
   # Drop and recreate database
   PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "
     DROP DATABASE IF EXISTS $DB_NAME;
     CREATE DATABASE $DB_NAME;
   "
-  
+
   # Restore from backup
   PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f "$FULL_BACKUP_PATH"
-  
+
   # Clean up temporary file if created
   if [[ "$FULL_BACKUP_PATH" == *.tmp ]]; then
     rm "$FULL_BACKUP_PATH"
   fi
-  
+
   step_success "Database restored from backup"
 }
 
 # Reset database
 reset_database() {
   section_header "Resetting Database"
-  
+
   step_info "This will drop and recreate the database. All data will be lost."
   read -p "Are you sure you want to continue? (y/n): " CONFIRM
-  
+
   if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
     step_info "Database reset cancelled"
     return
   fi
-  
+
   # Drop and recreate database
   step_info "Dropping database '$DB_NAME'..."
   PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d postgres -c "
@@ -520,17 +520,17 @@ reset_database() {
     CREATE DATABASE $DB_NAME;
   "
   step_success "Database '$DB_NAME' reset"
-  
+
   # Initialize schema
   setup_database
-  
+
   # Ask if user wants to seed the database
   read -p "Do you want to seed the database with test data? (y/n): " SEED_CONFIRM
-  
+
   if [ "$SEED_CONFIRM" = "y" ] || [ "$SEED_CONFIRM" = "Y" ]; then
     seed_database
   fi
-  
+
   step_success "Database reset completed"
 }
 
@@ -538,13 +538,13 @@ reset_database() {
 main() {
   echo -e "${YELLOW}=== Optionix Database Management Tool ===${NC}"
   echo -e "${BLUE}$(date)${NC}"
-  
+
   # Parse command line arguments
   parse_args "$@"
-  
+
   # Check requirements
   check_requirements
-  
+
   # Execute command
   case $COMMAND in
     setup)
@@ -566,7 +566,7 @@ main() {
       reset_database
       ;;
   esac
-  
+
   echo -e "\n${GREEN}Database operation completed successfully!${NC}"
 }
 

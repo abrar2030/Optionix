@@ -11,6 +11,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 # Import the enhanced application and dependencies
 from app import app
 from auth import auth_service, mfa_service, rbac_service

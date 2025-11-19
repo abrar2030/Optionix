@@ -44,11 +44,11 @@ else
         else
             source venv_optionix_backend_py/bin/activate
             echo "Backend Python virtual environment created and activated."
-            
+
             echo "Installing backend Python dependencies from requirements.txt..."
             pip3 install -r requirements.txt
             echo "Backend dependencies installed."
-            
+
             echo "To activate the backend virtual environment later, run: source ${BACKEND_DIR}/venv_optionix_backend_py/bin/activate"
             echo "To start the backend server (from ${BACKEND_DIR} with venv activated): uvicorn app:app --host 0.0.0.0 --port 8000 (as per README)"
             deactivate

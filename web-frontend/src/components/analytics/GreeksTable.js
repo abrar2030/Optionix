@@ -16,7 +16,7 @@ const TableHead = styled.thead`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
   }
-  
+
   th {
     padding: 10px;
     text-align: left;
@@ -29,16 +29,16 @@ const TableHead = styled.thead`
 const TableBody = styled.tbody`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     &:hover {
       background-color: rgba(42, 46, 57, 0.3);
     }
   }
-  
+
   td {
     padding: 12px 10px;
     font-size: 13px;
@@ -114,7 +114,7 @@ const GreeksTable = () => {
       rho: -8.15
     }
   ];
-  
+
   return (
     <TableContainer>
       <StyledGreeksTable>

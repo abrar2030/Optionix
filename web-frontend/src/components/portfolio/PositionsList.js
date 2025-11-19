@@ -15,7 +15,7 @@ const TableHead = styled.thead`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
   }
-  
+
   th {
     padding: 10px;
     text-align: left;
@@ -28,16 +28,16 @@ const TableHead = styled.thead`
 const TableBody = styled.tbody`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     &:hover {
       background-color: rgba(42, 46, 57, 0.3);
     }
   }
-  
+
   td {
     padding: 12px 10px;
     font-size: 13px;
@@ -78,7 +78,7 @@ const ProfitLoss = styled.div`
   display: flex;
   align-items: center;
   color: ${props => props.isPositive ? props.theme.colors.success : props.theme.colors.danger};
-  
+
   svg {
     margin-right: 4px;
   }
@@ -93,7 +93,7 @@ const ActionButton = styled.button`
   color: ${props => props.theme.colors.textSecondary};
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: rgba(41, 98, 255, 0.1);
     color: ${props => props.theme.colors.primary};
@@ -182,7 +182,7 @@ const PositionsList = () => {
       color: '#00ffbd'
     }
   ];
-  
+
   return (
     <PositionsContainer>
       {positions.length > 0 ? (

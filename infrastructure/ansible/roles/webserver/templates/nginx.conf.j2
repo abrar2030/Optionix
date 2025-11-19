@@ -23,7 +23,7 @@ http {
     keepalive_timeout 65;
     types_hash_max_size 2048;
     client_max_body_size 10M;
-    
+
     # Security Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -32,14 +32,14 @@ http {
     add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'self';" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
     add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
-    
+
     # Hide server information
     more_set_headers "Server: Financial-Server";
-    
+
     # MIME Types
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    
+
     # SSL Configuration
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
@@ -49,27 +49,27 @@ http {
     ssl_session_tickets off;
     ssl_stapling on;
     ssl_stapling_verify on;
-    
+
     # DH Parameters
     ssl_dhparam /etc/nginx/ssl/dhparam.pem;
-    
+
     # Rate Limiting
     limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
     limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
     limit_req_zone $binary_remote_addr zone=general:10m rate=1r/s;
     limit_conn_zone $binary_remote_addr zone=conn_limit_per_ip:10m;
-    
+
     # Logging Format
     log_format security '$remote_addr - $remote_user [$time_local] '
                        '"$request" $status $body_bytes_sent '
                        '"$http_referer" "$http_user_agent" '
                        '$request_time $upstream_response_time '
                        '$gzip_ratio $request_length';
-    
+
     # Access and Error Logs
     access_log /var/log/nginx/access.log security;
     error_log /var/log/nginx/error.log warn;
-    
+
     # Gzip Compression
     gzip on;
     gzip_vary on;
@@ -85,23 +85,22 @@ http {
         application/xml+rss
         application/atom+xml
         image/svg+xml;
-    
+
     # Security: Disable access to hidden files
     location ~ /\. {
         deny all;
         access_log off;
         log_not_found off;
     }
-    
+
     # Security: Disable access to backup files
     location ~ ~$ {
         deny all;
         access_log off;
         log_not_found off;
     }
-    
+
     # Include additional configurations
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
 }
-

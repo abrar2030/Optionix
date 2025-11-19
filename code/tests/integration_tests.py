@@ -16,16 +16,22 @@ import pandas as pd
 
 sys.path.append("/home/ubuntu/Optionix/code")
 
-from backend.services.risk_management.risk_engine import (RiskEngine,
-                                                          RiskMetricType,
-                                                          ScenarioAnalyzer,
-                                                          StressTestEngine)
+from backend.services.risk_management.risk_engine import (
+    RiskEngine,
+    RiskMetricType,
+    ScenarioAnalyzer,
+    StressTestEngine,
+)
 from backend.services.trade_execution.circuit_breaker import (
-    CircuitBreaker, CircuitBreakerType)
-from backend.services.trade_execution.execution_engine import (ExecutionEngine,
-                                                               Order,
-                                                               OrderSide,
-                                                               OrderType)
+    CircuitBreaker,
+    CircuitBreakerType,
+)
+from backend.services.trade_execution.execution_engine import (
+    ExecutionEngine,
+    Order,
+    OrderSide,
+    OrderType,
+)
 from quantitative.enhanced.calibration_engine import CalibrationEngine
 from quantitative.enhanced.local_volatility import DupireLocalVolModel
 from quantitative.enhanced.stochastic_volatility import HestonModel, SabrModel

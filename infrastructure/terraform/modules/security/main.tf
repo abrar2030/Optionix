@@ -131,7 +131,7 @@ resource "aws_security_group" "redis" {
 # WAF v2 for enhanced security
 resource "aws_wafv2_web_acl" "optionix_waf" {
   count = var.enable_waf ? 1 : 0
-  
+
   name  = "${var.environment}-optionix-waf"
   scope = "REGIONAL"
   description = "WAF for Optionix financial application"
@@ -153,7 +153,7 @@ resource "aws_wafv2_web_acl" "optionix_waf" {
       rate_based_statement {
         limit              = 2000
         aggregate_key_type = "IP"
-        
+
         scope_down_statement {
           geo_match_statement {
             country_codes = ["US", "CA", "GB", "DE", "FR", "JP", "AU"]
@@ -254,7 +254,7 @@ resource "aws_wafv2_web_acl" "optionix_waf" {
 # GuardDuty for threat detection
 resource "aws_guardduty_detector" "optionix_guardduty" {
   count = var.enable_guardduty ? 1 : 0
-  
+
   enable = true
   finding_publishing_frequency = "FIFTEEN_MINUTES"
 
@@ -284,7 +284,7 @@ resource "aws_guardduty_detector" "optionix_guardduty" {
 # Config for compliance monitoring
 resource "aws_config_configuration_recorder" "optionix_config" {
   count = var.enable_config ? 1 : 0
-  
+
   name     = "${var.environment}-optionix-config"
   role_arn = aws_iam_role.config_role[0].arn
 
@@ -298,7 +298,7 @@ resource "aws_config_configuration_recorder" "optionix_config" {
 
 resource "aws_config_delivery_channel" "optionix_config" {
   count = var.enable_config ? 1 : 0
-  
+
   name           = "${var.environment}-optionix-config"
   s3_bucket_name = aws_s3_bucket.config_bucket[0].bucket
   s3_key_prefix  = "config"
@@ -310,7 +310,7 @@ resource "aws_config_delivery_channel" "optionix_config" {
 
 resource "aws_s3_bucket" "config_bucket" {
   count = var.enable_config ? 1 : 0
-  
+
   bucket        = "${var.environment}-optionix-config-${random_id.config_suffix[0].hex}"
   force_destroy = var.environment == "dev" ? true : false
 
@@ -322,7 +322,7 @@ resource "aws_s3_bucket" "config_bucket" {
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "config_bucket_encryption" {
   count = var.enable_config ? 1 : 0
-  
+
   bucket = aws_s3_bucket.config_bucket[0].id
 
   rule {
@@ -335,7 +335,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "config_bucket_enc
 
 resource "aws_s3_bucket_versioning" "config_bucket_versioning" {
   count = var.enable_config ? 1 : 0
-  
+
   bucket = aws_s3_bucket.config_bucket[0].id
   versioning_configuration {
     status = "Enabled"
@@ -344,7 +344,7 @@ resource "aws_s3_bucket_versioning" "config_bucket_versioning" {
 
 resource "aws_s3_bucket_public_access_block" "config_bucket_pab" {
   count = var.enable_config ? 1 : 0
-  
+
   bucket = aws_s3_bucket.config_bucket[0].id
 
   block_public_acls       = true
@@ -356,7 +356,7 @@ resource "aws_s3_bucket_public_access_block" "config_bucket_pab" {
 # CloudTrail for audit logging
 resource "aws_cloudtrail" "optionix_trail" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   name           = "${var.environment}-optionix-trail"
   s3_bucket_name = aws_s3_bucket.cloudtrail_bucket[0].bucket
   s3_key_prefix  = "cloudtrail"
@@ -391,7 +391,7 @@ resource "aws_cloudtrail" "optionix_trail" {
 
 resource "aws_s3_bucket" "cloudtrail_bucket" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   bucket        = var.cloudtrail_s3_bucket_name
   force_destroy = var.environment == "dev" ? true : false
 
@@ -403,7 +403,7 @@ resource "aws_s3_bucket" "cloudtrail_bucket" {
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail_bucket_encryption" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   bucket = aws_s3_bucket.cloudtrail_bucket[0].id
 
   rule {
@@ -416,7 +416,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail_bucket
 
 resource "aws_s3_bucket_versioning" "cloudtrail_bucket_versioning" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   bucket = aws_s3_bucket.cloudtrail_bucket[0].id
   versioning_configuration {
     status = "Enabled"
@@ -425,7 +425,7 @@ resource "aws_s3_bucket_versioning" "cloudtrail_bucket_versioning" {
 
 resource "aws_s3_bucket_public_access_block" "cloudtrail_bucket_pab" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   bucket = aws_s3_bucket.cloudtrail_bucket[0].id
 
   block_public_acls       = true
@@ -436,7 +436,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail_bucket_pab" {
 
 resource "aws_s3_bucket_policy" "cloudtrail_bucket_policy" {
   count = var.enable_cloudtrail ? 1 : 0
-  
+
   bucket = aws_s3_bucket.cloudtrail_bucket[0].id
 
   policy = jsonencode({
@@ -533,7 +533,7 @@ resource "aws_iam_role_policy" "optionix_policy" {
 
 resource "aws_iam_role" "config_role" {
   count = var.enable_config ? 1 : 0
-  
+
   name = "${var.environment}-config-role"
 
   assume_role_policy = jsonencode({
@@ -556,7 +556,7 @@ resource "aws_iam_role" "config_role" {
 
 resource "aws_iam_role_policy_attachment" "config_role_policy" {
   count = var.enable_config ? 1 : 0
-  
+
   role       = aws_iam_role.config_role[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
@@ -613,4 +613,3 @@ resource "random_id" "config_suffix" {
   count = var.enable_config ? 1 : 0
   byte_length = 4
 }
-

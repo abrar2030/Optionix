@@ -310,4 +310,3 @@ volumes:
     driver: local
   elasticsearch_data:
     driver: local
-

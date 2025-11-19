@@ -14,7 +14,7 @@ const SidebarContainer = styled.aside`
   padding-top: 70px;
   transition: transform 0.3s ease;
   z-index: 90;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     transform: translateX(${props => props.isOpen ? '0' : '-100%'});
   }
@@ -25,14 +25,14 @@ const Logo = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   h1 {
     font-size: 24px;
     font-weight: 700;
     color: ${props => props.theme.colors.primary};
     margin: 0;
   }
-  
+
   span {
     color: ${props => props.theme.colors.secondary};
   }
@@ -50,12 +50,12 @@ const NavItem = styled(Link)`
   background-color: ${props => props.active ? 'rgba(41, 98, 255, 0.1)' : 'transparent'};
   border-left: 3px solid ${props => props.active ? props.theme.colors.primary : 'transparent'};
   transition: all 0.2s ease;
-  
+
   &:hover {
     color: ${props => props.theme.colors.primary};
     background-color: rgba(41, 98, 255, 0.05);
   }
-  
+
   svg {
     margin-right: 12px;
     font-size: 18px;
@@ -79,7 +79,7 @@ const FooterText = styled.p`
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
-  
+
   const navItems = [
     { icon: <FiHome />, label: 'Dashboard', path: '/' },
     { icon: <FiTrendingUp />, label: 'Trading', path: '/trading' },
@@ -87,18 +87,18 @@ const Sidebar = ({ isOpen }) => {
     { icon: <FiPieChart />, label: 'Analytics', path: '/analytics' },
     { icon: <FiSettings />, label: 'Settings', path: '/settings' },
   ];
-  
+
   return (
     <SidebarContainer isOpen={isOpen}>
       <Logo>
         <h1>Option<span>ix</span></h1>
       </Logo>
-      
+
       <NavMenu>
         {navItems.map((item, index) => (
-          <NavItem 
-            key={index} 
-            to={item.path} 
+          <NavItem
+            key={index}
+            to={item.path}
             active={location.pathname === item.path ? 1 : 0}
           >
             {item.icon}
@@ -106,7 +106,7 @@ const Sidebar = ({ isOpen }) => {
           </NavItem>
         ))}
       </NavMenu>
-      
+
       <SidebarFooter>
         <FooterText>Optionix v1.0.0</FooterText>
         <NavItem to="/logout" as="button" style={{ width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left' }}>

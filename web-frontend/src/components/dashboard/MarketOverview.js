@@ -15,7 +15,7 @@ const TableHead = styled.thead`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
   }
-  
+
   th {
     padding: 10px;
     text-align: left;
@@ -28,16 +28,16 @@ const TableHead = styled.thead`
 const TableBody = styled.tbody`
   tr {
     border-bottom: 1px solid ${props => props.theme.colors.border};
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     &:hover {
       background-color: rgba(42, 46, 57, 0.3);
     }
   }
-  
+
   td {
     padding: 12px 10px;
     font-size: 13px;
@@ -72,7 +72,7 @@ const PriceChange = styled.div`
   display: flex;
   align-items: center;
   color: ${props => props.isPositive ? props.theme.colors.success : props.theme.colors.danger};
-  
+
   svg {
     margin-right: 4px;
   }
@@ -86,7 +86,7 @@ const InfoIcon = styled.div`
   color: ${props => props.theme.colors.textSecondary};
   cursor: help;
   position: relative;
-  
+
   &:hover::after {
     content: "${props => props.tooltip}";
     position: absolute;
@@ -164,7 +164,7 @@ const MarketOverview = () => {
       color: '#cc0000'
     }
   ];
-  
+
   return (
     <MarketOverviewContainer>
       <MarketTable>

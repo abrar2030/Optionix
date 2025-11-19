@@ -12,21 +12,21 @@ const TransactionsList = styled.div`
   gap: 10px;
   max-height: 300px;
   overflow-y: auto;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: ${props => props.theme.colors.backgroundDark};
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: ${props => props.theme.colors.border};
     border-radius: 3px;
   }
-  
+
   &::-webkit-scrollbar-thumb:hover {
     background: ${props => props.theme.colors.textSecondary};
   }
@@ -50,7 +50,7 @@ const TransactionIcon = styled.div`
   align-items: center;
   justify-content: center;
   margin-right: 12px;
-  
+
   svg {
     color: ${props => props.type === 'buy' ? props.theme.colors.success : props.theme.colors.danger};
     font-size: 18px;
@@ -130,7 +130,7 @@ const RecentTransactions = () => {
       timestamp: '3 days ago'
     }
   ];
-  
+
   return (
     <TransactionsContainer>
       {transactions.length > 0 ? (

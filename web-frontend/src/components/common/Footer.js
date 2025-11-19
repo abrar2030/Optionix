@@ -20,14 +20,14 @@ const FooterContent = styled.div`
 
 const FooterLogo = styled.div`
   margin-bottom: 16px;
-  
+
   h2 {
     font-size: 20px;
     font-weight: 700;
     color: ${props => props.theme.colors.primary};
     margin: 0;
   }
-  
+
   span {
     color: ${props => props.theme.colors.secondary};
   }
@@ -37,7 +37,7 @@ const FooterLinks = styled.div`
   display: flex;
   gap: 20px;
   margin-bottom: 16px;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     flex-direction: column;
     gap: 10px;
@@ -48,7 +48,7 @@ const FooterLink = styled.a`
   color: ${props => props.theme.colors.textSecondary};
   text-decoration: none;
   font-size: 14px;
-  
+
   &:hover {
     color: ${props => props.theme.colors.primary};
   }
@@ -63,7 +63,7 @@ const SocialLinks = styled.div`
 const SocialLink = styled.a`
   color: ${props => props.theme.colors.textSecondary};
   font-size: 20px;
-  
+
   &:hover {
     color: ${props => props.theme.colors.primary};
   }
@@ -82,7 +82,7 @@ const Footer = () => {
         <FooterLogo>
           <h2>Option<span>ix</span></h2>
         </FooterLogo>
-        
+
         <FooterLinks>
           <FooterLink href="#">About</FooterLink>
           <FooterLink href="#">Documentation</FooterLink>
@@ -90,7 +90,7 @@ const Footer = () => {
           <FooterLink href="#">Pricing</FooterLink>
           <FooterLink href="#">Contact</FooterLink>
         </FooterLinks>
-        
+
         <SocialLinks>
           <SocialLink href="#" aria-label="GitHub">
             <FiGithub />
@@ -102,7 +102,7 @@ const Footer = () => {
             <FiLinkedin />
           </SocialLink>
         </SocialLinks>
-        
+
         <Copyright>© {new Date().getFullYear()} Optionix. All rights reserved.</Copyright>
       </FooterContent>
     </FooterContainer>

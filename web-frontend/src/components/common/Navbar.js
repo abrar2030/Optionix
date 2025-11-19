@@ -32,11 +32,11 @@ const MenuButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     color: ${props => props.theme.colors.textPrimary};
   }
-  
+
   @media (min-width: ${props => props.theme.breakpoints.tablet}) {
     display: none;
   }
@@ -45,7 +45,7 @@ const MenuButton = styled.button`
 const SearchBar = styled.div`
   position: relative;
   width: 300px;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     display: none;
   }
@@ -58,7 +58,7 @@ const SearchInput = styled.input`
   padding: 8px 12px 8px 36px;
   color: ${props => props.theme.colors.textPrimary};
   width: 100%;
-  
+
   &:focus {
     outline: none;
     border-color: ${props => props.theme.colors.primary};
@@ -90,7 +90,7 @@ const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     color: ${props => props.theme.colors.textPrimary};
   }
@@ -123,7 +123,7 @@ const UserAvatar = styled.div`
   justify-content: center;
   margin-left: 16px;
   cursor: pointer;
-  
+
   &:hover {
     background-color: ${props => props.theme.colors.primaryDark};
   }
@@ -131,14 +131,14 @@ const UserAvatar = styled.div`
 
 const Navbar = ({ toggleSidebar }) => {
   const [notifications, setNotifications] = useState(3);
-  
+
   return (
     <NavbarContainer>
       <LeftSection>
         <MenuButton onClick={toggleSidebar}>
           <FiMenu />
         </MenuButton>
-        
+
         <SearchBar>
           <SearchIcon>
             <FiSearch />
@@ -146,13 +146,13 @@ const Navbar = ({ toggleSidebar }) => {
           <SearchInput placeholder="Search..." />
         </SearchBar>
       </LeftSection>
-      
+
       <RightSection>
         <IconButton>
           <FiBell />
           {notifications > 0 && <NotificationBadge>{notifications}</NotificationBadge>}
         </IconButton>
-        
+
         <UserAvatar>
           <FiUser />
         </UserAvatar>

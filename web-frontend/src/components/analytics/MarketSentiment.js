@@ -82,7 +82,7 @@ const MarketSentiment = () => {
       },
     ],
   };
-  
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -107,7 +107,7 @@ const MarketSentiment = () => {
     },
     cutout: '70%',
   };
-  
+
   return (
     <SentimentContainer>
       <ChartContainer>
@@ -117,7 +117,7 @@ const MarketSentiment = () => {
           <SentimentLabel>Bullish</SentimentLabel>
         </CenterText>
       </ChartContainer>
-      
+
       <StatsContainer>
         <StatItem>
           <StatValue>0.85</StatValue>

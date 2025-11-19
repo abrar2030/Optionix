@@ -21,7 +21,7 @@ const ChartSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -34,7 +34,7 @@ const TradingFormSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -47,7 +47,7 @@ const OptionChainSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -60,7 +60,7 @@ const OrderBookSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -89,19 +89,19 @@ const MarketItem = styled.div`
   padding: 10px 15px;
   flex: 1;
   min-width: 120px;
-  
+
   h4 {
     font-size: 12px;
     color: ${props => props.theme.colors.textSecondary};
     margin: 0 0 5px 0;
     display: flex;
     align-items: center;
-    
+
     svg {
       margin-right: 5px;
     }
   }
-  
+
   p {
     font-size: 16px;
     font-weight: 600;
@@ -112,14 +112,14 @@ const MarketItem = styled.div`
 
 const Trading = () => {
   const [selectedAsset, setSelectedAsset] = useState('BTC-USD');
-  
+
   return (
     <TradingContainer>
       <ChartSection>
         <CardTitle>
           {selectedAsset} Price Chart
         </CardTitle>
-        
+
         <MarketInfo>
           <MarketItem>
             <h4><FiDollarSign /> Price</h4>
@@ -138,20 +138,20 @@ const Trading = () => {
             <p>$1.2B</p>
           </MarketItem>
         </MarketInfo>
-        
+
         <PriceChart />
       </ChartSection>
-      
+
       <TradingFormSection>
         <CardTitle>Trade Options</CardTitle>
         <TradingForm />
       </TradingFormSection>
-      
+
       <OptionChainSection>
         <CardTitle>Option Chain</CardTitle>
         <OptionChain />
       </OptionChainSection>
-      
+
       <OrderBookSection>
         <CardTitle>Order Book</CardTitle>
         <OrderBook />

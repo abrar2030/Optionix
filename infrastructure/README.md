@@ -261,4 +261,3 @@ For contributions to this infrastructure, please follow the established change m
 ---
 
 **Note**: This infrastructure has been designed to meet the highest standards of security and compliance for financial applications. Regular reviews and updates are essential to maintain the security posture and compliance status.
-

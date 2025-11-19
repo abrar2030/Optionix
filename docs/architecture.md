@@ -124,4 +124,4 @@ Optionix is built as a modern web application with a microservices architecture.
 - Enhanced AI model capabilities
 - Mobile application development
 - Advanced analytics features
-- Integration with external trading platforms 
+- Integration with external trading platforms

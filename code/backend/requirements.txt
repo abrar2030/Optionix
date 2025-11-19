@@ -331,4 +331,3 @@ ddd-python==0.1.0
 
 # Clean architecture
 clean-architecture==0.1.0
-

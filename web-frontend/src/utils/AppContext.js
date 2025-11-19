@@ -18,10 +18,10 @@ export const AppProvider = ({ children }) => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        
+
         // In a real app, we would fetch this data from the API
         // For now, we'll use mock data since the backend isn't fully connected
-        
+
         // Mock market data
         const marketOverview = {
           assets: [
@@ -82,7 +82,7 @@ export const AppProvider = ({ children }) => {
             }
           ]
         };
-        
+
         // Mock portfolio data
         const portfolioSummary = {
           totalValue: '$24,875.65',
@@ -144,7 +144,7 @@ export const AppProvider = ({ children }) => {
             }
           ]
         };
-        
+
         setMarketData(marketOverview);
         setPortfolioData(portfolioSummary);
         setLoading(false);
@@ -154,7 +154,7 @@ export const AppProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    
+
     fetchInitialData();
   }, []);
 

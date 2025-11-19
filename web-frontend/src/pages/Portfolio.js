@@ -19,11 +19,11 @@ const SummarySection = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
@@ -62,7 +62,7 @@ const SummaryIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   svg {
     color: ${props => props.color || props.theme.colors.primary};
     font-size: 20px;
@@ -82,7 +82,7 @@ const SummaryChange = styled.div`
   color: ${props => props.isPositive ? props.theme.colors.success : props.theme.colors.danger};
   display: flex;
   align-items: center;
-  
+
   svg {
     margin-right: 4px;
   }
@@ -95,7 +95,7 @@ const PositionsSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -108,7 +108,7 @@ const AllocationSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -121,7 +121,7 @@ const PerformanceSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -134,7 +134,7 @@ const RiskSection = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -166,7 +166,7 @@ const Portfolio = () => {
             <FiTrendingUp /> +5.27% today
           </SummaryChange>
         </SummaryCard>
-        
+
         <SummaryCard>
           <SummaryHeader>
             <SummaryTitle>Profit/Loss</SummaryTitle>
@@ -179,7 +179,7 @@ const Portfolio = () => {
             <FiTrendingUp /> +12.3% this week
           </SummaryChange>
         </SummaryCard>
-        
+
         <SummaryCard>
           <SummaryHeader>
             <SummaryTitle>Margin Used</SummaryTitle>
@@ -192,7 +192,7 @@ const Portfolio = () => {
             <FiTrendingDown /> -2.5% available
           </SummaryChange>
         </SummaryCard>
-        
+
         <SummaryCard>
           <SummaryHeader>
             <SummaryTitle>Risk Level</SummaryTitle>
@@ -206,22 +206,22 @@ const Portfolio = () => {
           </SummaryChange>
         </SummaryCard>
       </SummarySection>
-      
+
       <PositionsSection>
         <CardTitle>Open Positions</CardTitle>
         <PositionsList />
       </PositionsSection>
-      
+
       <AllocationSection>
         <CardTitle>Portfolio Allocation</CardTitle>
         <PortfolioAllocation />
       </AllocationSection>
-      
+
       <PerformanceSection>
         <CardTitle>Performance History</CardTitle>
         <PerformanceChart />
       </PerformanceSection>
-      
+
       <RiskSection>
         <CardTitle>Risk Assessment</CardTitle>
         <RiskAssessment />

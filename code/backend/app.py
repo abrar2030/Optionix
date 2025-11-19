@@ -9,12 +9,23 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import uvicorn
+
 # Import enhanced authentication and authorization
-from auth import (Permission, UserRole, auth_service, get_current_user,
-                  get_current_verified_user, log_auth_event, mfa_service,
-                  rbac_service, require_permission)
+from auth import (
+    Permission,
+    UserRole,
+    auth_service,
+    get_current_user,
+    get_current_verified_user,
+    log_auth_event,
+    mfa_service,
+    rbac_service,
+    require_permission,
+)
+
 # Import enhanced compliance and security
 from compliance_enhanced import enhanced_compliance_service
+
 # Import configuration and database
 from config import settings
 from data_protection import data_protection_service
@@ -25,24 +36,53 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 from financial_standards import financial_standards_service
+
 # Import enhanced middleware
-from middleware.security import (AdvancedRateLimitMiddleware,
-                                 AuditLoggingMiddleware,
-                                 RequestValidationMiddleware,
-                                 SecurityHeadersMiddleware)
+from middleware.security import (
+    AdvancedRateLimitMiddleware,
+    AuditLoggingMiddleware,
+    RequestValidationMiddleware,
+    SecurityHeadersMiddleware,
+)
+
 # Import enhanced models
-from models import (Account, APIKey, AuditLog, FinancialAuditLog, KYCDocument,
-                    Position, SanctionsCheck, Trade, TransactionMonitoring,
-                    User)
+from models import (
+    Account,
+    APIKey,
+    AuditLog,
+    FinancialAuditLog,
+    KYCDocument,
+    Position,
+    SanctionsCheck,
+    Trade,
+    TransactionMonitoring,
+    User,
+)
+
 # Import enhanced schemas
-from schemas import (AccountCreate, AccountResponse, ComplianceCheckResponse,
-                     ErrorResponse, HealthCheckResponse, KYCDataRequest,
-                     MarketDataRequest, MFASetupResponse, MFAVerifyRequest,
-                     PositionHealthResponse, PositionResponse,
-                     RiskMetricsResponse, TokenResponse, TradeRequest,
-                     TradeResponse, UserCreate, UserLogin, UserResponse,
-                     VolatilityResponse)
+from schemas import (
+    AccountCreate,
+    AccountResponse,
+    ComplianceCheckResponse,
+    ErrorResponse,
+    HealthCheckResponse,
+    KYCDataRequest,
+    MarketDataRequest,
+    MFASetupResponse,
+    MFAVerifyRequest,
+    PositionHealthResponse,
+    PositionResponse,
+    RiskMetricsResponse,
+    TokenResponse,
+    TradeRequest,
+    TradeResponse,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    VolatilityResponse,
+)
 from security import security_service
+
 # Import services
 from services.blockchain_service import BlockchainService
 from services.financial_service import FinancialCalculationService

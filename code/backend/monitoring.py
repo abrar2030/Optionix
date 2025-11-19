@@ -32,8 +32,17 @@ import redis
 import requests
 from celery import Celery
 from cryptography.fernet import Fernet
-from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, Integer,
-                        String, Text, create_engine)
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 

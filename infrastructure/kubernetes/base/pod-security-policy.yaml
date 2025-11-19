@@ -15,12 +15,12 @@ spec:
   requiredDropCapabilities:
     - ALL
   allowedCapabilities: []
-  
+
   # Host namespaces
   hostNetwork: false
   hostIPC: false
   hostPID: false
-  
+
   # Volumes and file systems
   volumes:
     - 'configMap'
@@ -31,7 +31,7 @@ spec:
     - 'persistentVolumeClaim'
   allowedHostPaths: []
   readOnlyRootFilesystem: true
-  
+
   # Users and groups
   runAsUser:
     rule: 'MustRunAsNonRoot'
@@ -50,11 +50,11 @@ spec:
     ranges:
       - min: 1000
         max: 65535
-  
+
   # SELinux
   seLinux:
     rule: 'RunAsAny'
-  
+
   # Forbidden sysctls
   forbiddenSysctls:
     - '*'
@@ -84,4 +84,3 @@ subjects:
 - kind: Group
   name: system:serviceaccounts:optionix
   apiGroup: rbac.authorization.k8s.io
-

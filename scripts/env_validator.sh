@@ -39,12 +39,12 @@ step_error() {
 # Function to check and install Python dependencies
 check_python_deps() {
   section_header "Checking Python Environment"
-  
+
   # Check Python version
   if command_exists python3; then
     PYTHON_VERSION=$(python3 --version)
     step_success "Python installed: $PYTHON_VERSION"
-    
+
     # Check pip
     if command_exists pip3; then
       PIP_VERSION=$(pip3 --version)
@@ -59,7 +59,7 @@ check_python_deps() {
         step_error "Could not install pip. Please install manually."
       fi
     fi
-    
+
     # Check virtual environment
     if command_exists python3 && python3 -c "import venv" &>/dev/null; then
       step_success "Python venv module is available"
@@ -73,13 +73,13 @@ check_python_deps() {
         step_error "Could not install venv. Please install manually."
       fi
     fi
-    
+
     # Check if we're in a virtual environment
     if [ -n "$VIRTUAL_ENV" ]; then
       step_success "Currently in a virtual environment: $VIRTUAL_ENV"
     else
       step_info "Not currently in a virtual environment"
-      
+
       # Check if venv directory exists
       if [ -d "venv" ]; then
         step_info "Virtual environment directory exists, activating..."
@@ -92,7 +92,7 @@ check_python_deps() {
         step_success "Virtual environment created and activated"
       fi
     fi
-    
+
     # Install backend dependencies if requirements.txt exists
     if [ -f "code/backend/requirements.txt" ]; then
       step_info "Installing backend dependencies..."
@@ -101,7 +101,7 @@ check_python_deps() {
     else
       step_error "Backend requirements.txt not found"
     fi
-    
+
     # Install AI model dependencies if requirements.txt exists
     if [ -f "code/ai_models/requirements.txt" ]; then
       step_info "Installing AI model dependencies..."
@@ -116,17 +116,17 @@ check_python_deps() {
 # Function to check and install Node.js dependencies
 check_node_deps() {
   section_header "Checking Node.js Environment"
-  
+
   # Check Node.js
   if command_exists node; then
     NODE_VERSION=$(node --version)
     step_success "Node.js installed: $NODE_VERSION"
-    
+
     # Check npm
     if command_exists npm; then
       NPM_VERSION=$(npm --version)
       step_success "npm installed: $NPM_VERSION"
-      
+
       # Install frontend dependencies
       if [ -f "code/web-frontend/package.json" ]; then
         step_info "Installing frontend dependencies..."
@@ -137,7 +137,7 @@ check_node_deps() {
       else
         step_error "Frontend package.json not found"
       fi
-      
+
       # Install mobile dependencies
       if [ -f "code/mobile-frontend/package.json" ]; then
         step_info "Installing mobile dependencies..."
@@ -148,7 +148,7 @@ check_node_deps() {
       else
         step_error "Mobile package.json not found"
       fi
-      
+
       # Install blockchain dependencies
       if [ -f "code/blockchain/package.json" ]; then
         step_info "Installing blockchain dependencies..."
@@ -168,12 +168,12 @@ check_node_deps() {
 # Function to check and install Docker
 check_docker() {
   section_header "Checking Docker Environment"
-  
+
   # Check Docker
   if command_exists docker; then
     DOCKER_VERSION=$(docker --version)
     step_success "Docker installed: $DOCKER_VERSION"
-    
+
     # Check Docker Compose
     if command_exists docker-compose; then
       COMPOSE_VERSION=$(docker-compose --version)
@@ -188,7 +188,7 @@ check_docker() {
         step_error "Could not install Docker Compose. Please install manually."
       fi
     fi
-    
+
     # Check if Docker daemon is running
     if docker info &>/dev/null; then
       step_success "Docker daemon is running"
@@ -203,7 +203,7 @@ check_docker() {
 # Function to check and install database
 check_database() {
   section_header "Checking Database Environment"
-  
+
   # Check PostgreSQL
   if command_exists psql; then
     PSQL_VERSION=$(psql --version)
@@ -218,14 +218,14 @@ check_database() {
       step_error "Could not install PostgreSQL client. Please install manually."
     fi
   fi
-  
+
   # Check if PostgreSQL server is running
   if command_exists pg_isready && pg_isready &>/dev/null; then
     step_success "PostgreSQL server is running"
   else
     step_info "PostgreSQL server is not running or not installed locally"
     step_info "Checking for Docker PostgreSQL container..."
-    
+
     if command_exists docker && docker ps | grep -q postgres; then
       step_success "PostgreSQL Docker container is running"
     else
@@ -238,7 +238,7 @@ check_database() {
       fi
     fi
   fi
-  
+
   # Check Redis
   if command_exists redis-cli; then
     REDIS_VERSION=$(redis-cli --version)
@@ -253,14 +253,14 @@ check_database() {
       step_error "Could not install Redis client. Please install manually."
     fi
   fi
-  
+
   # Check if Redis server is running
   if command_exists redis-cli && redis-cli ping &>/dev/null; then
     step_success "Redis server is running"
   else
     step_info "Redis server is not running or not installed locally"
     step_info "Checking for Docker Redis container..."
-    
+
     if command_exists docker && docker ps | grep -q redis; then
       step_success "Redis Docker container is running"
     else
@@ -278,12 +278,12 @@ check_database() {
 # Function to check and configure Git
 check_git() {
   section_header "Checking Git Configuration"
-  
+
   # Check Git
   if command_exists git; then
     GIT_VERSION=$(git --version)
     step_success "Git installed: $GIT_VERSION"
-    
+
     # Check Git configuration
     if git config --get user.name &>/dev/null && git config --get user.email &>/dev/null; then
       GIT_USER=$(git config --get user.name)
@@ -294,11 +294,11 @@ check_git() {
       echo "  git config --global user.name \"Your Name\""
       echo "  git config --global user.email \"your.email@example.com\""
     fi
-    
+
     # Check if this is a Git repository
     if [ -d ".git" ]; then
       step_success "Current directory is a Git repository"
-      
+
       # Check remote
       if git remote -v | grep -q origin; then
         REMOTE_URL=$(git remote get-url origin)
@@ -320,13 +320,13 @@ check_git() {
 # Function to validate project structure
 validate_project_structure() {
   section_header "Validating Project Structure"
-  
+
   # Check if we're in the project root
   if [ -f "README.md" ] && [ -d "code" ]; then
     step_success "Current directory appears to be the project root"
   else
     step_error "Current directory does not appear to be the project root"
-    
+
     # Try to find the project root
     if [ -d "../Optionix" ]; then
       step_info "Project root found at ../Optionix, changing directory..."
@@ -339,7 +339,7 @@ validate_project_structure() {
       return 1
     fi
   fi
-  
+
   # Check required directories
   for dir in code code/backend code/web-frontend; do
     if [ -d "$dir" ]; then
@@ -350,7 +350,7 @@ validate_project_structure() {
       step_info "Created directory: $dir"
     fi
   done
-  
+
   # Check optional directories
   for dir in code/ai_models code/blockchain code/mobile-frontend docs infrastructure resources; do
     if [ -d "$dir" ]; then
@@ -361,7 +361,7 @@ validate_project_structure() {
       step_info "Created directory: $dir"
     fi
   done
-  
+
   # Check required files
   for file in README.md .gitignore; do
     if [ -f "$file" ]; then
@@ -372,14 +372,14 @@ validate_project_structure() {
       step_info "Created empty file: $file"
     fi
   done
-  
+
   return 0
 }
 
 # Function to create missing scripts
 create_missing_scripts() {
   section_header "Creating Missing Scripts"
-  
+
   # Check and create setup script
   if [ ! -f "setup_optionix_env.sh" ]; then
     step_info "Creating setup_optionix_env.sh..."
@@ -431,7 +431,7 @@ EOF
   else
     step_success "setup_optionix_env.sh already exists"
   fi
-  
+
   # Check and create run script
   if [ ! -f "run_optionix.sh" ]; then
     step_info "Creating run_optionix.sh..."
@@ -473,7 +473,7 @@ EOF
   else
     step_success "run_optionix.sh already exists"
   fi
-  
+
   # Check and create lint script
   if [ ! -f "lint-all.sh" ]; then
     step_info "Creating lint-all.sh..."
@@ -524,7 +524,7 @@ EOF
   else
     step_success "lint-all.sh already exists"
   fi
-  
+
   # Check and create test script
   if [ ! -f "test_backend.sh" ]; then
     step_info "Creating test_backend.sh..."
@@ -567,7 +567,7 @@ EOF
 # Function to check for Docker Compose configuration
 check_docker_compose() {
   section_header "Checking Docker Compose Configuration"
-  
+
   if [ ! -f "docker-compose.yml" ]; then
     step_info "Creating docker-compose.yml..."
     cat > docker-compose.yml << 'EOF'
@@ -584,12 +584,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    
+
   redis:
     image: redis:6
     ports:
       - "6379:6379"
-    
+
   backend:
     build: ./code/backend
     ports:
@@ -600,7 +600,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/optionix
       - REDIS_URL=redis://redis:6379/0
-    
+
   frontend:
     build: ./code/web-frontend
     ports:
@@ -621,21 +621,21 @@ EOF
 main() {
   echo -e "${YELLOW}=== Optionix Environment Validator ===${NC}"
   echo -e "${BLUE}$(date)${NC}"
-  
+
   # Validate project structure first
   validate_project_structure || exit 1
-  
+
   # Check all components
   check_git
   check_python_deps
   check_node_deps
   check_docker
   check_database
-  
+
   # Create missing scripts and configurations
   create_missing_scripts
   check_docker_compose
-  
+
   # Print summary
   section_header "Environment Validation Summary"
   echo -e "${GREEN}Environment validation completed!${NC}"

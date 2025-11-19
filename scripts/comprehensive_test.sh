@@ -20,9 +20,9 @@ command_exists() {
 run_test() {
   local test_name="$1"
   local test_command="$2"
-  
+
   echo -e "${BLUE}Running ${test_name}...${NC}"
-  
+
   if eval "$test_command"; then
     echo -e "${GREEN}✓ ${test_name} passed${NC}"
     return 0
@@ -108,7 +108,7 @@ if command_exists node; then
   else
     FAILED_TESTS=$((FAILED_TESTS + 1))
   fi
-  
+
   # Run frontend component tests
   TOTAL_TESTS=$((TOTAL_TESTS + 1))
   if run_test "Frontend Component Tests" "cd code/web-frontend && npm run test:components"; then

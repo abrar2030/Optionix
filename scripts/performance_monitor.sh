@@ -103,7 +103,7 @@ parse_args() {
         ;;
     esac
   done
-  
+
   if [ -z "$COMMAND" ]; then
     step_error "No command specified. Use --help for usage information." "exit"
   fi
@@ -112,7 +112,7 @@ parse_args() {
 # Check requirements
 check_requirements() {
   section_header "Checking Requirements"
-  
+
   # Create report directory if it doesn't exist
   if [ ! -d "$REPORT_DIR" ]; then
     mkdir -p "$REPORT_DIR"
@@ -120,7 +120,7 @@ check_requirements() {
   else
     step_success "Report directory exists: $REPORT_DIR"
   fi
-  
+
   # Check required tools based on command
   case $COMMAND in
     monitor)
@@ -138,7 +138,7 @@ check_requirements() {
       else
         step_error "curl is required but not installed" "exit"
       fi
-      
+
       if command_exists ab; then
         step_success "Apache Bench (ab) is installed"
       else
@@ -179,26 +179,26 @@ check_requirements() {
 # Monitor system performance
 monitor_performance() {
   section_header "Monitoring System Performance"
-  
+
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
   CPU_LOG="$REPORT_DIR/cpu_${TIMESTAMP}.log"
   MEMORY_LOG="$REPORT_DIR/memory_${TIMESTAMP}.log"
   DISK_LOG="$REPORT_DIR/disk_${TIMESTAMP}.log"
-  
+
   step_info "Monitoring system for $DURATION seconds with $INTERVAL second intervals"
   step_info "Logs will be saved to $REPORT_DIR"
-  
+
   # Initialize log files with headers
   echo "Timestamp,CPU_User,CPU_System,CPU_Idle,CPU_IOWait" > "$CPU_LOG"
   echo "Timestamp,Total_Memory,Used_Memory,Free_Memory,Cached_Memory,Buffer_Memory" > "$MEMORY_LOG"
   echo "Timestamp,Disk_Read_Ops,Disk_Write_Ops,Disk_Read_KB,Disk_Write_KB" > "$DISK_LOG"
-  
+
   # Start monitoring
   END_TIME=$(($(date +%s) + DURATION))
-  
+
   while [ $(date +%s) -lt $END_TIME ]; do
     CURRENT_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-    
+
     # CPU usage
     CPU_STATS=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100-$1}')
     CPU_USER=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}')
@@ -206,7 +206,7 @@ monitor_performance() {
     CPU_IDLE=$(top -bn1 | grep "Cpu(s)" | awk '{print $8}')
     CPU_IOWAIT=$(top -bn1 | grep "Cpu(s)" | awk '{print $10}')
     echo "$CURRENT_TIMESTAMP,$CPU_USER,$CPU_SYSTEM,$CPU_IDLE,$CPU_IOWAIT" >> "$CPU_LOG"
-    
+
     # Memory usage
     TOTAL_MEM=$(free -m | grep Mem | awk '{print $2}')
     USED_MEM=$(free -m | grep Mem | awk '{print $3}')
@@ -214,7 +214,7 @@ monitor_performance() {
     CACHED_MEM=$(free -m | grep Mem | awk '{print $6}')
     BUFFER_MEM=$(free -m | grep Mem | awk '{print $5}')
     echo "$CURRENT_TIMESTAMP,$TOTAL_MEM,$USED_MEM,$FREE_MEM,$CACHED_MEM,$BUFFER_MEM" >> "$MEMORY_LOG"
-    
+
     # Disk I/O
     if [ -f "/proc/diskstats" ]; then
       DISK_STATS=$(cat /proc/diskstats | grep -w "sda" || echo "0 0 0 0 0 0 0 0 0 0 0")
@@ -226,13 +226,13 @@ monitor_performance() {
     else
       echo "$CURRENT_TIMESTAMP,0,0,0,0" >> "$DISK_LOG"
     fi
-    
+
     # Display current stats
     echo -ne "CPU Usage: ${CPU_STATS}% | Memory Used: ${USED_MEM}/${TOTAL_MEM} MB | Time left: $((END_TIME - $(date +%s))) seconds\r"
-    
+
     sleep $INTERVAL
   done
-  
+
   echo
   step_success "Monitoring completed"
   step_info "CPU log: $CPU_LOG"
@@ -243,22 +243,22 @@ monitor_performance() {
 # Run API benchmarks
 run_benchmarks() {
   section_header "Running API Benchmarks"
-  
+
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
   BENCHMARK_LOG="$REPORT_DIR/benchmark_${TIMESTAMP}.log"
-  
+
   step_info "Running benchmarks against $API_ENDPOINT"
   step_info "Results will be saved to $BENCHMARK_LOG"
-  
+
   # Initialize log file with header
   echo "Endpoint,Requests,Concurrency,Time_Taken,Requests_per_second,Time_per_request,Transfer_rate" > "$BENCHMARK_LOG"
-  
+
   # Check if API is running
   if ! curl -s "$API_ENDPOINT" > /dev/null; then
     step_error "API endpoint $API_ENDPOINT is not responding. Please ensure the API is running."
     return 1
   fi
-  
+
   # Define benchmark scenarios
   declare -A ENDPOINTS
   ENDPOINTS=(
@@ -267,17 +267,17 @@ run_benchmarks() {
     ["volatility"]="/api/volatility"
     ["strategies"]="/api/strategies"
   )
-  
+
   # Run benchmarks for each endpoint
   for endpoint_name in "${!ENDPOINTS[@]}"; do
     endpoint_path=${ENDPOINTS[$endpoint_name]}
     full_url="${API_ENDPOINT}${endpoint_path}"
-    
+
     step_info "Benchmarking endpoint: $endpoint_name ($full_url)"
-    
+
     # Run Apache Bench
     AB_OUTPUT=$(ab -n 1000 -c 10 -k "$full_url" 2>&1)
-    
+
     # Extract metrics
     REQUESTS=$(echo "$AB_OUTPUT" | grep "Complete requests:" | awk '{print $3}')
     CONCURRENCY=$(echo "$AB_OUTPUT" | grep "Concurrency Level:" | awk '{print $3}')
@@ -285,10 +285,10 @@ run_benchmarks() {
     RPS=$(echo "$AB_OUTPUT" | grep "Requests per second:" | awk '{print $4}')
     TIME_PER_REQUEST=$(echo "$AB_OUTPUT" | grep -A 1 "Time per request:" | tail -n 1 | awk '{print $4}')
     TRANSFER_RATE=$(echo "$AB_OUTPUT" | grep "Transfer rate:" | awk '{print $3}')
-    
+
     # Log results
     echo "$endpoint_name,$REQUESTS,$CONCURRENCY,$TIME_TAKEN,$RPS,$TIME_PER_REQUEST,$TRANSFER_RATE" >> "$BENCHMARK_LOG"
-    
+
     # Display results
     echo "  Requests: $REQUESTS"
     echo "  Concurrency: $CONCURRENCY"
@@ -298,7 +298,7 @@ run_benchmarks() {
     echo "  Transfer rate: $TRANSFER_RATE KB/s"
     echo
   done
-  
+
   step_success "Benchmarking completed"
   step_info "Benchmark log: $BENCHMARK_LOG"
 }
@@ -306,22 +306,22 @@ run_benchmarks() {
 # Run load tests
 run_load_tests() {
   section_header "Running Load Tests"
-  
+
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
   LOADTEST_LOG="$REPORT_DIR/loadtest_${TIMESTAMP}.log"
-  
+
   step_info "Running load tests against $API_ENDPOINT with $LOAD_TEST_USERS concurrent users for $LOAD_TEST_DURATION seconds"
   step_info "Results will be saved to $LOADTEST_LOG"
-  
+
   # Initialize log file with header
   echo "Endpoint,Requests,Failed,RPS,Min_Latency,Mean_Latency,Max_Latency,50th_Percentile,90th_Percentile,99th_Percentile" > "$LOADTEST_LOG"
-  
+
   # Check if API is running
   if ! curl -s "$API_ENDPOINT" > /dev/null; then
     step_error "API endpoint $API_ENDPOINT is not responding. Please ensure the API is running."
     return 1
   fi
-  
+
   # Define load test scenarios
   declare -A ENDPOINTS
   ENDPOINTS=(
@@ -330,17 +330,17 @@ run_load_tests() {
     ["volatility"]="/api/volatility"
     ["strategies"]="/api/strategies"
   )
-  
+
   # Run load tests for each endpoint
   for endpoint_name in "${!ENDPOINTS[@]}"; do
     endpoint_path=${ENDPOINTS[$endpoint_name]}
     full_url="${API_ENDPOINT}${endpoint_path}"
-    
+
     step_info "Load testing endpoint: $endpoint_name ($full_url)"
-    
+
     # Run Apache Bench with more intensive parameters
     AB_OUTPUT=$(ab -n $((LOAD_TEST_USERS * 100)) -c $LOAD_TEST_USERS -t $LOAD_TEST_DURATION -k "$full_url" 2>&1)
-    
+
     # Extract metrics
     REQUESTS=$(echo "$AB_OUTPUT" | grep "Complete requests:" | awk '{print $3}')
     FAILED=$(echo "$AB_OUTPUT" | grep "Failed requests:" | awk '{print $3}')
@@ -351,10 +351,10 @@ run_load_tests() {
     PERCENTILE_50=$(echo "$AB_OUTPUT" | grep "50%" | awk '{print $2}')
     PERCENTILE_90=$(echo "$AB_OUTPUT" | grep "90%" | awk '{print $2}')
     PERCENTILE_99=$(echo "$AB_OUTPUT" | grep "99%" | awk '{print $2}')
-    
+
     # Log results
     echo "$endpoint_name,$REQUESTS,$FAILED,$RPS,$MIN_LATENCY,$MEAN_LATENCY,$MAX_LATENCY,$PERCENTILE_50,$PERCENTILE_90,$PERCENTILE_99" >> "$LOADTEST_LOG"
-    
+
     # Display results
     echo "  Requests: $REQUESTS"
     echo "  Failed: $FAILED"
@@ -363,7 +363,7 @@ run_load_tests() {
     echo "  Percentiles (50/90/99): $PERCENTILE_50/$PERCENTILE_90/$PERCENTILE_99 ms"
     echo
   done
-  
+
   step_success "Load testing completed"
   step_info "Load test log: $LOADTEST_LOG"
 }
@@ -371,25 +371,25 @@ run_load_tests() {
 # Generate performance report
 generate_report() {
   section_header "Generating Performance Report"
-  
+
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
   REPORT_FILE="$REPORT_DIR/performance_report_${TIMESTAMP}.html"
-  
+
   step_info "Generating performance report: $REPORT_FILE"
-  
+
   # Find latest log files
   CPU_LOG=$(ls -t "$REPORT_DIR"/cpu_*.log 2>/dev/null | head -n 1)
   MEMORY_LOG=$(ls -t "$REPORT_DIR"/memory_*.log 2>/dev/null | head -n 1)
   DISK_LOG=$(ls -t "$REPORT_DIR"/disk_*.log 2>/dev/null | head -n 1)
   BENCHMARK_LOG=$(ls -t "$REPORT_DIR"/benchmark_*.log 2>/dev/null | head -n 1)
   LOADTEST_LOG=$(ls -t "$REPORT_DIR"/loadtest_*.log 2>/dev/null | head -n 1)
-  
+
   # Check if log files exist
   if [ -z "$CPU_LOG" ] && [ -z "$MEMORY_LOG" ] && [ -z "$BENCHMARK_LOG" ] && [ -z "$LOADTEST_LOG" ]; then
     step_error "No log files found in $REPORT_DIR. Please run monitoring, benchmarking, or load testing first."
     return 1
   fi
-  
+
   # Generate HTML report
   cat > "$REPORT_FILE" << EOF
 <!DOCTYPE html>
@@ -410,7 +410,7 @@ generate_report() {
 <body>
   <h1>Optionix Performance Report</h1>
   <p><strong>Generated:</strong> $(date)</p>
-  
+
   <div class="section">
     <h2>Summary</h2>
     <p>This report contains performance metrics for the Optionix application.</p>
@@ -422,7 +422,7 @@ EOF
     cat >> "$REPORT_FILE" << EOF
   <div class="section">
     <h2>System Monitoring</h2>
-    
+
 EOF
 
     if [ -n "$CPU_LOG" ]; then
@@ -573,7 +573,7 @@ EOF
 EOF
 
   step_success "Performance report generated: $REPORT_FILE"
-  
+
   # Try to open the report in a browser if possible
   if command_exists xdg-open; then
     xdg-open "$REPORT_FILE" &>/dev/null &
@@ -588,13 +588,13 @@ EOF
 main() {
   echo -e "${YELLOW}=== Optionix Performance Monitoring Tool ===${NC}"
   echo -e "${BLUE}$(date)${NC}"
-  
+
   # Parse command line arguments
   parse_args "$@"
-  
+
   # Check requirements
   check_requirements
-  
+
   # Execute command
   case $COMMAND in
     monitor)
@@ -610,7 +610,7 @@ main() {
       generate_report
       ;;
   esac
-  
+
   echo -e "\n${GREEN}Performance operation completed successfully!${NC}"
 }
 

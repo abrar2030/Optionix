@@ -204,4 +204,4 @@ For development support:
 - Check documentation
 - Review existing issues
 - Contact development team
-- Join community chat 
+- Join community chat

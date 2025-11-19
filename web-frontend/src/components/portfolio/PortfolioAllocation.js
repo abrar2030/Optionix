@@ -64,7 +64,7 @@ const PortfolioAllocation = () => {
       },
     ],
   };
-  
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -89,7 +89,7 @@ const PortfolioAllocation = () => {
     },
     cutout: '70%',
   };
-  
+
   const legendItems = [
     { label: 'BTC Options', value: '35%', color: '#2962ff' },
     { label: 'ETH Options', value: '25%', color: '#26a69a' },
@@ -97,13 +97,13 @@ const PortfolioAllocation = () => {
     { label: 'AAPL Options', value: '15%', color: '#42a5f5' },
     { label: 'TSLA Options', value: '10%', color: '#ec407a' },
   ];
-  
+
   return (
     <>
       <ChartContainer>
         <Doughnut data={data} options={options} />
       </ChartContainer>
-      
+
       <LegendContainer>
         {legendItems.map((item, index) => (
           <LegendItem key={index}>

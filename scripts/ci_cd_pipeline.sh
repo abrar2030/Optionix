@@ -42,9 +42,9 @@ step_error() {
 # Check for required tools
 check_requirements() {
   section_header "Checking Requirements"
-  
+
   local missing_tools=0
-  
+
   for tool in git docker npm python3; do
     if command_exists "$tool"; then
       step_success "$tool is installed"
@@ -53,11 +53,11 @@ check_requirements() {
       missing_tools=$((missing_tools + 1))
     fi
   done
-  
+
   if [ $missing_tools -gt 0 ]; then
     step_error "Please install the missing tools before proceeding" "exit"
   fi
-  
+
   step_success "All required tools are installed"
 }
 
@@ -69,7 +69,7 @@ parse_args() {
   SKIP_LINT=false
   SKIP_BUILD=false
   SKIP_DEPLOY=false
-  
+
   while [[ $# -gt 0 ]]; do
     case $1 in
       --environment=*)
@@ -108,7 +108,7 @@ parse_args() {
         ;;
     esac
   done
-  
+
   step_info "Environment: $ENVIRONMENT"
   [ "$SKIP_TESTS" = true ] && step_info "Tests will be skipped"
   [ "$SKIP_LINT" = true ] && step_info "Linting will be skipped"
@@ -119,7 +119,7 @@ parse_args() {
 # Checkout and update code
 checkout_code() {
   section_header "Checking out code"
-  
+
   if [ -d ".git" ]; then
     step_info "Git repository already exists, pulling latest changes"
     git pull
@@ -127,10 +127,10 @@ checkout_code() {
     step_info "Cloning repository"
     git clone https://github.com/abrar2030/Optionix.git .
   fi
-  
+
   step_info "Current branch: $(git branch --show-current)"
   step_info "Latest commit: $(git log -1 --pretty=%B)"
-  
+
   step_success "Code checkout complete"
 }
 
@@ -140,9 +140,9 @@ run_lint() {
     step_info "Skipping linting as requested"
     return 0
   fi
-  
+
   section_header "Running Linters"
-  
+
   # Backend linting
   if [ -d "code/backend" ]; then
     step_info "Linting backend code"
@@ -154,7 +154,7 @@ run_lint() {
     fi
     cd - > /dev/null
   fi
-  
+
   # Frontend linting
   if [ -d "code/web-frontend" ]; then
     step_info "Linting frontend code"
@@ -166,7 +166,7 @@ run_lint() {
     fi
     cd - > /dev/null
   fi
-  
+
   # Mobile linting
   if [ -d "code/mobile-frontend" ]; then
     step_info "Linting mobile code"
@@ -178,7 +178,7 @@ run_lint() {
     fi
     cd - > /dev/null
   fi
-  
+
   step_success "Linting complete"
 }
 
@@ -188,9 +188,9 @@ run_tests() {
     step_info "Skipping tests as requested"
     return 0
   fi
-  
+
   section_header "Running Tests"
-  
+
   # Run the comprehensive test script if it exists
   if [ -f "./optionix_automation/comprehensive_test.sh" ]; then
     step_info "Running comprehensive test suite"
@@ -203,7 +203,7 @@ run_tests() {
       python -m pytest || step_error "Backend tests failed"
       cd - > /dev/null
     fi
-    
+
     # Frontend tests
     if [ -d "code/web-frontend" ]; then
       step_info "Running frontend tests"
@@ -216,7 +216,7 @@ run_tests() {
       cd - > /dev/null
     fi
   fi
-  
+
   step_success "Tests complete"
 }
 
@@ -226,9 +226,9 @@ build_app() {
     step_info "Skipping build as requested"
     return 0
   fi
-  
+
   section_header "Building Application"
-  
+
   # Backend build (if needed)
   if [ -d "code/backend" ]; then
     step_info "Preparing backend"
@@ -238,7 +238,7 @@ build_app() {
     fi
     cd - > /dev/null
   fi
-  
+
   # Frontend build
   if [ -d "code/web-frontend" ]; then
     step_info "Building frontend"
@@ -251,7 +251,7 @@ build_app() {
     fi
     cd - > /dev/null
   fi
-  
+
   # Mobile build
   if [ -d "code/mobile-frontend" ] && [ "$ENVIRONMENT" = "production" ]; then
     step_info "Building mobile app"
@@ -264,7 +264,7 @@ build_app() {
     fi
     cd - > /dev/null
   fi
-  
+
   step_success "Build complete"
 }
 
@@ -274,9 +274,9 @@ create_containers() {
     step_info "Skipping container creation as build is skipped"
     return 0
   fi
-  
+
   section_header "Creating Docker Containers"
-  
+
   if command_exists docker; then
     # Backend container
     if [ -f "code/backend/Dockerfile" ]; then
@@ -300,7 +300,7 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 EOF
       docker build -t optionix-backend:latest code/backend
     fi
-    
+
     # Frontend container
     if [ -d "code/web-frontend/build" ]; then
       if [ -f "code/web-frontend/Dockerfile" ]; then
@@ -322,7 +322,7 @@ EOF
     else
       step_info "Frontend build directory not found, skipping container creation"
     fi
-    
+
     step_success "Container creation complete"
   else
     step_info "Docker not installed, skipping container creation"
@@ -335,9 +335,9 @@ deploy_app() {
     step_info "Skipping deployment as requested"
     return 0
   fi
-  
+
   section_header "Deploying Application to $ENVIRONMENT"
-  
+
   case $ENVIRONMENT in
     development)
       step_info "Deploying to development environment"
@@ -357,7 +357,7 @@ services:
       - "8000:8000"
     environment:
       - ENVIRONMENT=development
-    
+
   frontend:
     image: optionix-frontend:latest
     ports:
@@ -373,7 +373,7 @@ EOF
         docker run -d -p 80:80 --name optionix-frontend optionix-frontend:latest
       fi
       ;;
-      
+
     staging)
       step_info "Deploying to staging environment"
       # For staging, we might push to a staging server or Kubernetes cluster
@@ -383,7 +383,7 @@ EOF
         step_info "No Kubernetes configuration found for staging"
       fi
       ;;
-      
+
     production)
       step_info "Deploying to production environment"
       # For production, we might use a more robust deployment strategy
@@ -393,12 +393,12 @@ EOF
         step_info "No Kubernetes configuration found for production"
       fi
       ;;
-      
+
     *)
       step_error "Unknown environment: $ENVIRONMENT" "exit"
       ;;
   esac
-  
+
   step_success "Deployment complete"
 }
 
@@ -406,16 +406,16 @@ EOF
 main() {
   echo -e "${YELLOW}=== Optionix CI/CD Pipeline ===${NC}"
   echo -e "${BLUE}$(date)${NC}"
-  
+
   # Parse command line arguments
   parse_args "$@"
-  
+
   # Check requirements
   check_requirements
-  
+
   # Start timer
   START_TIME=$(date +%s)
-  
+
   # Run pipeline steps
   checkout_code
   run_lint
@@ -423,13 +423,13 @@ main() {
   build_app
   create_containers
   deploy_app
-  
+
   # Calculate duration
   END_TIME=$(date +%s)
   DURATION=$((END_TIME - START_TIME))
   MINUTES=$((DURATION / 60))
   SECONDS=$((DURATION % 60))
-  
+
   # Print summary
   section_header "Pipeline Summary"
   echo -e "Environment: ${BLUE}${ENVIRONMENT}${NC}"

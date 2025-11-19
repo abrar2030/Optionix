@@ -45,7 +45,7 @@ const TimeButton = styled.button`
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: ${props => props.active ? props.theme.colors.primary : 'rgba(41, 98, 255, 0.1)'};
     color: ${props => props.active ? 'white' : props.theme.colors.primary};
@@ -54,7 +54,7 @@ const TimeButton = styled.button`
 
 const PriceChart = () => {
   const [timeframe, setTimeframe] = React.useState('1D');
-  
+
   // Sample data
   const data = {
     labels: ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
@@ -74,7 +74,7 @@ const PriceChart = () => {
       }
     ]
   };
-  
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -138,13 +138,13 @@ const PriceChart = () => {
       }
     }
   };
-  
+
   return (
     <>
       <TimeframeSelector>
         {['1H', '1D', '1W', '1M', '3M', 'YTD', '1Y', 'ALL'].map(time => (
-          <TimeButton 
-            key={time} 
+          <TimeButton
+            key={time}
             active={timeframe === time}
             onClick={() => setTimeframe(time)}
           >

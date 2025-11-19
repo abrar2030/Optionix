@@ -26,7 +26,7 @@ const Input = styled.input`
   padding: 10px 12px;
   color: ${props => props.theme.colors.textPrimary};
   font-size: 14px;
-  
+
   &:focus {
     outline: none;
     border-color: ${props => props.theme.colors.primary};
@@ -46,7 +46,7 @@ const Select = styled.select`
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
-  
+
   &:focus {
     outline: none;
     border-color: ${props => props.theme.colors.primary};
@@ -71,7 +71,7 @@ const ToggleButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: ${props => props.active ? props.activeColor : 'rgba(42, 46, 57, 0.8)'};
   }
@@ -91,11 +91,11 @@ const SubmitButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     background-color: ${props => props.theme.colors.primaryDark};
   }
-  
+
   svg {
     margin-right: 8px;
   }
@@ -113,7 +113,7 @@ const PriceRow = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  
+
   &:last-child {
     margin-bottom: 0;
     padding-top: 8px;
@@ -141,52 +141,52 @@ const TotalValue = styled.span`
 const TradingForm = () => {
   const [optionType, setOptionType] = useState('call');
   const [positionType, setPositionType] = useState('buy');
-  
+
   return (
     <TradingFormContainer>
       <ToggleContainer>
-        <ToggleButton 
-          active={optionType === 'call'} 
+        <ToggleButton
+          active={optionType === 'call'}
           activeColor="#26a69a"
           onClick={() => setOptionType('call')}
         >
           Call
         </ToggleButton>
-        <ToggleButton 
-          active={optionType === 'put'} 
+        <ToggleButton
+          active={optionType === 'put'}
           activeColor="#ef5350"
           onClick={() => setOptionType('put')}
         >
           Put
         </ToggleButton>
       </ToggleContainer>
-      
+
       <ToggleContainer>
-        <ToggleButton 
-          active={positionType === 'buy'} 
+        <ToggleButton
+          active={positionType === 'buy'}
           activeColor="#26a69a"
           onClick={() => setPositionType('buy')}
         >
           Buy
         </ToggleButton>
-        <ToggleButton 
-          active={positionType === 'sell'} 
+        <ToggleButton
+          active={positionType === 'sell'}
           activeColor="#ef5350"
           onClick={() => setPositionType('sell')}
         >
           Sell
         </ToggleButton>
       </ToggleContainer>
-      
+
       <FormGroup>
         <Label>Strike Price</Label>
-        <Input 
-          type="number" 
-          placeholder="Enter strike price" 
+        <Input
+          type="number"
+          placeholder="Enter strike price"
           defaultValue="45000"
         />
       </FormGroup>
-      
+
       <FormGroup>
         <Label>Expiration Date</Label>
         <Select>
@@ -197,17 +197,17 @@ const TradingForm = () => {
           <option value="20250720">Jul 20, 2025</option>
         </Select>
       </FormGroup>
-      
+
       <FormGroup>
         <Label>Quantity (Contracts)</Label>
-        <Input 
-          type="number" 
-          placeholder="Enter quantity" 
+        <Input
+          type="number"
+          placeholder="Enter quantity"
           defaultValue="1"
           min="1"
         />
       </FormGroup>
-      
+
       <PricePreview>
         <PriceRow>
           <PriceLabel>Premium per Contract</PriceLabel>
@@ -230,7 +230,7 @@ const TradingForm = () => {
           <TotalValue>$1,250.00</TotalValue>
         </PriceRow>
       </PricePreview>
-      
+
       <SubmitButton>
         <FiCheckCircle />
         {positionType === 'buy' ? 'Buy' : 'Sell'} {optionType.toUpperCase()}

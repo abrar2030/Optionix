@@ -9,7 +9,7 @@ contract("OptionsContract", (accounts) => {
   });
 
   it("should create valid call options", async () => {
-    await instance.createOption(3000, 30, 0, { 
+    await instance.createOption(3000, 30, 0, {
       value: ethers.utils.parseEther("1"),
       from: accounts[0]
     });

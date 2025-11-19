@@ -118,4 +118,3 @@ monte-carlo==1.0.0
 mifid2-reporting==1.0.0
 emir-reporting==1.0.0
 dodd-frank==1.0.0
-

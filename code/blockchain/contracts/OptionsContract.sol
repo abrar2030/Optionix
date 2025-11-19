@@ -87,12 +87,12 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
     mapping(address => PriceOracle) public priceOracles;
     mapping(address => uint256[]) public userOptions;
     mapping(address => mapping(address => uint256)) public collateralBalances;
-    
+
     uint256 public nextOptionId = 1;
     uint256 public totalVolume;
     uint256 public totalOpenInterest;
     RiskParameters public riskParams;
-    
+
     // Emergency controls
     bool public emergencyStop = false;
     uint256 public maxDailyVolume;
@@ -108,37 +108,37 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         uint256 premium,
         uint256 expirationTime
     );
-    
+
     event OptionPurchased(
         uint256 indexed optionId,
         address indexed buyer,
         uint256 premium
     );
-    
+
     event OptionExercised(
         uint256 indexed optionId,
         address indexed exerciser,
         uint256 payoff
     );
-    
+
     event CollateralDeposited(
         address indexed user,
         address indexed asset,
         uint256 amount
     );
-    
+
     event ComplianceStatusUpdated(
         address indexed user,
         ComplianceStatus oldStatus,
         ComplianceStatus newStatus
     );
-    
+
     event RiskParametersUpdated(
         uint256 maxLeverage,
         uint256 marginRequirement,
         uint256 liquidationThreshold
     );
-    
+
     event EmergencyAction(
         string action,
         address indexed initiator,
@@ -245,7 +245,7 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         uint256 _amount
     ) external payable onlyCompliantUser nonReentrant {
         require(_amount > 0, "Amount must be positive");
-        
+
         if (_asset == address(0)) {
             // ETH deposit
             require(msg.value == _amount, "ETH amount mismatch");
@@ -256,7 +256,7 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         }
 
         collateralBalances[msg.sender][_asset] = collateralBalances[msg.sender][_asset].add(_amount);
-        
+
         emit CollateralDeposited(msg.sender, _asset, _amount);
     }
 
@@ -271,12 +271,12 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         uint256 _expirationTime,
         address _underlyingAsset,
         uint256 _contractSize
-    ) external 
-        onlyCompliantUser 
-        nonReentrant 
-        notEmergencyStop 
-        whenNotPaused 
-        returns (uint256) 
+    ) external
+        onlyCompliantUser
+        nonReentrant
+        notEmergencyStop
+        whenNotPaused
+        returns (uint256)
     {
         require(_strikePrice > 0, "Strike price must be positive");
         require(_premium > 0, "Premium must be positive");
@@ -304,14 +304,14 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         // Check risk limits
         uint256 exposure = _premium.mul(_contractSize);
         require(
-            userProfiles[msg.sender].totalExposure.add(exposure) <= 
+            userProfiles[msg.sender].totalExposure.add(exposure) <=
             userProfiles[msg.sender].maxPositionSize,
             "Exceeds position limit"
         );
 
         // Create option
         uint256 optionId = nextOptionId++;
-        
+
         options[optionId] = Option({
             optionId: optionId,
             writer: msg.sender,
@@ -330,11 +330,11 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         });
 
         // Lock collateral
-        collateralBalances[msg.sender][_underlyingAsset] = 
+        collateralBalances[msg.sender][_underlyingAsset] =
             collateralBalances[msg.sender][_underlyingAsset].sub(requiredCollateral);
 
         // Update user exposure
-        userProfiles[msg.sender].totalExposure = 
+        userProfiles[msg.sender].totalExposure =
             userProfiles[msg.sender].totalExposure.add(exposure);
 
         // Update global metrics
@@ -394,7 +394,7 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         address _underlyingAsset
     ) internal view returns (uint256) {
         uint256 currentPrice = _getAssetPrice(_underlyingAsset);
-        
+
         if (_optionType == OptionType.CALL) {
             // For calls: collateral = contract size * underlying asset
             return _contractSize;
@@ -473,4 +473,3 @@ contract EnhancedOptionsContract is ReentrancyGuard, Pausable, AccessControl {
         return collateralBalances[_user][_asset];
     }
 }
-

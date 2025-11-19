@@ -23,7 +23,7 @@ describe('TradingInterface Component', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    
+
     // Setup default mock responses
     api.fetchMarketData.mockResolvedValue({
       price: 1500.25,
@@ -34,9 +34,9 @@ describe('TradingInterface Component', () => {
         { strike: 1400, premium: 38.75, type: 'put' }
       ]
     });
-    
+
     api.submitTrade.mockResolvedValue({ success: true, txId: '0x123456789' });
-    
+
     blockchain.connectWallet.mockResolvedValue({ address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e' });
     blockchain.getAccountBalance.mockResolvedValue('2.5');
     blockchain.executeTransaction.mockResolvedValue({ hash: '0x987654321' });
@@ -48,16 +48,16 @@ describe('TradingInterface Component', () => {
         <TradingInterface />
       </MemoryRouter>
     );
-    
+
     // Check that market data is fetched and displayed
     expect(api.fetchMarketData).toHaveBeenCalled();
-    
+
     // Wait for market data to be displayed
     await waitFor(() => {
       expect(screen.getByText(/1500\.25/)).toBeInTheDocument();
       expect(screen.getByText(/2\.5%/)).toBeInTheDocument();
     });
-    
+
     // Check that options are displayed
     await waitFor(() => {
       expect(screen.getByText(/1600/)).toBeInTheDocument();
@@ -71,14 +71,14 @@ describe('TradingInterface Component', () => {
         <TradingInterface />
       </MemoryRouter>
     );
-    
+
     // Find and click the connect wallet button
     const connectButton = screen.getByRole('button', { name: /connect wallet/i });
     fireEvent.click(connectButton);
-    
+
     // Check that the wallet connection function was called
     expect(blockchain.connectWallet).toHaveBeenCalled();
-    
+
     // Wait for wallet address to be displayed
     await waitFor(() => {
       expect(screen.getByText(/0x742d.*44e/i)).toBeInTheDocument();
@@ -92,25 +92,25 @@ describe('TradingInterface Component', () => {
         <TradingInterface />
       </MemoryRouter>
     );
-    
+
     // Connect wallet first
     const connectButton = screen.getByRole('button', { name: /connect wallet/i });
     fireEvent.click(connectButton);
     await waitFor(() => expect(screen.getByText(/0x742d.*44e/i)).toBeInTheDocument());
-    
+
     // Fill out the trade form
     const amountInput = screen.getByLabelText(/amount/i);
     const strikeInput = screen.getByLabelText(/strike price/i);
     const typeSelect = screen.getByLabelText(/option type/i);
-    
+
     fireEvent.change(amountInput, { target: { value: '1' } });
     fireEvent.change(strikeInput, { target: { value: '1600' } });
     fireEvent.change(typeSelect, { target: { value: 'call' } });
-    
+
     // Submit the form
     const submitButton = screen.getByRole('button', { name: /submit trade/i });
     fireEvent.click(submitButton);
-    
+
     // Check that the API and blockchain functions were called
     await waitFor(() => {
       expect(api.submitTrade).toHaveBeenCalledWith({
@@ -121,7 +121,7 @@ describe('TradingInterface Component', () => {
       });
       expect(blockchain.executeTransaction).toHaveBeenCalled();
     });
-    
+
     // Check for success message
     await waitFor(() => {
       expect(screen.getByText(/trade successful/i)).toBeInTheDocument();
@@ -132,31 +132,31 @@ describe('TradingInterface Component', () => {
   test('displays error when trade submission fails', async () => {
     // Mock API to return an error
     api.submitTrade.mockRejectedValue(new Error('Insufficient funds'));
-    
+
     render(
       <MemoryRouter>
         <TradingInterface />
       </MemoryRouter>
     );
-    
+
     // Connect wallet first
     const connectButton = screen.getByRole('button', { name: /connect wallet/i });
     fireEvent.click(connectButton);
     await waitFor(() => expect(screen.getByText(/0x742d.*44e/i)).toBeInTheDocument());
-    
+
     // Fill out the trade form
     const amountInput = screen.getByLabelText(/amount/i);
     const strikeInput = screen.getByLabelText(/strike price/i);
     const typeSelect = screen.getByLabelText(/option type/i);
-    
+
     fireEvent.change(amountInput, { target: { value: '1' } });
     fireEvent.change(strikeInput, { target: { value: '1600' } });
     fireEvent.change(typeSelect, { target: { value: 'call' } });
-    
+
     // Submit the form
     const submitButton = screen.getByRole('button', { name: /submit trade/i });
     fireEvent.click(submitButton);
-    
+
     // Check for error message
     await waitFor(() => {
       expect(screen.getByText(/error/i)).toBeInTheDocument();

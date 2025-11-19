@@ -263,4 +263,4 @@ For testing support:
 - Check test documentation
 - Review test logs
 - Contact QA team
-- Submit bug reports 
+- Submit bug reports

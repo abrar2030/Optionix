@@ -45,7 +45,7 @@ const TimeButton = styled.button`
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: ${props => props.active ? props.theme.colors.primary : 'rgba(41, 98, 255, 0.1)'};
     color: ${props => props.active ? 'white' : props.theme.colors.primary};
@@ -54,7 +54,7 @@ const TimeButton = styled.button`
 
 const PerformanceChart = () => {
   const [timeframe, setTimeframe] = React.useState('1M');
-  
+
   // Sample data
   const data = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -74,7 +74,7 @@ const PerformanceChart = () => {
       }
     ]
   };
-  
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -138,13 +138,13 @@ const PerformanceChart = () => {
       }
     }
   };
-  
+
   return (
     <>
       <TimeframeSelector>
         {['1W', '1M', '3M', '6M', '1Y', 'ALL'].map(time => (
-          <TimeButton 
-            key={time} 
+          <TimeButton
+            key={time}
             active={timeframe === time}
             onClick={() => setTimeframe(time)}
           >

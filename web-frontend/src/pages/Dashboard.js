@@ -116,11 +116,11 @@ const StatCard = styled.div`
   border: 1px solid ${props => props.theme.colors.border};
   display: flex;
   flex-direction: column;
-  
+
   @media (max-width: ${props => props.theme.breakpoints.desktop}) {
     grid-column: span 6;
   }
-  
+
   @media (max-width: ${props => props.theme.breakpoints.mobile}) {
     grid-column: span 12;
   }
@@ -149,7 +149,7 @@ const StatIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   svg {
     color: ${props => props.color || props.theme.colors.primary};
     font-size: 20px;
@@ -169,7 +169,7 @@ const StatChange = styled.div`
   color: ${props => props.isPositive ? props.theme.colors.success : props.theme.colors.danger};
   display: flex;
   align-items: center;
-  
+
   svg {
     margin-right: 4px;
   }
@@ -182,7 +182,7 @@ const ChartCard = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -195,7 +195,7 @@ const PortfolioCard = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -208,7 +208,7 @@ const TransactionsCard = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -221,7 +221,7 @@ const MarketCard = styled.div`
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid ${props => props.theme.colors.border};
-  
+
   @media (max-width: ${props => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
@@ -292,7 +292,7 @@ const Dashboard = () => {
       console.log("[DEBUG] handleRegister: API registration successful"); // DEBUG LOG
       // Automatically switch to login view after successful registration
       setIsLoginView(true);
-      setError('Registration successful! Please login.'); 
+      setError('Registration successful! Please login.');
     } catch (err) {
       console.error("[DEBUG] handleRegister: API registration error:", err); // DEBUG LOG
       setError(err.message || 'Registration failed');
@@ -308,34 +308,34 @@ const Dashboard = () => {
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <InputGroup>
             <Label htmlFor="username">Username</Label>
-            <Input 
-              type="text" 
-              id="username" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              required 
+            <Input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
             />
           </InputGroup>
           { !isLoginView && (
             <InputGroup>
               <Label htmlFor="email">Email</Label>
-              <Input 
-                type="email" 
-                id="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
+              <Input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </InputGroup>
           )}
           <InputGroup>
             <Label htmlFor="password">Password</Label>
-            <Input 
-              type="password" 
-              id="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
+            <Input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </InputGroup>
           <Button type="submit" disabled={loading}>
@@ -363,7 +363,7 @@ const Dashboard = () => {
         <StatValue>$24,875.65</StatValue>
         <StatChange isPositive={true}>+5.27% today</StatChange>
       </StatCard>
-      
+
       <StatCard>
         <StatHeader>
           <StatTitle>Open Positions</StatTitle>
@@ -374,7 +374,7 @@ const Dashboard = () => {
         <StatValue>12</StatValue>
         <StatChange isPositive={true}>+2 new today</StatChange>
       </StatCard>
-      
+
       <StatCard>
         <StatHeader>
           <StatTitle>Profit/Loss</StatTitle>
@@ -385,7 +385,7 @@ const Dashboard = () => {
         <StatValue>$1,243.89</StatValue>
         <StatChange isPositive={true}>+12.3% this week</StatChange>
       </StatCard>
-      
+
       <StatCard>
         <StatHeader>
           <StatTitle>Portfolio Risk</StatTitle>
@@ -396,22 +396,22 @@ const Dashboard = () => {
         <StatValue>Medium</StatValue>
         <StatChange isPositive={false}>+2.1% since yesterday</StatChange>
       </StatCard>
-      
+
       <ChartCard>
         <CardTitle>Price Chart</CardTitle>
         <PriceChart />
       </ChartCard>
-      
+
       <PortfolioCard>
         <CardTitle>Portfolio Allocation</CardTitle>
         <PortfolioSummary />
       </PortfolioCard>
-      
+
       <TransactionsCard>
         <CardTitle>Recent Transactions</CardTitle>
         <RecentTransactions />
       </TransactionsCard>
-      
+
       <MarketCard>
         <CardTitle>Market Overview</CardTitle>
         <MarketOverview />
@@ -421,4 +421,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

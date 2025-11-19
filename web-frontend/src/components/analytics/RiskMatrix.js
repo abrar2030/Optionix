@@ -32,7 +32,7 @@ const MatrixCell = styled.div`
   }};
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -82,19 +82,19 @@ const RiskMatrix = () => {
   const generateMatrix = () => {
     const matrix = [];
     const risks = ['very-low', 'low', 'medium', 'high', 'very-high'];
-    
+
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < 5; j++) {
         // Determine risk level based on position
         let risk;
         const sum = i + j;
-        
+
         if (sum <= 1) risk = 'very-low';
         else if (sum <= 3) risk = 'low';
         else if (sum <= 5) risk = 'medium';
         else if (sum <= 7) risk = 'high';
         else risk = 'very-high';
-        
+
         matrix.push({
           id: `${i}-${j}`,
           x: j,
@@ -103,12 +103,12 @@ const RiskMatrix = () => {
         });
       }
     }
-    
+
     return matrix;
   };
-  
+
   const matrix = generateMatrix();
-  
+
   return (
     <MatrixContainer>
       <AxisLabel margin="0 0 8px 0">Impact</AxisLabel>
@@ -119,8 +119,8 @@ const RiskMatrix = () => {
         <div style={{ flex: 1 }}>
           <MatrixGrid>
             {matrix.map(cell => (
-              <MatrixCell 
-                key={cell.id} 
+              <MatrixCell
+                key={cell.id}
                 risk={cell.risk}
                 style={{ gridColumn: cell.x + 1, gridRow: cell.y + 1 }}
               />
@@ -128,7 +128,7 @@ const RiskMatrix = () => {
           </MatrixGrid>
         </div>
       </div>
-      
+
       <LegendContainer>
         <LegendItem>
           <LegendColor risk="very-low" />

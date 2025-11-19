@@ -86,7 +86,7 @@ parse_args() {
         ;;
     esac
   done
-  
+
   if [ -z "$COMMAND" ]; then
     step_error "No command specified. Use --help for usage information." "exit"
   fi
@@ -95,7 +95,7 @@ parse_args() {
 # Check requirements
 check_requirements() {
   section_header "Checking Requirements"
-  
+
   # Create output directory if it doesn't exist
   if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"
@@ -103,7 +103,7 @@ check_requirements() {
   else
     step_success "Output directory exists: $OUTPUT_DIR"
   fi
-  
+
   # Check required tools based on command
   case $COMMAND in
     api)
@@ -114,7 +114,7 @@ check_requirements() {
           step_error "pydoc is required but not installed" "exit"
         fi
       fi
-      
+
       if [ -d "$CODE_DIR/web-frontend" ]; then
         if command_exists jsdoc; then
           step_success "jsdoc is installed"
@@ -166,44 +166,44 @@ check_requirements() {
 # Generate API documentation
 generate_api_docs() {
   section_header "Generating API Documentation"
-  
+
   API_DOCS_DIR="$OUTPUT_DIR/api"
   mkdir -p "$API_DOCS_DIR"
-  
+
   # Generate Python API docs
   if [ -d "$CODE_DIR/backend" ]; then
     step_info "Generating Python API documentation..."
-    
+
     PYTHON_API_DIR="$API_DOCS_DIR/python"
     mkdir -p "$PYTHON_API_DIR"
-    
+
     # Find all Python files
     find "$CODE_DIR/backend" -name "*.py" | while read -r py_file; do
       rel_path=${py_file#"$CODE_DIR/backend/"}
       module_name=${rel_path%.py}
       module_name=${module_name//\//.}
-      
+
       # Skip __init__.py files
       if [[ "$module_name" == *__init__ ]]; then
         continue
       fi
-      
+
       # Skip private modules if not including private
       if [[ "$INCLUDE_PRIVATE" = false && "$module_name" == _* ]]; then
         continue
       }
-      
+
       step_info "Processing module: $module_name"
-      
+
       # Create output file
       output_file="$PYTHON_API_DIR/${module_name}.md"
-      
+
       # Generate documentation
       echo "# Module: $module_name" > "$output_file"
       echo "" >> "$output_file"
       echo "## Description" >> "$output_file"
       echo "" >> "$output_file"
-      
+
       # Extract module docstring
       module_doc=$(grep -A 20 '"""' "$py_file" | sed -n '/"""/,/"""/p' | sed 's/"""//' | sed 's/^[ \t]*//')
       if [ -n "$module_doc" ]; then
@@ -211,29 +211,29 @@ generate_api_docs() {
       else
         echo "No module documentation available." >> "$output_file"
       fi
-      
+
       echo "" >> "$output_file"
       echo "## Functions and Classes" >> "$output_file"
       echo "" >> "$output_file"
-      
+
       # Extract functions and classes
       grep -n "^def " "$py_file" | while IFS=: read -r line_num line_content; do
         func_name=$(echo "$line_content" | sed -n 's/def \([a-zA-Z0-9_]*\).*/\1/p')
-        
+
         # Skip private functions if not including private
         if [[ "$INCLUDE_PRIVATE" = false && "$func_name" == _* ]]; then
           continue
         fi
-        
+
         echo "### Function: $func_name" >> "$output_file"
         echo "" >> "$output_file"
-        
+
         # Extract function signature
         echo "```python" >> "$output_file"
         echo "$line_content" >> "$output_file"
         echo "```" >> "$output_file"
         echo "" >> "$output_file"
-        
+
         # Extract function docstring
         func_doc=$(tail -n +$((line_num + 1)) "$py_file" | grep -A 20 '"""' | sed -n '/"""/,/"""/p' | sed 's/"""//' | sed 's/^[ \t]*//')
         if [ -n "$func_doc" ]; then
@@ -241,27 +241,27 @@ generate_api_docs() {
         else
           echo "No function documentation available." >> "$output_file"
         fi
-        
+
         echo "" >> "$output_file"
       done
-      
+
       grep -n "^class " "$py_file" | while IFS=: read -r line_num line_content; do
         class_name=$(echo "$line_content" | sed -n 's/class \([a-zA-Z0-9_]*\).*/\1/p')
-        
+
         # Skip private classes if not including private
         if [[ "$INCLUDE_PRIVATE" = false && "$class_name" == _* ]]; then
           continue
         fi
-        
+
         echo "### Class: $class_name" >> "$output_file"
         echo "" >> "$output_file"
-        
+
         # Extract class signature
         echo "```python" >> "$output_file"
         echo "$line_content" >> "$output_file"
         echo "```" >> "$output_file"
         echo "" >> "$output_file"
-        
+
         # Extract class docstring
         class_doc=$(tail -n +$((line_num + 1)) "$py_file" | grep -A 20 '"""' | sed -n '/"""/,/"""/p' | sed 's/"""//' | sed 's/^[ \t]*//')
         if [ -n "$class_doc" ]; then
@@ -269,21 +269,21 @@ generate_api_docs() {
         else
           echo "No class documentation available." >> "$output_file"
         fi
-        
+
         echo "" >> "$output_file"
       done
     done
-    
+
     step_success "Python API documentation generated: $PYTHON_API_DIR"
   fi
-  
+
   # Generate JavaScript API docs
   if [ -d "$CODE_DIR/web-frontend" ]; then
     step_info "Generating JavaScript API documentation..."
-    
+
     JS_API_DIR="$API_DOCS_DIR/javascript"
     mkdir -p "$JS_API_DIR"
-    
+
     # Create JSDoc configuration
     cat > "$JS_API_DIR/jsdoc.json" << EOF
 {
@@ -300,7 +300,7 @@ generate_api_docs() {
   }
 }
 EOF
-    
+
     # Run JSDoc
     if command_exists jsdoc; then
       jsdoc -c "$JS_API_DIR/jsdoc.json" -r
@@ -309,7 +309,7 @@ EOF
       step_error "jsdoc not installed, skipping JavaScript API documentation"
     fi
   fi
-  
+
   # Create API documentation index
   cat > "$API_DOCS_DIR/index.md" << EOF
 # Optionix API Documentation
@@ -343,45 +343,45 @@ The following REST API endpoints are available:
 | /api/portfolio/{id} | GET | Get specific portfolio details |
 
 EOF
-  
+
   step_success "API documentation index created: $API_DOCS_DIR/index.md"
 }
 
 # Generate component documentation
 generate_component_docs() {
   section_header "Generating Component Documentation"
-  
+
   COMPONENT_DOCS_DIR="$OUTPUT_DIR/components"
   mkdir -p "$COMPONENT_DOCS_DIR"
-  
+
   # Generate React component docs
   if [ -d "$CODE_DIR/web-frontend" ]; then
     step_info "Generating React component documentation..."
-    
+
     REACT_COMPONENT_DIR="$COMPONENT_DOCS_DIR/react"
     mkdir -p "$REACT_COMPONENT_DIR"
-    
+
     # Find all React component files
     find "$CODE_DIR/web-frontend" -name "*.jsx" -o -name "*.tsx" | while read -r component_file; do
       rel_path=${component_file#"$CODE_DIR/web-frontend/"}
       component_name=$(basename "$component_file" | sed 's/\.[^.]*$//')
-      
+
       # Skip private components if not including private
       if [[ "$INCLUDE_PRIVATE" = false && "$component_name" == _* ]]; then
         continue
       fi
-      
+
       step_info "Processing component: $component_name"
-      
+
       # Create output file
       output_file="$REACT_COMPONENT_DIR/${component_name}.md"
-      
+
       # Generate documentation
       echo "# Component: $component_name" > "$output_file"
       echo "" >> "$output_file"
       echo "**File:** \`$rel_path\`" >> "$output_file"
       echo "" >> "$output_file"
-      
+
       # Extract component description from comments
       component_doc=$(grep -A 20 '/\*\*' "$component_file" | sed -n '/\/\*\*/,/\*\//p' | sed 's/\/\*\*//' | sed 's/\*\///' | sed 's/^[ \t*]*//')
       if [ -n "$component_doc" ]; then
@@ -390,82 +390,82 @@ generate_component_docs() {
         echo "$component_doc" >> "$output_file"
         echo "" >> "$output_file"
       fi
-      
+
       # Extract props
       echo "## Props" >> "$output_file"
       echo "" >> "$output_file"
-      
+
       props_found=false
-      
+
       # Look for PropTypes
       if grep -q "PropTypes" "$component_file"; then
         props_found=true
         echo "| Prop | Type | Required | Default | Description |" >> "$output_file"
         echo "|------|------|----------|---------|-------------|" >> "$output_file"
-        
+
         grep -A 50 "PropTypes" "$component_file" | grep -B 50 "}" | grep -v "PropTypes" | grep -v "}" | while read -r prop_line; do
           if [[ "$prop_line" =~ ([a-zA-Z0-9_]+):\ *PropTypes\.([a-zA-Z0-9_]+)(\.isRequired)? ]]; then
             prop_name=${BASH_REMATCH[1]}
             prop_type=${BASH_REMATCH[2]}
             is_required=$([ -n "${BASH_REMATCH[3]}" ] && echo "Yes" || echo "No")
-            
+
             # Try to find default value
             default_value=$(grep -A 5 "defaultProps" "$component_file" | grep "$prop_name" | sed -n "s/.*$prop_name: \(.*\),/\1/p" | tr -d ' ')
             if [ -z "$default_value" ]; then
               default_value="-"
             fi
-            
+
             # Try to find description from comments
             prop_desc=$(grep -B 5 "$prop_name:" "$component_file" | grep -o "\/\*\*.*\*\/" | sed 's/\/\*\*//' | sed 's/\*\///' | tr -d '*' | tr -d ' ')
             if [ -z "$prop_desc" ]; then
               prop_desc="-"
             fi
-            
+
             echo "| $prop_name | $prop_type | $is_required | $default_value | $prop_desc |" >> "$output_file"
           fi
         done
       fi
-      
+
       # Look for TypeScript interface
       if grep -q "interface.*Props" "$component_file"; then
         props_found=true
         echo "| Prop | Type | Required | Description |" >> "$output_file"
         echo "|------|------|----------|-------------|" >> "$output_file"
-        
+
         in_interface=false
         while IFS= read -r line; do
           if [[ "$line" =~ interface.*Props ]]; then
             in_interface=true
             continue
           fi
-          
+
           if [ "$in_interface" = true ]; then
             if [[ "$line" =~ \} ]]; then
               in_interface=false
               continue
             fi
-            
+
             if [[ "$line" =~ ([a-zA-Z0-9_]+)(\?)?:\ *([a-zA-Z0-9_<>|]+) ]]; then
               prop_name=${BASH_REMATCH[1]}
               is_required=$([ -z "${BASH_REMATCH[2]}" ] && echo "Yes" || echo "No")
               prop_type=${BASH_REMATCH[3]}
-              
+
               # Try to find description from comments
               prop_desc=$(grep -B 1 "$prop_name[?]\?:" "$component_file" | grep -o "\/\*\*.*\*\/" | sed 's/\/\*\*//' | sed 's/\*\///' | tr -d '*' | tr -d ' ')
               if [ -z "$prop_desc" ]; then
                 prop_desc="-"
               fi
-              
+
               echo "| $prop_name | $prop_type | $is_required | $prop_desc |" >> "$output_file"
             fi
           fi
         done < "$component_file"
       fi
-      
+
       if [ "$props_found" = false ]; then
         echo "No props documentation found." >> "$output_file"
       fi
-      
+
       echo "" >> "$output_file"
       echo "## Example Usage" >> "$output_file"
       echo "" >> "$output_file"
@@ -477,10 +477,10 @@ generate_component_docs() {
       echo "}" >> "$output_file"
       echo "```" >> "$output_file"
     done
-    
+
     step_success "React component documentation generated: $REACT_COMPONENT_DIR"
   fi
-  
+
   # Create component documentation index
   cat > "$COMPONENT_DOCS_DIR/index.md" << EOF
 # Optionix Component Documentation
@@ -519,23 +519,23 @@ App
 \`\`\`
 
 EOF
-  
+
   step_success "Component documentation index created: $COMPONENT_DOCS_DIR/index.md"
 }
 
 # Generate project structure documentation
 generate_project_docs() {
   section_header "Generating Project Structure Documentation"
-  
+
   PROJECT_DOCS_DIR="$OUTPUT_DIR/project"
   mkdir -p "$PROJECT_DOCS_DIR"
-  
+
   # Generate project structure
   step_info "Generating project structure documentation..."
-  
+
   # Create project structure file
   STRUCTURE_FILE="$PROJECT_DOCS_DIR/structure.md"
-  
+
   echo "# Optionix Project Structure" > "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
   echo "This document provides an overview of the Optionix project structure." >> "$STRUCTURE_FILE"
@@ -543,17 +543,17 @@ generate_project_docs() {
   echo "## Directory Structure" >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
   echo "```" >> "$STRUCTURE_FILE"
-  
+
   # Generate directory tree
   find . -type d -not -path "*/\.*" -not -path "*/node_modules/*" -not -path "*/venv/*" | sort | while read -r dir; do
     # Calculate directory depth
     depth=$(echo "$dir" | tr -cd '/' | wc -c)
-    
+
     # Skip root directory
     if [ "$dir" = "." ]; then
       continue
     fi
-    
+
     # Add indentation based on depth
     indent=$(printf '%*s' "$((depth-1))" '' | tr ' ' '│   ')
     if [ "$depth" -gt 1 ]; then
@@ -562,59 +562,59 @@ generate_project_docs() {
       echo "├── $(basename "$dir")" >> "$STRUCTURE_FILE"
     fi
   done
-  
+
   echo "```" >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   # Add descriptions for main directories
   echo "## Directory Descriptions" >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/" >> "$STRUCTURE_FILE"
   echo "Contains all source code for the Optionix project." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/backend/" >> "$STRUCTURE_FILE"
   echo "Contains the Python FastAPI backend server code." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/web-frontend/" >> "$STRUCTURE_FILE"
   echo "Contains the React web frontend code." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/mobile-frontend/" >> "$STRUCTURE_FILE"
   echo "Contains the React Native mobile app code." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/blockchain/" >> "$STRUCTURE_FILE"
   echo "Contains the Solidity smart contracts and blockchain integration code." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/ai_models/" >> "$STRUCTURE_FILE"
   echo "Contains the machine learning models for volatility prediction and trading signals." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### code/quantitative/" >> "$STRUCTURE_FILE"
   echo "Contains the quantitative finance models and algorithms." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### docs/" >> "$STRUCTURE_FILE"
   echo "Contains project documentation." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### infrastructure/" >> "$STRUCTURE_FILE"
   echo "Contains infrastructure as code, deployment configurations, and CI/CD pipelines." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   echo "### resources/" >> "$STRUCTURE_FILE"
   echo "Contains static resources such as datasets, images, and other assets." >> "$STRUCTURE_FILE"
   echo "" >> "$STRUCTURE_FILE"
-  
+
   step_success "Project structure documentation generated: $STRUCTURE_FILE"
-  
+
   # Generate architecture documentation
   ARCHITECTURE_FILE="$PROJECT_DOCS_DIR/architecture.md"
-  
+
   echo "# Optionix Architecture" > "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
   echo "This document provides an overview of the Optionix architecture." >> "$ARCHITECTURE_FILE"
@@ -650,42 +650,42 @@ generate_project_docs() {
   echo "└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘" >> "$ARCHITECTURE_FILE"
   echo "```" >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "## Component Descriptions" >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Frontend (React/Redux)" >> "$ARCHITECTURE_FILE"
   echo "The web frontend is built with React and Redux for state management. It provides the user interface for trading, analytics, and portfolio management." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Mobile App (React Native)" >> "$ARCHITECTURE_FILE"
   echo "The mobile app is built with React Native, providing a native mobile experience for iOS and Android devices." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### API Gateway (FastAPI)" >> "$ARCHITECTURE_FILE"
   echo "The API gateway serves as the entry point for all client requests, routing them to the appropriate microservices." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Authentication Service" >> "$ARCHITECTURE_FILE"
   echo "Handles user authentication, authorization, and session management." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Options Data Service" >> "$ARCHITECTURE_FILE"
   echo "Provides real-time and historical options data, including prices, Greeks, and implied volatility." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Trading Engine Service" >> "$ARCHITECTURE_FILE"
   echo "Handles order placement, execution, and portfolio management." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Analytics Engine Service" >> "$ARCHITECTURE_FILE"
   echo "Provides options analytics, strategy analysis, and risk assessment." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "### Blockchain Node Service" >> "$ARCHITECTURE_FILE"
   echo "Interfaces with the Ethereum blockchain for decentralized options trading and settlement." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   echo "## Data Flow" >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
   echo "1. Users interact with the frontend or mobile app." >> "$ARCHITECTURE_FILE"
@@ -694,9 +694,9 @@ generate_project_docs() {
   echo "4. Services process the request, interact with databases or external systems, and return the response." >> "$ARCHITECTURE_FILE"
   echo "5. The API gateway aggregates responses and returns them to the client." >> "$ARCHITECTURE_FILE"
   echo "" >> "$ARCHITECTURE_FILE"
-  
+
   step_success "Architecture documentation generated: $ARCHITECTURE_FILE"
-  
+
   # Create project documentation index
   cat > "$PROJECT_DOCS_DIR/index.md" << EOF
 # Optionix Project Documentation
@@ -735,59 +735,59 @@ The application can be deployed using the following methods:
 3. Manual deployment using the \`run_optionix.sh\` script
 
 EOF
-  
+
   step_success "Project documentation index created: $PROJECT_DOCS_DIR/index.md"
 }
 
 # Generate changelog
 generate_changelog() {
   section_header "Generating Changelog"
-  
+
   CHANGELOG_FILE="$OUTPUT_DIR/CHANGELOG.md"
-  
+
   step_info "Generating changelog from git history..."
-  
+
   # Check if git repository exists
   if [ ! -d ".git" ]; then
     step_error "Not a git repository. Please run this script from the root of a git repository."
     return 1
   fi
-  
+
   # Create changelog file
   echo "# Changelog" > "$CHANGELOG_FILE"
   echo "" >> "$CHANGELOG_FILE"
   echo "All notable changes to the Optionix project will be documented in this file." >> "$CHANGELOG_FILE"
   echo "" >> "$CHANGELOG_FILE"
-  
+
   # Get all tags sorted by date
   tags=$(git tag --sort=-creatordate)
-  
+
   if [ -z "$tags" ]; then
     # No tags, use commit history
     step_info "No tags found, generating changelog from commit history..."
-    
+
     echo "## Unreleased" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
-    
+
     # Group commits by type
     echo "### Features" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
     git log --pretty=format:"- %s (%h)" | grep -i "feat\|feature\|add" >> "$CHANGELOG_FILE" || echo "No features found."
     echo "" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
-    
+
     echo "### Bug Fixes" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
     git log --pretty=format:"- %s (%h)" | grep -i "fix\|bug\|issue" >> "$CHANGELOG_FILE" || echo "No bug fixes found."
     echo "" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
-    
+
     echo "### Improvements" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
     git log --pretty=format:"- %s (%h)" | grep -i "improve\|enhance\|refactor\|perf" >> "$CHANGELOG_FILE" || echo "No improvements found."
     echo "" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
-    
+
     echo "### Other Changes" >> "$CHANGELOG_FILE"
     echo "" >> "$CHANGELOG_FILE"
     git log --pretty=format:"- %s (%h)" | grep -v -i "feat\|feature\|add\|fix\|bug\|issue\|improve\|enhance\|refactor\|perf" >> "$CHANGELOG_FILE" || echo "No other changes found."
@@ -795,44 +795,44 @@ generate_changelog() {
   else
     # Generate changelog from tags
     step_info "Generating changelog from tags..."
-    
+
     # Check if there are unreleased changes
     latest_tag=$(echo "$tags" | head -n 1)
     unreleased_commits=$(git log "$latest_tag"..HEAD --oneline)
-    
+
     if [ -n "$unreleased_commits" ]; then
       echo "## Unreleased" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       # Group commits by type
       echo "### Features" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
       git log "$latest_tag"..HEAD --pretty=format:"- %s (%h)" | grep -i "feat\|feature\|add" >> "$CHANGELOG_FILE" || echo "No features found."
       echo "" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       echo "### Bug Fixes" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
       git log "$latest_tag"..HEAD --pretty=format:"- %s (%h)" | grep -i "fix\|bug\|issue" >> "$CHANGELOG_FILE" || echo "No bug fixes found."
       echo "" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       echo "### Improvements" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
       git log "$latest_tag"..HEAD --pretty=format:"- %s (%h)" | grep -i "improve\|enhance\|refactor\|perf" >> "$CHANGELOG_FILE" || echo "No improvements found."
       echo "" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
     fi
-    
+
     # Generate changelog for each tag
     prev_tag=""
     for tag in $tags; do
       # Get tag date
       tag_date=$(git log -1 --format=%ad --date=short "$tag")
-      
+
       echo "## [$tag] - $tag_date" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       if [ -z "$prev_tag" ]; then
         # First tag
         range="$tag"
@@ -840,45 +840,45 @@ generate_changelog() {
         # Between tags
         range="$tag..$prev_tag"
       fi
-      
+
       # Group commits by type
       echo "### Features" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
       git log "$range" --pretty=format:"- %s (%h)" | grep -i "feat\|feature\|add" >> "$CHANGELOG_FILE" || echo "No features found."
       echo "" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       echo "### Bug Fixes" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
       git log "$range" --pretty=format:"- %s (%h)" | grep -i "fix\|bug\|issue" >> "$CHANGELOG_FILE" || echo "No bug fixes found."
       echo "" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       echo "### Improvements" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
       git log "$range" --pretty=format:"- %s (%h)" | grep -i "improve\|enhance\|refactor\|perf" >> "$CHANGELOG_FILE" || echo "No improvements found."
       echo "" >> "$CHANGELOG_FILE"
       echo "" >> "$CHANGELOG_FILE"
-      
+
       prev_tag="$tag"
     done
   fi
-  
+
   step_success "Changelog generated: $CHANGELOG_FILE"
 }
 
 # Generate all documentation
 generate_all_docs() {
   section_header "Generating All Documentation"
-  
+
   generate_api_docs
   generate_component_docs
   generate_project_docs
   generate_changelog
-  
+
   # Create main index file
   MAIN_INDEX="$OUTPUT_DIR/index.md"
-  
+
   echo "# Optionix Documentation" > "$MAIN_INDEX"
   echo "" >> "$MAIN_INDEX"
   echo "Welcome to the Optionix documentation. This documentation provides comprehensive information about the Optionix platform." >> "$MAIN_INDEX"
@@ -900,7 +900,7 @@ generate_all_docs() {
   echo "" >> "$MAIN_INDEX"
   echo "For more detailed instructions, see the [Project Documentation](./project/index.md)." >> "$MAIN_INDEX"
   echo "" >> "$MAIN_INDEX"
-  
+
   step_success "Main documentation index created: $MAIN_INDEX"
   step_success "All documentation generated successfully"
 }
@@ -909,13 +909,13 @@ generate_all_docs() {
 main() {
   echo -e "${YELLOW}=== Optionix Documentation Generator ===${NC}"
   echo -e "${BLUE}$(date)${NC}"
-  
+
   # Parse command line arguments
   parse_args "$@"
-  
+
   # Check requirements
   check_requirements
-  
+
   # Execute command
   case $COMMAND in
     api)
@@ -934,7 +934,7 @@ main() {
       generate_all_docs
       ;;
   esac
-  
+
   echo -e "\n${GREEN}Documentation generation completed successfully!${NC}"
 }
 

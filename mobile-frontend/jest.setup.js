@@ -32,4 +32,4 @@ jest.mock('expo-status-bar', () => ({
   StatusBar: {
     setBarStyle: jest.fn(),
   },
-})); 
+}));

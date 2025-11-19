@@ -12,7 +12,7 @@ export const marketService = {
       throw error;
     }
   },
-  
+
   // Get price history for a specific asset
   getPriceHistory: async (symbol, timeframe) => {
     try {
@@ -25,7 +25,7 @@ export const marketService = {
       throw error;
     }
   },
-  
+
   // Get option chain data
   getOptionChain: async (symbol, expiry) => {
     try {
@@ -38,7 +38,7 @@ export const marketService = {
       throw error;
     }
   },
-  
+
   // Get order book data
   getOrderBook: async (symbol) => {
     try {
@@ -49,7 +49,7 @@ export const marketService = {
       throw error;
     }
   },
-  
+
   // Predict volatility using AI model
   predictVolatility: async (data) => {
     try {
@@ -74,7 +74,7 @@ export const portfolioService = {
       throw error;
     }
   },
-  
+
   // Get open positions
   getPositions: async () => {
     try {
@@ -85,7 +85,7 @@ export const portfolioService = {
       throw error;
     }
   },
-  
+
   // Get position health
   getPositionHealth: async (address) => {
     try {
@@ -96,7 +96,7 @@ export const portfolioService = {
       throw error;
     }
   },
-  
+
   // Get transaction history
   getTransactionHistory: async () => {
     try {
@@ -107,7 +107,7 @@ export const portfolioService = {
       throw error;
     }
   },
-  
+
   // Get performance history
   getPerformanceHistory: async (timeframe) => {
     try {
@@ -134,7 +134,7 @@ export const tradingService = {
       throw error;
     }
   },
-  
+
   // Calculate option price
   calculateOptionPrice: async (optionData) => {
     try {
@@ -145,7 +145,7 @@ export const tradingService = {
       throw error;
     }
   },
-  
+
   // Calculate option greeks
   calculateGreeks: async (optionData) => {
     try {
@@ -170,7 +170,7 @@ export const analyticsService = {
       throw error;
     }
   },
-  
+
   // Get volatility analysis
   getVolatilityAnalysis: async (symbol, timeframe) => {
     try {
@@ -183,7 +183,7 @@ export const analyticsService = {
       throw error;
     }
   },
-  
+
   // Get market sentiment
   getMarketSentiment: async () => {
     try {

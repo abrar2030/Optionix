@@ -41,16 +41,16 @@ describe('Mobile App Component', () => {
   test('handles successful login', async () => {
     mockApi.login.mockResolvedValueOnce({ token: 'fake-token' });
     mockApi.getUserProfile.mockResolvedValueOnce({ username: 'testuser' });
-    
+
     const { getByPlaceholderText, getByText } = renderWithNavigation(<App />);
-    
+
     const usernameInput = getByPlaceholderText('Username');
     const passwordInput = getByPlaceholderText('Password');
     const loginButton = getByText('Login');
 
     fireEvent.changeText(usernameInput, 'testuser');
     fireEvent.changeText(passwordInput, 'password123');
-    
+
     // Check loading state
     fireEvent.press(loginButton);
     expect(loginButton.props.disabled).toBeTruthy();
@@ -68,7 +68,7 @@ describe('Mobile App Component', () => {
   test('handles login error', async () => {
     mockApi.login.mockRejectedValueOnce(new Error('Invalid credentials'));
     const { getByPlaceholderText, getByText } = renderWithNavigation(<App />);
-    
+
     const usernameInput = getByPlaceholderText('Username');
     const passwordInput = getByPlaceholderText('Password');
     const loginButton = getByText('Login');
@@ -85,7 +85,7 @@ describe('Mobile App Component', () => {
 
   test('validates login form', async () => {
     const { getByText } = renderWithNavigation(<App />);
-    
+
     const loginButton = getByText('Login');
     fireEvent.press(loginButton);
 
@@ -103,10 +103,10 @@ describe('Mobile App Component', () => {
   test('handles successful registration', async () => {
     mockApi.register.mockResolvedValueOnce({ success: true });
     const { getByText, getByPlaceholderText } = renderWithNavigation(<App />);
-    
+
     // Navigate to registration
     fireEvent.press(getByText('Register'));
-    
+
     // Fill registration form
     const usernameInput = getByPlaceholderText('Username');
     const emailInput = getByPlaceholderText('Email');
@@ -116,7 +116,7 @@ describe('Mobile App Component', () => {
     fireEvent.changeText(usernameInput, 'newuser');
     fireEvent.changeText(emailInput, 'newuser@example.com');
     fireEvent.changeText(passwordInput, 'password123');
-    
+
     // Check loading state
     fireEvent.press(registerButton);
     expect(registerButton.props.disabled).toBeTruthy();
@@ -137,10 +137,10 @@ describe('Mobile App Component', () => {
 
   test('validates registration form', async () => {
     const { getByText } = renderWithNavigation(<App />);
-    
+
     // Navigate to registration
     fireEvent.press(getByText('Register'));
-    
+
     const registerButton = getByText('Register');
     fireEvent.press(registerButton);
 
@@ -152,13 +152,13 @@ describe('Mobile App Component', () => {
 
   test('validates email format in registration', async () => {
     const { getByText, getByPlaceholderText } = renderWithNavigation(<App />);
-    
+
     // Navigate to registration
     fireEvent.press(getByText('Register'));
-    
+
     const emailInput = getByPlaceholderText('Email');
     fireEvent.changeText(emailInput, 'invalid-email');
-    
+
     const registerButton = getByText('Register');
     fireEvent.press(registerButton);
 
@@ -178,4 +178,4 @@ describe('Mobile App Component', () => {
       expect(getByText('Dashboard')).toBeTruthy();
     });
   });
-}); 
+});
