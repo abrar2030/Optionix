@@ -13,19 +13,15 @@ Implements comprehensive volatility surface modeling with:
 
 import logging
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sns
-from scipy import stats
-from scipy.interpolate import RectBivariateSpline, griddata, interp2d
-from scipy.optimize import differential_evolution, least_squares, minimize
+from scipy.interpolate import RectBivariateSpline, griddata
+from scipy.optimize import minimize
 
 warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)

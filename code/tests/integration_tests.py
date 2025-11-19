@@ -9,29 +9,16 @@ and risk management tools.
 # Import modules to test
 import sys
 import unittest
-from datetime import datetime, timedelta
-
-import numpy as np
-import pandas as pd
 
 sys.path.append("/home/ubuntu/Optionix/code")
 
-from backend.services.risk_management.risk_engine import (
-    RiskEngine,
-    RiskMetricType,
-    ScenarioAnalyzer,
-    StressTestEngine,
-)
+from backend.services.risk_management.risk_engine import (RiskEngine,
+                                                          RiskMetricType)
 from backend.services.trade_execution.circuit_breaker import (
-    CircuitBreaker,
-    CircuitBreakerType,
-)
-from backend.services.trade_execution.execution_engine import (
-    ExecutionEngine,
-    Order,
-    OrderSide,
-    OrderType,
-)
+    CircuitBreaker, CircuitBreakerType)
+from backend.services.trade_execution.execution_engine import (ExecutionEngine,
+                                                               OrderSide,
+                                                               OrderType)
 from quantitative.enhanced.calibration_engine import CalibrationEngine
 from quantitative.enhanced.local_volatility import DupireLocalVolModel
 from quantitative.enhanced.stochastic_volatility import HestonModel, SabrModel
@@ -344,7 +331,7 @@ class IntegrationTests(unittest.TestCase):
     def test_integration_execution_and_circuit_breaker(self):
         """Test integration between execution engine and circuit breaker."""
         # Create components
-        execution_engine = ExecutionEngine()
+        ExecutionEngine()
         circuit_breaker = CircuitBreaker()
 
         # Activate circuit breaker
@@ -393,7 +380,7 @@ class IntegrationTests(unittest.TestCase):
         }
 
         result = execution_engine.submit_order(order_params)
-        order_id = result["order_id"]
+        result["order_id"]
 
         # Update portfolio with new position
         portfolio_copy = self.portfolio.copy()

@@ -8,11 +8,11 @@ import logging
 import os
 import time
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from config import settings
 from eth_account import Account
-from models import AuditLog, Position, Trade
+from models import AuditLog
 from sqlalchemy.orm import Session
 from web3 import Web3
 from web3.exceptions import ContractLogicError, Web3Exception

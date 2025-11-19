@@ -3,14 +3,13 @@ Rate limiting middleware for Optionix backend.
 Implements rate limiting to prevent abuse and DDoS attacks.
 """
 
-import json
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import redis
 from config import settings
-from fastapi import HTTPException, Request, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from security import security_service
 

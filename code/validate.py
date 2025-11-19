@@ -4,15 +4,13 @@ Validation Script for Optionix Platform
 Validates security, compliance, and financial standards implementation
 """
 
-import importlib.util
 import json
 import logging
 import os
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 # Setup logging
 logging.basicConfig(

@@ -6,11 +6,8 @@ to ensure they match market prices.
 """
 
 import logging
-from datetime import datetime, timedelta
 
 import numpy as np
-import pandas as pd
-from scipy.optimize import minimize
 
 # Configure logging
 logging.basicConfig(
@@ -31,7 +28,6 @@ class CalibrationEngine:
         """
         Initialize calibration engine.
         """
-        pass
 
     def calibrate_heston(self, option_data, initial_params=None):
         """

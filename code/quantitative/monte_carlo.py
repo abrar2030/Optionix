@@ -14,16 +14,14 @@ Implements comprehensive Monte Carlo methods for:
 import logging
 import multiprocessing as mp
 import warnings
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 from scipy import stats
-from scipy.optimize import minimize
 
 warnings.filterwarnings("ignore")
 

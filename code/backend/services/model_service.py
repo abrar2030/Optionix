@@ -7,14 +7,11 @@ import hashlib
 import json
 import logging
 import os
-import pickle
-from datetime import datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import joblib
 import numpy as np
-import pandas as pd
 from config import settings
 from models import AuditLog, MarketData
 from sqlalchemy.orm import Session

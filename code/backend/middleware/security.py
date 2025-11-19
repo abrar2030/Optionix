@@ -3,20 +3,15 @@ Enhanced security middleware for Optionix backend.
 Provides comprehensive security features including headers, rate limiting, and validation.
 """
 
-import hashlib
-import json
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
 import redis
 from config import settings
-from database import get_db
-from fastapi import HTTPException, Request, Response, status
+from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-from security import security_service
-from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 

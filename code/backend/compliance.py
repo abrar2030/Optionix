@@ -19,30 +19,18 @@ import asyncio
 import hashlib
 import json
 import logging
-import re
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
-import requests
-from models import Account, Position, Trade, User
-from security_enhanced import ComplianceFramework, SecurityContext, security_service
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    Text,
-)
+from security_enhanced import (ComplianceFramework, SecurityContext,
+                               security_service)
+from sqlalchemy import (Boolean, Column, DateTime, Index, Integer, Numeric,
+                        String, Text)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()

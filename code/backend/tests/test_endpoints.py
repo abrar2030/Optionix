@@ -1,11 +1,3 @@
-import json
-from unittest.mock import MagicMock, patch
-
-import numpy as np
-import pytest
-from fastapi.testclient import TestClient
-
-
 def test_root_endpoint(client):
     """
     Test the root endpoint returns the expected welcome message

@@ -15,39 +15,25 @@ Implements comprehensive security features including:
 
 import base64
 import hashlib
-import json
 import logging
 import secrets
-import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Optional
 
 import bcrypt
-import geoip2.database
 import jwt
 import pyotp
 import qrcode
-import user_agents
 from config import settings
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    Numeric,
-    String,
-    Text,
-)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()

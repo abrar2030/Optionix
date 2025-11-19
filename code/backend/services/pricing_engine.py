@@ -4,7 +4,6 @@ import numpy as np
 from scipy.stats import norm
 
 sys.path.append("../../quantitative")
-from black_scholes import black_scholes
 
 
 class PricingEngine:

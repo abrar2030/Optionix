@@ -8,12 +8,10 @@ including advanced risk metrics, scenario analysis, and portfolio-level risk ass
 import json
 import logging
 import threading
-import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -379,7 +377,6 @@ class RiskMetricsCalculator:
 
     def __init__(self):
         """Initialize risk metrics calculator."""
-        pass
 
     def calculate_var(self, portfolio, confidence=0.95, window=252):
         """
@@ -1897,7 +1894,7 @@ class SensitivityCalculator:
 
         for position in portfolio.get("positions", []):
             position_id = position.get("position_id")
-            position_value = position.get("value", 0)
+            position.get("value", 0)
 
             # Get position sensitivities
             delta = position.get("delta", self._generate_random_delta(position))

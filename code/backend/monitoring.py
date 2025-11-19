@@ -13,36 +13,16 @@ Implements comprehensive monitoring and compliance features:
 - Market surveillance
 """
 
-import asyncio
-import hashlib
-import hmac
 import json
 import logging
-import smtplib
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import numpy as np
-import pandas as pd
 import redis
-import requests
-from celery import Celery
-from cryptography.fernet import Fernet
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    Column,
-    DateTime,
-    Float,
-    Integer,
-    String,
-    Text,
-    create_engine,
-)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, Integer,
+                        String, Text, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 

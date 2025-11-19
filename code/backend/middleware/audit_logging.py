@@ -3,9 +3,7 @@ Audit logging service for Optionix backend.
 Provides comprehensive audit trail for all critical operations.
 """
 
-import asyncio
 import json
-import logging
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -14,7 +12,6 @@ import structlog
 from database import get_db_session
 from fastapi import Request
 from models import AuditLog
-from sqlalchemy.orm import Session
 
 # Configure structured logging
 structlog.configure(

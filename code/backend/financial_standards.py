@@ -6,26 +6,16 @@ Implements SOX, Basel III, MiFID II, Dodd-Frank, and other financial regulations
 import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from datetime import datetime
+from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from data_protection import data_protection_service
 from models import Account, Position, Trade, User
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    Numeric,
-    String,
-    Text,
-)
+from sqlalchemy import (Column, DateTime, ForeignKey, Index, Integer, Numeric,
+                        String, Text)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 

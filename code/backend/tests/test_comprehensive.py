@@ -3,20 +3,15 @@ Comprehensive test suite for Optionix backend.
 Tests all major components including authentication, trading, compliance, and security.
 """
 
-import asyncio
-import json
-from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
-
 # Import application and dependencies
 from app import app
-from auth import create_access_token, get_password_hash
-from config import settings
+from auth import get_password_hash
 from database import Base, get_db
 from fastapi.testclient import TestClient
-from models import Account, Position, Trade, User
+from models import User
 from security import security_service
 from services.compliance_service import compliance_service
 from services.financial_service import FinancialCalculationService

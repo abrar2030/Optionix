@@ -3,24 +3,19 @@ Comprehensive test suite for enhanced Optionix backend.
 Tests security, compliance, and financial standards features.
 """
 
-import asyncio
-import json
-import secrets
-from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
-
 # Import the enhanced application and dependencies
 from app import app
-from auth import auth_service, mfa_service, rbac_service
+from auth import auth_service
 from compliance_enhanced import enhanced_compliance_service
 from data_protection import data_protection_service
 from database import Base, get_db
 from fastapi.testclient import TestClient
 from financial_standards import financial_standards_service
-from models import Account, AuditLog, Position, Trade, User
+from models import Account, Position, User
 from security import security_service
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -638,7 +633,6 @@ class TestAPIEndpoints:
         """Test rate limiting functionality"""
         # This would require a more sophisticated test setup
         # to actually trigger rate limits
-        pass
 
 
 class TestPerformance:

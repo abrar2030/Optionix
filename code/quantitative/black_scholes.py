@@ -14,13 +14,11 @@ Implements comprehensive option pricing with:
 import logging
 import warnings
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Dict, Optional
 
 import numpy as np
-import pandas as pd
-from scipy.optimize import brentq, minimize_scalar
 from scipy.stats import norm
 
 warnings.filterwarnings("ignore")

@@ -9,20 +9,13 @@ Tests all enhanced components including:
 - Monitoring and compliance
 """
 
-import asyncio
-import json
-import os
-
 # Import enhanced modules
 import sys
-import tempfile
 import unittest
 from datetime import datetime, timedelta
-from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
-import pandas as pd
 import pytest
 
 sys.path.append("/home/ubuntu/Optionix/code/backend")
@@ -31,25 +24,15 @@ sys.path.append("/home/ubuntu/Optionix/code/ai_models")
 
 try:
     from auth_enhanced import EnhancedAuthService
-    from black_scholes import (
-        EnhancedBlackScholesModel,
-        OptionParameters,
-        OptionStyle,
-        OptionType,
-    )
+    from black_scholes import (EnhancedBlackScholesModel, OptionParameters,
+                               OptionType)
     from compliance_enhanced import EnhancedComplianceService
-    from data_handler_enhanced import (
-        DataClassification,
-        EnhancedDataHandler,
-        ValidationResult,
-    )
+    from data_handler_enhanced import (DataClassification, EnhancedDataHandler,
+                                       ValidationResult)
     from enhanced_ai_models import EnhancedAIModelService
     from monitoring_enhanced import EnhancedMonitoringService
-    from monte_carlo import (
-        EnhancedMonteCarloSimulator,
-        ProcessType,
-        SimulationParameters,
-    )
+    from monte_carlo import (EnhancedMonteCarloSimulator, ProcessType,
+                             SimulationParameters)
     from security_enhanced import EnhancedSecurityService
 except ImportError as e:
     print(f"Import error: {e}")
@@ -653,7 +636,7 @@ class TestIntegration(unittest.TestCase):
             self.assertGreater(price, 0)
 
             # 3. Monitor the transaction
-            monitoring_service = EnhancedMonitoringService(self.config)
+            EnhancedMonitoringService(self.config)
             transaction_data = {
                 "transaction_id": "tx123",
                 "user_id": "user123",
@@ -668,7 +651,6 @@ class TestIntegration(unittest.TestCase):
         except Exception as e:
             # If modules not available, just pass
             print(f"Integration test skipped due to: {e}")
-            pass
 
     def test_compliance_workflow(self):
         """Test compliance workflow"""
@@ -689,7 +671,7 @@ class TestIntegration(unittest.TestCase):
                 self.assertTrue(kyc_result)
 
             # 2. Transaction monitoring
-            monitoring_service = EnhancedMonitoringService(self.config)
+            EnhancedMonitoringService(self.config)
             transaction_data = {
                 "transaction_id": "tx123",
                 "user_id": "user123",
@@ -703,7 +685,6 @@ class TestIntegration(unittest.TestCase):
 
         except Exception as e:
             print(f"Compliance test skipped due to: {e}")
-            pass
 
 
 class TestPerformance(unittest.TestCase):
@@ -727,7 +708,7 @@ class TestPerformance(unittest.TestCase):
             # Time 1000 option pricing calculations
             start_time = time.time()
             for _ in range(1000):
-                price = bs_model.black_scholes_price(params)
+                bs_model.black_scholes_price(params)
             end_time = time.time()
 
             execution_time = end_time - start_time
@@ -737,7 +718,6 @@ class TestPerformance(unittest.TestCase):
 
         except Exception as e:
             print(f"Performance test skipped due to: {e}")
-            pass
 
     def test_monte_carlo_performance(self):
         """Test Monte Carlo performance"""
@@ -757,7 +737,7 @@ class TestPerformance(unittest.TestCase):
             mc_simulator = EnhancedMonteCarloSimulator(params)
 
             start_time = time.time()
-            paths = mc_simulator.generate_paths()
+            mc_simulator.generate_paths()
             end_time = time.time()
 
             execution_time = end_time - start_time
@@ -767,7 +747,6 @@ class TestPerformance(unittest.TestCase):
 
         except Exception as e:
             print(f"Monte Carlo performance test skipped due to: {e}")
-            pass
 
 
 def run_all_tests():

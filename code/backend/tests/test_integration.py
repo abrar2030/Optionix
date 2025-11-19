@@ -1,14 +1,8 @@
-import json
 import os
 import sys
-from unittest.mock import patch
-
-import pytest
-from fastapi.testclient import TestClient
 
 # Add the parent directory to sys.path to import app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from app import app
 
 
 def test_integration_root_to_volatility(client, mock_model_service):

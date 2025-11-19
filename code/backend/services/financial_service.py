@@ -5,11 +5,9 @@ Provides accurate financial calculations meeting industry standards.
 
 import logging
 import math
-from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, getcontext
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-import numpy as np
 from config import settings
 
 # Set decimal precision for financial calculations

@@ -6,11 +6,9 @@ Heston model and SABR model for more accurate option pricing.
 """
 
 import logging
-from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from scipy import stats
 from scipy.optimize import minimize
 
@@ -202,7 +200,7 @@ class HestonModel:
         # Extract parameters
         v0 = self.params["v0"]
         kappa = self.params["kappa"]
-        theta = self.params["theta"]
+        self.params["theta"]
         sigma = self.params["sigma"]
         rho = self.params["rho"]
 
@@ -432,11 +430,10 @@ class SabrModel:
         # Calculate SABR implied volatility using Hagan's formula
         F = forward
         K = strike
-        T = time_to_expiry
 
         # Calculate intermediate terms
         z = nu / alpha * (F * K) ** (0.5 * (1 - beta)) * np.log(F / K)
-        x = np.log(F / K)
+        np.log(F / K)
 
         # Handle small z case
         if abs(z) < 1e-6:
@@ -481,7 +478,6 @@ class SabrModel:
             float: ATM SABR implied volatility
         """
         F = forward
-        T = time_to_expiry
 
         # ATM volatility formula
         vol = alpha / (F ** (1 - beta))

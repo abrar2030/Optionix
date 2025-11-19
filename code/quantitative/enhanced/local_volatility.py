@@ -6,13 +6,11 @@ for more accurate option pricing with volatility skew and smile.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from scipy import stats
-from scipy.interpolate import RectBivariateSpline, griddata
 from scipy.optimize import minimize
 
 # Configure logging

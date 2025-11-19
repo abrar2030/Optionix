@@ -5,89 +5,38 @@ Integrates comprehensive security, compliance, and financial standards.
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
 
 import uvicorn
-
 # Import enhanced authentication and authorization
-from auth import (
-    Permission,
-    UserRole,
-    auth_service,
-    get_current_user,
-    get_current_verified_user,
-    log_auth_event,
-    mfa_service,
-    rbac_service,
-    require_permission,
-)
-
-# Import enhanced compliance and security
-from compliance_enhanced import enhanced_compliance_service
-
+from auth import UserRole, auth_service, log_auth_event
 # Import configuration and database
 from config import settings
 from data_protection import data_protection_service
 from database import create_tables, get_db
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from financial_standards import financial_standards_service
-
 # Import enhanced middleware
-from middleware.security import (
-    AdvancedRateLimitMiddleware,
-    AuditLoggingMiddleware,
-    RequestValidationMiddleware,
-    SecurityHeadersMiddleware,
-)
-
+from middleware.security import (AdvancedRateLimitMiddleware,
+                                 AuditLoggingMiddleware,
+                                 RequestValidationMiddleware,
+                                 SecurityHeadersMiddleware)
 # Import enhanced models
-from models import (
-    Account,
-    APIKey,
-    AuditLog,
-    FinancialAuditLog,
-    KYCDocument,
-    Position,
-    SanctionsCheck,
-    Trade,
-    TransactionMonitoring,
-    User,
-)
-
+from models import User
 # Import enhanced schemas
-from schemas import (
-    AccountCreate,
-    AccountResponse,
-    ComplianceCheckResponse,
-    ErrorResponse,
-    HealthCheckResponse,
-    KYCDataRequest,
-    MarketDataRequest,
-    MFASetupResponse,
-    MFAVerifyRequest,
-    PositionHealthResponse,
-    PositionResponse,
-    RiskMetricsResponse,
-    TokenResponse,
-    TradeRequest,
-    TradeResponse,
-    UserCreate,
-    UserLogin,
-    UserResponse,
-    VolatilityResponse,
-)
+from schemas import HealthCheckResponse, UserCreate, UserResponse
 from security import security_service
-
 # Import services
 from services.blockchain_service import BlockchainService
 from services.financial_service import FinancialCalculationService
 from services.model_service import ModelService
 from sqlalchemy.orm import Session
+
+# Import enhanced compliance and security
+
 
 # Setup logging
 logging.basicConfig(
