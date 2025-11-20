@@ -26,8 +26,16 @@ from typing import Any, Dict, List, Optional
 import redis
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, ValidationError, validator
-from sqlalchemy import (JSON, Column, DateTime, Float, Integer, LargeBinary,
-                        String, create_engine)
+from sqlalchemy import (
+    JSON,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    LargeBinary,
+    String,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 

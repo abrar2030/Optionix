@@ -24,15 +24,20 @@ sys.path.append("/home/ubuntu/Optionix/code/ai_models")
 
 try:
     from auth_enhanced import EnhancedAuthService
-    from black_scholes import (EnhancedBlackScholesModel, OptionParameters,
-                               OptionType)
+    from black_scholes import EnhancedBlackScholesModel, OptionParameters, OptionType
     from compliance_enhanced import EnhancedComplianceService
-    from data_handler_enhanced import (DataClassification, EnhancedDataHandler,
-                                       ValidationResult)
+    from data_handler_enhanced import (
+        DataClassification,
+        EnhancedDataHandler,
+        ValidationResult,
+    )
     from enhanced_ai_models import EnhancedAIModelService
     from monitoring_enhanced import EnhancedMonitoringService
-    from monte_carlo import (EnhancedMonteCarloSimulator, ProcessType,
-                             SimulationParameters)
+    from monte_carlo import (
+        EnhancedMonteCarloSimulator,
+        ProcessType,
+        SimulationParameters,
+    )
     from security_enhanced import EnhancedSecurityService
 except ImportError as e:
     print(f"Import error: {e}")

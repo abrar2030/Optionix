@@ -29,12 +29,19 @@ warnings.filterwarnings("ignore")
 
 # Statistical Libraries
 from scipy import stats
+
 # Machine Learning Libraries
 from sklearn.ensemble import IsolationForest, RandomForestRegressor
 from sklearn.feature_selection import SelectKBest, f_regression
-from sklearn.metrics import (accuracy_score, f1_score, mean_absolute_error,
-                             mean_squared_error, precision_score, r2_score,
-                             recall_score)
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    mean_absolute_error,
+    mean_squared_error,
+    precision_score,
+    r2_score,
+    recall_score,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import RobustScaler, StandardScaler
 

@@ -12,8 +12,16 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from models import Account, Position, Trade, User
-from sqlalchemy import (Column, DateTime, ForeignKey, Index, Integer, Numeric,
-                        String, Text)
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 

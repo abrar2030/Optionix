@@ -21,8 +21,17 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import redis
-from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, Integer,
-                        String, Text, create_engine)
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 

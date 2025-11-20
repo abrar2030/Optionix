@@ -25,10 +25,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from security_enhanced import (ComplianceFramework, SecurityContext,
-                               security_service)
-from sqlalchemy import (Boolean, Column, DateTime, Index, Integer, Numeric,
-                        String, Text)
+from security_enhanced import ComplianceFramework, SecurityContext, security_service
+from sqlalchemy import Boolean, Column, DateTime, Index, Integer, Numeric, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 

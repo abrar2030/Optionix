@@ -8,8 +8,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 import uvicorn
+
 # Import enhanced authentication and authorization
 from auth import UserRole, auth_service, log_auth_event
+
 # Import configuration and database
 from config import settings
 from data_protection import data_protection_service
@@ -19,16 +21,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
+
 # Import enhanced middleware
-from middleware.security import (AdvancedRateLimitMiddleware,
-                                 AuditLoggingMiddleware,
-                                 RequestValidationMiddleware,
-                                 SecurityHeadersMiddleware)
+from middleware.security import (
+    AdvancedRateLimitMiddleware,
+    AuditLoggingMiddleware,
+    RequestValidationMiddleware,
+    SecurityHeadersMiddleware,
+)
+
 # Import enhanced models
 from models import User
+
 # Import enhanced schemas
 from schemas import HealthCheckResponse, UserCreate, UserResponse
 from security import security_service
+
 # Import services
 from services.blockchain_service import BlockchainService
 from services.financial_service import FinancialCalculationService

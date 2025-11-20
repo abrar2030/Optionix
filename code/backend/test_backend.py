@@ -7,6 +7,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+
 # Import the enhanced application and dependencies
 from app import app
 from auth import auth_service
