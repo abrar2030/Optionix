@@ -13,10 +13,10 @@ spec:
         app: derivatives
     spec:
       containers:
-      - name: api
-        image: derivatives-api:latest
-        ports:
-        - containerPort: 8000
-        envFrom:
-        - configMapRef:
-            name: derivatives-config
+        - name: api
+          image: derivatives-api:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: derivatives-config

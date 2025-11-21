@@ -7,6 +7,7 @@ Optionix is a comprehensive financial trading system with robust security, compl
 ## 🚀 Key Features
 
 ### Security Features
+
 - **Advanced Authentication**: Multi-factor authentication (MFA) with TOTP support
 - **Data Encryption**: End-to-end encryption for sensitive data at rest and in transit
 - **Input Sanitization**: Comprehensive protection against SQL injection and XSS attacks
@@ -16,6 +17,7 @@ Optionix is a comprehensive financial trading system with robust security, compl
 - **Session Management**: Secure session handling with automatic timeout
 
 ### Compliance Features
+
 - **AML/KYC**: Anti-Money Laundering and Know Your Customer compliance
 - **Transaction Monitoring**: Real-time monitoring for suspicious activities
 - **Regulatory Reporting**: Automated reporting for MiFID II, EMIR, and Dodd-Frank
@@ -25,6 +27,7 @@ Optionix is a comprehensive financial trading system with robust security, compl
 - **Audit Trail**: Immutable audit logs for regulatory requirements
 
 ### Financial Standards
+
 - **Black-Scholes**: Comprehensive option pricing with multiple option types
 - **Greeks Calculation**: Delta, Gamma, Theta, Vega, and Rho calculations
 - **Risk Management**: Advanced risk metrics and position limits
@@ -33,6 +36,7 @@ Optionix is a comprehensive financial trading system with robust security, compl
 - **Portfolio Management**: Advanced portfolio optimization algorithms
 
 ### Infrastructure Enhancements
+
 - **Containerization**: Production-ready Docker containers with security hardening
 - **Orchestration**: Comprehensive Docker Compose setup with monitoring
 - **Cloud Infrastructure**: Terraform configurations for AWS deployment
@@ -69,6 +73,7 @@ code/
 ## 🛠 Installation and Setup
 
 ### Prerequisites
+
 - Python 3.11+
 - Docker and Docker Compose
 - PostgreSQL 15+
@@ -77,17 +82,20 @@ code/
 ### Quick Start with Docker
 
 1. **Clone and navigate to the code directory**:
+
    ```bash
    cd code/
    ```
 
 2. **Set environment variables**:
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 3. **Start the platform**:
+
    ```bash
    docker-compose up -d
    ```
@@ -100,11 +108,13 @@ code/
 ### Manual Installation
 
 1. **Install dependencies**:
+
    ```bash
    pip install -r requirements.txt
    ```
 
 2. **Set up database**:
+
    ```bash
    # Configure PostgreSQL and Redis
    export DATABASE_URL="postgresql://user:pass@localhost/optionix"
@@ -112,6 +122,7 @@ code/
    ```
 
 3. **Run migrations**:
+
    ```bash
    alembic upgrade head
    ```
@@ -125,15 +136,15 @@ code/
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `REDIS_URL` | Redis connection string | Yes |
-| `SECRET_KEY` | Application secret key | Yes |
-| `JWT_SECRET` | JWT signing secret | Yes |
-| `ENCRYPTION_KEY` | Data encryption key | Yes |
-| `ENVIRONMENT` | Environment (dev/staging/prod) | No |
-| `LOG_LEVEL` | Logging level | No |
+| Variable         | Description                    | Required |
+| ---------------- | ------------------------------ | -------- |
+| `DATABASE_URL`   | PostgreSQL connection string   | Yes      |
+| `REDIS_URL`      | Redis connection string        | Yes      |
+| `SECRET_KEY`     | Application secret key         | Yes      |
+| `JWT_SECRET`     | JWT signing secret             | Yes      |
+| `ENCRYPTION_KEY` | Data encryption key            | Yes      |
+| `ENVIRONMENT`    | Environment (dev/staging/prod) | No       |
+| `LOG_LEVEL`      | Logging level                  | No       |
 
 ### Security Configuration
 
@@ -152,17 +163,21 @@ SECURITY_CONFIG = {
 ## 🧪 Testing
 
 ### Run Comprehensive Tests
+
 ```bash
 python -m pytest tests/test_comprehensive.py -v
 ```
 
 ### Run Validation
+
 ```bash
 python validate.py .
 ```
 
 ### Test Coverage
+
 The test suite covers:
+
 - Security features (authentication, encryption, input validation)
 - Compliance features (AML, KYC, transaction monitoring)
 - Financial models (Black-Scholes, Greeks, risk management)
@@ -172,16 +187,19 @@ The test suite covers:
 ## 📊 Monitoring and Observability
 
 ### Health Checks
+
 - **Application Health**: `GET /health`
 - **Database Health**: `GET /health/database`
 - **Cache Health**: `GET /health/cache`
 
 ### Metrics and Monitoring
+
 - **Prometheus**: Metrics collection at `:9090`
 - **Grafana**: Dashboards at `:3000`
 - **Kibana**: Log analysis at `:5601`
 
 ### Logging
+
 - **Structured Logging**: JSON format with correlation IDs
 - **Audit Logs**: Immutable audit trail for compliance
 - **Error Tracking**: Comprehensive error monitoring
@@ -190,18 +208,21 @@ The test suite covers:
 ## 🔒 Security Best Practices
 
 ### Authentication
+
 - Multi-factor authentication (MFA) required for all users
 - JWT tokens with short expiration times
 - Secure password policies and hashing (bcrypt)
 - Session management with automatic timeout
 
 ### Data Protection
+
 - Encryption at rest using AES-256
 - Encryption in transit using TLS 1.3
 - Sensitive data tokenization
 - PII data masking in logs
 
 ### Network Security
+
 - HTTPS only in production
 - CORS configuration for cross-origin requests
 - Rate limiting and DDoS protection
@@ -210,18 +231,21 @@ The test suite covers:
 ## 📋 Compliance Features
 
 ### Regulatory Compliance
+
 - **MiFID II**: Transaction reporting and best execution
 - **EMIR**: Derivatives reporting and risk mitigation
 - **Dodd-Frank**: Swap data reporting and clearing
 - **GDPR**: Data privacy and protection compliance
 
 ### Risk Management
+
 - Real-time transaction monitoring
 - Position limits and margin requirements
 - Stress testing and scenario analysis
 - Market risk and credit risk assessment
 
 ### Audit and Reporting
+
 - Comprehensive audit trails
 - Automated regulatory reporting
 - Suspicious activity monitoring
@@ -232,6 +256,7 @@ The test suite covers:
 ### Production Deployment
 
 1. **AWS Infrastructure** (using Terraform):
+
    ```bash
    cd ../infrastructure/terraform/
    terraform init
@@ -240,6 +265,7 @@ The test suite covers:
    ```
 
 2. **Container Deployment**:
+
    ```bash
    docker build -t optionix-platform .
    docker push your-registry/optionix-platform:latest
@@ -251,6 +277,7 @@ The test suite covers:
    ```
 
 ### Scaling Considerations
+
 - Horizontal scaling with load balancers
 - Database read replicas for performance
 - Redis clustering for cache scaling
@@ -259,18 +286,21 @@ The test suite covers:
 ## 📈 Performance Optimization
 
 ### Database Optimization
+
 - Connection pooling and query optimization
 - Proper indexing for financial data
 - Partitioning for large datasets
 - Read replicas for reporting queries
 
 ### Caching Strategy
+
 - Redis for session and application caching
 - Database query result caching
 - API response caching with TTL
 - Static asset caching with CDN
 
 ### Application Performance
+
 - Async/await for I/O operations
 - Connection pooling for external services
 - Background task processing with Celery
@@ -279,12 +309,14 @@ The test suite covers:
 ## 🔧 Maintenance
 
 ### Regular Tasks
+
 - Database backup and recovery testing
 - Security updates and vulnerability scanning
 - Performance monitoring and optimization
 - Compliance reporting and auditing
 
 ### Monitoring Alerts
+
 - System health and availability
 - Security incidents and anomalies
 - Performance degradation
@@ -293,6 +325,7 @@ The test suite covers:
 ## 📚 API Documentation
 
 ### Authentication Endpoints
+
 - `POST /auth/register` - User registration
 - `POST /auth/login` - User login
 - `POST /auth/logout` - User logout
@@ -301,6 +334,7 @@ The test suite covers:
 - `POST /auth/mfa/verify` - MFA verification
 
 ### Trading Endpoints
+
 - `GET /options` - List available options
 - `POST /options` - Create new option
 - `POST /options/{id}/buy` - Purchase option
@@ -309,6 +343,7 @@ The test suite covers:
 - `GET /positions` - Get current positions
 
 ### Risk Management
+
 - `GET /risk/assessment` - Get risk assessment
 - `GET /risk/limits` - Get position limits
 - `POST /risk/calculate` - Calculate risk metrics
@@ -316,6 +351,7 @@ The test suite covers:
 ## 🤝 Contributing
 
 ### Development Guidelines
+
 1. Follow PEP 8 style guidelines
 2. Write comprehensive tests for new features
 3. Update documentation for API changes
@@ -323,6 +359,7 @@ The test suite covers:
 5. Ensure all tests pass before submission
 
 ### Code Review Process
+
 1. Security review for all changes
 2. Compliance review for financial features
 3. Performance impact assessment
@@ -335,6 +372,7 @@ This enhanced Optionix platform is proprietary software. All rights reserved.
 ## 🆘 Support
 
 For technical support and questions:
+
 - **Documentation**: See inline code documentation
 - **Issues**: Check validation report for common issues
 - **Security**: Report security issues immediately
@@ -343,6 +381,7 @@ For technical support and questions:
 ## 📊 Validation Report
 
 The platform has been validated with the following results:
+
 - **Overall Status**: EXCELLENT (92.65% success rate)
 - **Security**: 85.7% compliance
 - **Financial Standards**: 100% compliance

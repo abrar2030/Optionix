@@ -27,6 +27,7 @@ Optionix is built as a modern web application with a microservices architecture.
 ## Component Details
 
 ### Frontend (React)
+
 - Built with React and TypeScript
 - Uses styled-components for styling
 - Implements Redux for state management
@@ -37,6 +38,7 @@ Optionix is built as a modern web application with a microservices architecture.
   - Analytics and charts
 
 ### Backend (FastAPI)
+
 - RESTful API built with FastAPI
 - Handles:
   - Options pricing calculations
@@ -50,6 +52,7 @@ Optionix is built as a modern web application with a microservices architecture.
   - Error handling
 
 ### AI Models
+
 - Python-based machine learning models
 - Features:
   - Volatility prediction
@@ -59,6 +62,7 @@ Optionix is built as a modern web application with a microservices architecture.
 - Provides real-time predictions
 
 ### Blockchain Integration
+
 - Smart contract interaction
 - Features:
   - Secure transaction processing
@@ -67,6 +71,7 @@ Optionix is built as a modern web application with a microservices architecture.
 - Supports multiple blockchain networks
 
 ### Data Storage
+
 - PostgreSQL for relational data
 - Redis for caching and real-time data
 - Features:

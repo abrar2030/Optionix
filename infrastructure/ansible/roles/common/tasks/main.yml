@@ -30,7 +30,7 @@
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart unattended-upgrades
 
@@ -44,7 +44,7 @@
 - name: Allow SSH through firewall
   ufw:
     rule: allow
-    port: '22'
+    port: "22"
     proto: tcp
   become: yes
 
@@ -54,7 +54,7 @@
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
-    mode: '0600'
+    mode: "0600"
     backup: yes
   become: yes
   notify: restart ssh
@@ -62,8 +62,8 @@
 - name: Disable root login
   lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: '^PermitRootLogin'
-    line: 'PermitRootLogin no'
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
     state: present
   become: yes
   notify: restart ssh
@@ -74,7 +74,7 @@
     dest: /etc/fail2ban/jail.local
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart fail2ban
 
@@ -94,7 +94,7 @@
     dest: /etc/audit/auditd.conf
     owner: root
     group: root
-    mode: '0640'
+    mode: "0640"
   become: yes
   notify: restart auditd
 
@@ -104,7 +104,7 @@
     dest: /etc/audit/rules.d/audit.rules
     owner: root
     group: root
-    mode: '0640'
+    mode: "0640"
   become: yes
   notify: restart auditd
 
@@ -114,7 +114,7 @@
     dest: /etc/rsyslog.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart rsyslog
 
@@ -124,7 +124,7 @@
     dest: /etc/logrotate.d/audit
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
 
 - name: Set up ClamAV antivirus
@@ -147,22 +147,22 @@
     reload: yes
   become: yes
   loop:
-    - { name: 'net.ipv4.ip_forward', value: '0' }
-    - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
-    - { name: 'net.ipv4.conf.default.send_redirects', value: '0' }
-    - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
-    - { name: 'net.ipv4.conf.default.accept_source_route', value: '0' }
-    - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
-    - { name: 'net.ipv4.conf.default.accept_redirects', value: '0' }
-    - { name: 'net.ipv4.conf.all.secure_redirects', value: '0' }
-    - { name: 'net.ipv4.conf.default.secure_redirects', value: '0' }
-    - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
-    - { name: 'net.ipv4.conf.default.log_martians', value: '1' }
-    - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }
-    - { name: 'net.ipv4.icmp_ignore_bogus_error_responses', value: '1' }
-    - { name: 'net.ipv4.tcp_syncookies', value: '1' }
-    - { name: 'kernel.dmesg_restrict', value: '1' }
-    - { name: 'kernel.kptr_restrict', value: '2' }
+    - { name: "net.ipv4.ip_forward", value: "0" }
+    - { name: "net.ipv4.conf.all.send_redirects", value: "0" }
+    - { name: "net.ipv4.conf.default.send_redirects", value: "0" }
+    - { name: "net.ipv4.conf.all.accept_source_route", value: "0" }
+    - { name: "net.ipv4.conf.default.accept_source_route", value: "0" }
+    - { name: "net.ipv4.conf.all.accept_redirects", value: "0" }
+    - { name: "net.ipv4.conf.default.accept_redirects", value: "0" }
+    - { name: "net.ipv4.conf.all.secure_redirects", value: "0" }
+    - { name: "net.ipv4.conf.default.secure_redirects", value: "0" }
+    - { name: "net.ipv4.conf.all.log_martians", value: "1" }
+    - { name: "net.ipv4.conf.default.log_martians", value: "1" }
+    - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: "1" }
+    - { name: "net.ipv4.icmp_ignore_bogus_error_responses", value: "1" }
+    - { name: "net.ipv4.tcp_syncookies", value: "1" }
+    - { name: "kernel.dmesg_restrict", value: "1" }
+    - { name: "kernel.kptr_restrict", value: "2" }
 
 - name: Create security monitoring user
   user:
@@ -188,7 +188,7 @@
     dest: /etc/ntp.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart ntp
 

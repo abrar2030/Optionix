@@ -5,6 +5,7 @@ This directory contains enhanced quantitative models for the Optionix platform, 
 ## Contents
 
 ### Stochastic Volatility Models
+
 - `stochastic_volatility.py`: Implementation of advanced stochastic volatility models including:
   - Heston model with full calibration capabilities
   - SABR (Stochastic Alpha Beta Rho) model
@@ -12,12 +13,14 @@ This directory contains enhanced quantitative models for the Optionix platform, 
   - Implied volatility surface generation
 
 ### Local Volatility Models
+
 - `local_volatility.py`: Implementation of Dupire's local volatility model with:
   - Volatility surface construction
   - Numerical methods for partial differential equations
   - Calibration to market option prices
 
 ### Volatility Surface Construction
+
 - `volatility_surface.py`: Tools for building and managing volatility surfaces with:
   - Interpolation methods (cubic spline, SVI parameterization)
   - Arbitrage-free constraints
@@ -25,6 +28,7 @@ This directory contains enhanced quantitative models for the Optionix platform, 
   - Surface visualization tools
 
 ### Market Calibration Framework
+
 - `calibration_engine.py`: Core engine for calibrating models to market data with:
   - Optimization algorithms
   - Objective function definitions
@@ -32,6 +36,7 @@ This directory contains enhanced quantitative models for the Optionix platform, 
   - Multi-asset calibration
 
 ### Market Data Management
+
 - `market_data.py`: Tools for managing and processing market data with:
   - Data cleaning and normalization
   - Implied volatility calculation
@@ -39,6 +44,7 @@ This directory contains enhanced quantitative models for the Optionix platform, 
   - Historical data analysis
 
 ### Model Validation
+
 - `model_validation.py`: Framework for validating calibrated models with:
   - Backtesting framework
   - Error metrics calculation
@@ -78,6 +84,7 @@ calibrated_params = heston.calibrate(market_data)
 ## Integration
 
 These models integrate with the existing Optionix pricing engine and can be used for:
+
 - Advanced option pricing
 - Risk management
 - Volatility trading strategies

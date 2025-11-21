@@ -1,10 +1,10 @@
-import React from 'react';
-import styled from 'styled-components';
-import { FiGithub, FiTwitter, FiLinkedin } from 'react-icons/fi';
+import React from "react";
+import styled from "styled-components";
+import { FiGithub, FiTwitter, FiLinkedin } from "react-icons/fi";
 
 const FooterContainer = styled.footer`
-  background-color: ${props => props.theme.colors.backgroundLight};
-  border-top: 1px solid ${props => props.theme.colors.border};
+  background-color: ${(props) => props.theme.colors.backgroundLight};
+  border-top: 1px solid ${(props) => props.theme.colors.border};
   padding: 20px;
   text-align: center;
 `;
@@ -24,12 +24,12 @@ const FooterLogo = styled.div`
   h2 {
     font-size: 20px;
     font-weight: 700;
-    color: ${props => props.theme.colors.primary};
+    color: ${(props) => props.theme.colors.primary};
     margin: 0;
   }
 
   span {
-    color: ${props => props.theme.colors.secondary};
+    color: ${(props) => props.theme.colors.secondary};
   }
 `;
 
@@ -38,19 +38,19 @@ const FooterLinks = styled.div`
   gap: 20px;
   margin-bottom: 16px;
 
-  @media (max-width: ${props => props.theme.breakpoints.mobile}) {
+  @media (max-width: ${(props) => props.theme.breakpoints.mobile}) {
     flex-direction: column;
     gap: 10px;
   }
 `;
 
 const FooterLink = styled.a`
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
   text-decoration: none;
   font-size: 14px;
 
   &:hover {
-    color: ${props => props.theme.colors.primary};
+    color: ${(props) => props.theme.colors.primary};
   }
 `;
 
@@ -61,16 +61,16 @@ const SocialLinks = styled.div`
 `;
 
 const SocialLink = styled.a`
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
   font-size: 20px;
 
   &:hover {
-    color: ${props => props.theme.colors.primary};
+    color: ${(props) => props.theme.colors.primary};
   }
 `;
 
 const Copyright = styled.p`
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
   font-size: 12px;
   margin: 0;
 `;
@@ -80,7 +80,9 @@ const Footer = () => {
     <FooterContainer>
       <FooterContent>
         <FooterLogo>
-          <h2>Option<span>ix</span></h2>
+          <h2>
+            Option<span>ix</span>
+          </h2>
         </FooterLogo>
 
         <FooterLinks>
@@ -103,7 +105,9 @@ const Footer = () => {
           </SocialLink>
         </SocialLinks>
 
-        <Copyright>© {new Date().getFullYear()} Optionix. All rights reserved.</Copyright>
+        <Copyright>
+          © {new Date().getFullYear()} Optionix. All rights reserved.
+        </Copyright>
       </FooterContent>
     </FooterContainer>
   );

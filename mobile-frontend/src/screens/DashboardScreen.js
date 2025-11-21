@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
-import { ActivityIndicator, Card, Title, Paragraph, List, Divider, Text as PaperText, useTheme } from 'react-native-paper';
+import React, { useState, useEffect } from "react";
+import { StyleSheet, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Card,
+  Title,
+  Paragraph,
+  List,
+  Divider,
+  Text as PaperText,
+  useTheme,
+} from "react-native-paper";
 // Removed unused import: import { marketService } from '../services/api';
 
 const DashboardScreen = () => {
@@ -15,24 +24,24 @@ const DashboardScreen = () => {
         setLoading(true);
         // Using placeholder data
         const placeholderData = {
-          marketStatus: 'Open',
+          marketStatus: "Open",
           majorIndices: [
-            { name: 'S&P 500', value: 4500.50, change: '+0.5%' },
-            { name: 'Dow Jones', value: 35000.75, change: '+0.3%' },
-            { name: 'NASDAQ', value: 14000.25, change: '+0.8%' },
+            { name: "S&P 500", value: 4500.5, change: "+0.5%" },
+            { name: "Dow Jones", value: 35000.75, change: "+0.3%" },
+            { name: "NASDAQ", value: 14000.25, change: "+0.8%" },
           ],
           topMovers: [
-            { symbol: 'AAPL', price: 175.50, change: '+1.2%' },
-            { symbol: 'GOOGL', price: 2800.00, change: '+0.9%' },
-            { symbol: 'TSLA', price: 700.00, change: '-0.5%' },
-          ]
+            { symbol: "AAPL", price: 175.5, change: "+1.2%" },
+            { symbol: "GOOGL", price: 2800.0, change: "+0.9%" },
+            { symbol: "TSLA", price: 700.0, change: "-0.5%" },
+          ],
         };
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
         setMarketOverview(placeholderData);
         setError(null);
       } catch (err) {
-        console.error('Error fetching market overview:', err);
-        setError('Failed to load market data. Please try again later.');
+        console.error("Error fetching market overview:", err);
+        setError("Failed to load market data. Please try again later.");
         setMarketOverview(null);
       } finally {
         setLoading(false);
@@ -43,19 +52,29 @@ const DashboardScreen = () => {
   }, []);
 
   const renderChange = (change) => {
-    const isPositive = change.startsWith('+');
+    const isPositive = change.startsWith("+");
     return (
-      <PaperText style={isPositive ? styles.positiveChange : styles.negativeChange}>
+      <PaperText
+        style={isPositive ? styles.positiveChange : styles.negativeChange}
+      >
         {change}
       </PaperText>
     );
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Title style={styles.title}>Market Dashboard</Title>
 
-      {loading && <ActivityIndicator animating={true} size="large" style={styles.loadingIndicator} />}
+      {loading && (
+        <ActivityIndicator
+          animating={true}
+          size="large"
+          style={styles.loadingIndicator}
+        />
+      )}
 
       {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
 
@@ -111,9 +130,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingIndicator: {
     marginTop: 30,
@@ -127,18 +146,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   positiveChange: {
-    color: '#34C759', // Green color for positive change
-    fontWeight: 'bold',
+    color: "#34C759", // Green color for positive change
+    fontWeight: "bold",
     fontSize: 16,
   },
   negativeChange: {
-    color: '#FF3B30', // Red color for negative change
-    fontWeight: 'bold',
+    color: "#FF3B30", // Red color for negative change
+    fontWeight: "bold",
     fontSize: 16,
   },
   errorText: {
-    color: '#FF3B30', // Use theme error color if available
-    textAlign: 'center',
+    color: "#FF3B30", // Use theme error color if available
+    textAlign: "center",
     marginTop: 20,
     fontSize: 16,
     padding: 10,

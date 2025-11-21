@@ -3,6 +3,7 @@
 ## Development Environment Setup
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - Python (v3.8 or higher)
 - Docker
@@ -12,24 +13,28 @@
 ### Initial Setup
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/your-org/optionix.git
 cd optionix
 ```
 
 2. Install frontend dependencies:
+
 ```bash
 cd code/frontend
 npm install
 ```
 
 3. Install backend dependencies:
+
 ```bash
 cd code/backend
 pip install -r requirements.txt
 ```
 
 4. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
@@ -38,6 +43,7 @@ cp .env.example .env
 ## Development Workflow
 
 ### Branching Strategy
+
 - `main` - Production-ready code
 - `develop` - Integration branch for features
 - `feature/*` - Feature branches
@@ -47,6 +53,7 @@ cp .env.example .env
 ### Code Style
 
 #### Frontend (React)
+
 - Follow Airbnb React/JSX Style Guide
 - Use TypeScript for type safety
 - Component naming: PascalCase
@@ -55,6 +62,7 @@ cp .env.example .env
 - Implement proper prop types
 
 #### Backend (Python)
+
 - Follow PEP 8 style guide
 - Use type hints
 - Document all functions and classes
@@ -64,6 +72,7 @@ cp .env.example .env
 ### Testing
 
 #### Frontend Testing
+
 ```bash
 cd code/frontend
 npm test
@@ -75,6 +84,7 @@ npm test
 - Maintain 80%+ test coverage
 
 #### Backend Testing
+
 ```bash
 cd code/backend
 pytest
@@ -97,6 +107,7 @@ pytest
 ## Project Structure
 
 ### Frontend Structure
+
 ```
 frontend/
 ├── src/
@@ -111,6 +122,7 @@ frontend/
 ```
 
 ### Backend Structure
+
 ```
 backend/
 ├── app/
@@ -128,6 +140,7 @@ backend/
 ### Adding a New Feature
 
 1. Create feature branch:
+
 ```bash
 git checkout -b feature/new-feature
 ```
@@ -139,12 +152,14 @@ git checkout -b feature/new-feature
 ### Database Migrations
 
 1. Create migration:
+
 ```bash
 cd code/backend
 alembic revision --autogenerate -m "description"
 ```
 
 2. Apply migration:
+
 ```bash
 alembic upgrade head
 ```
@@ -158,6 +173,7 @@ alembic upgrade head
 ## Best Practices
 
 ### Code Quality
+
 - Write clean, maintainable code
 - Follow SOLID principles
 - Use meaningful variable names
@@ -165,6 +181,7 @@ alembic upgrade head
 - Keep functions small and focused
 
 ### Performance
+
 - Optimize database queries
 - Implement caching where appropriate
 - Minimize API calls
@@ -172,6 +189,7 @@ alembic upgrade head
 - Optimize bundle size
 
 ### Security
+
 - Validate all inputs
 - Use prepared statements
 - Implement proper authentication
@@ -183,17 +201,20 @@ alembic upgrade head
 ### Common Issues
 
 1. Dependency conflicts:
+
 ```bash
 rm -rf node_modules
 npm install
 ```
 
 2. Database connection issues:
+
 - Check environment variables
 - Verify database is running
 - Check network connectivity
 
 3. API errors:
+
 - Check API documentation
 - Verify authentication
 - Check request format
@@ -201,6 +222,7 @@ npm install
 ## Support
 
 For development support:
+
 - Check documentation
 - Review existing issues
 - Contact development team

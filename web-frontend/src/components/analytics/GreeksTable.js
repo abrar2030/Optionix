@@ -1,5 +1,5 @@
-import React from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
 
 const TableContainer = styled.div`
   width: 100%;
@@ -14,7 +14,7 @@ const StyledGreeksTable = styled.table`
 
 const TableHead = styled.thead`
   tr {
-    border-bottom: 1px solid ${props => props.theme.colors.border};
+    border-bottom: 1px solid ${(props) => props.theme.colors.border};
   }
 
   th {
@@ -22,13 +22,13 @@ const TableHead = styled.thead`
     text-align: left;
     font-size: 12px;
     font-weight: 500;
-    color: ${props => props.theme.colors.textSecondary};
+    color: ${(props) => props.theme.colors.textSecondary};
   }
 `;
 
 const TableBody = styled.tbody`
   tr {
-    border-bottom: 1px solid ${props => props.theme.colors.border};
+    border-bottom: 1px solid ${(props) => props.theme.colors.border};
 
     &:last-child {
       border-bottom: none;
@@ -42,7 +42,7 @@ const TableBody = styled.tbody`
   td {
     padding: 12px 10px;
     font-size: 13px;
-    color: ${props => props.theme.colors.textPrimary};
+    color: ${(props) => props.theme.colors.textPrimary};
   }
 `;
 
@@ -55,64 +55,64 @@ const GreeksTable = () => {
   const greeksData = [
     {
       id: 1,
-      strike: '$42,000',
-      type: 'Call',
+      strike: "$42,000",
+      type: "Call",
       delta: 0.65,
       gamma: 0.0025,
       theta: -15.32,
       vega: 25.45,
-      rho: 12.35
+      rho: 12.35,
     },
     {
       id: 2,
-      strike: '$42,000',
-      type: 'Put',
+      strike: "$42,000",
+      type: "Put",
       delta: -0.35,
       gamma: 0.0025,
       theta: -12.45,
       vega: 25.45,
-      rho: -12.35
+      rho: -12.35,
     },
     {
       id: 3,
-      strike: '$44,000',
-      type: 'Call',
+      strike: "$44,000",
+      type: "Call",
       delta: 0.45,
       gamma: 0.0032,
       theta: -18.75,
       vega: 28.65,
-      rho: 10.25
+      rho: 10.25,
     },
     {
       id: 4,
-      strike: '$44,000',
-      type: 'Put',
+      strike: "$44,000",
+      type: "Put",
       delta: -0.55,
       gamma: 0.0032,
       theta: -15.85,
       vega: 28.65,
-      rho: -10.25
+      rho: -10.25,
     },
     {
       id: 5,
-      strike: '$46,000',
-      type: 'Call',
+      strike: "$46,000",
+      type: "Call",
       delta: 0.25,
       gamma: 0.0028,
       theta: -16.45,
       vega: 24.35,
-      rho: 8.15
+      rho: 8.15,
     },
     {
       id: 6,
-      strike: '$46,000',
-      type: 'Put',
+      strike: "$46,000",
+      type: "Put",
       delta: -0.75,
       gamma: 0.0028,
       theta: -14.25,
       vega: 24.35,
-      rho: -8.15
-    }
+      rho: -8.15,
+    },
   ];
 
   return (
@@ -130,7 +130,7 @@ const GreeksTable = () => {
           </tr>
         </TableHead>
         <TableBody>
-          {greeksData.map(row => (
+          {greeksData.map((row) => (
             <tr key={row.id}>
               <StrikeCell>{row.strike}</StrikeCell>
               <td>{row.type}</td>

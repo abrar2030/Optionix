@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { FiDollarSign, FiPercent, FiCalendar, FiCheckCircle } from 'react-icons/fi';
+import React, { useState } from "react";
+import styled from "styled-components";
+import {
+  FiDollarSign,
+  FiPercent,
+  FiCalendar,
+  FiCheckCircle,
+} from "react-icons/fi";
 
 const TradingFormContainer = styled.div`
   width: 100%;
@@ -14,32 +19,32 @@ const Label = styled.label`
   display: block;
   font-size: 12px;
   font-weight: 500;
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
   margin-bottom: 6px;
 `;
 
 const Input = styled.input`
   width: 100%;
-  background-color: ${props => props.theme.colors.backgroundDark};
-  border: 1px solid ${props => props.theme.colors.border};
+  background-color: ${(props) => props.theme.colors.backgroundDark};
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
   padding: 10px 12px;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
   font-size: 14px;
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${(props) => props.theme.colors.primary};
   }
 `;
 
 const Select = styled.select`
   width: 100%;
-  background-color: ${props => props.theme.colors.backgroundDark};
-  border: 1px solid ${props => props.theme.colors.border};
+  background-color: ${(props) => props.theme.colors.backgroundDark};
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
   padding: 10px 12px;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
   font-size: 14px;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b2b5be' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -49,7 +54,7 @@ const Select = styled.select`
 
   &:focus {
     outline: none;
-    border-color: ${props => props.theme.colors.primary};
+    border-color: ${(props) => props.theme.colors.primary};
   }
 `;
 
@@ -58,14 +63,16 @@ const ToggleContainer = styled.div`
   margin-bottom: 16px;
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
 `;
 
 const ToggleButton = styled.button`
   flex: 1;
   padding: 10px;
-  background-color: ${props => props.active ? props.activeColor : props.theme.colors.backgroundDark};
-  color: ${props => props.active ? 'white' : props.theme.colors.textSecondary};
+  background-color: ${(props) =>
+    props.active ? props.activeColor : props.theme.colors.backgroundDark};
+  color: ${(props) =>
+    props.active ? "white" : props.theme.colors.textSecondary};
   border: none;
   font-size: 14px;
   font-weight: 500;
@@ -73,14 +80,15 @@ const ToggleButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: ${props => props.active ? props.activeColor : 'rgba(42, 46, 57, 0.8)'};
+    background-color: ${(props) =>
+      props.active ? props.activeColor : "rgba(42, 46, 57, 0.8)"};
   }
 `;
 
 const SubmitButton = styled.button`
   width: 100%;
   padding: 12px;
-  background-color: ${props => props.theme.colors.primary};
+  background-color: ${(props) => props.theme.colors.primary};
   color: white;
   border: none;
   border-radius: 4px;
@@ -93,7 +101,7 @@ const SubmitButton = styled.button`
   justify-content: center;
 
   &:hover {
-    background-color: ${props => props.theme.colors.primaryDark};
+    background-color: ${(props) => props.theme.colors.primaryDark};
   }
 
   svg {
@@ -102,8 +110,8 @@ const SubmitButton = styled.button`
 `;
 
 const PricePreview = styled.div`
-  background-color: ${props => props.theme.colors.backgroundDark};
-  border: 1px solid ${props => props.theme.colors.border};
+  background-color: ${(props) => props.theme.colors.backgroundDark};
+  border: 1px solid ${(props) => props.theme.colors.border};
   border-radius: 4px;
   padding: 12px;
   margin-bottom: 16px;
@@ -117,45 +125,45 @@ const PriceRow = styled.div`
   &:last-child {
     margin-bottom: 0;
     padding-top: 8px;
-    border-top: 1px solid ${props => props.theme.colors.border};
+    border-top: 1px solid ${(props) => props.theme.colors.border};
   }
 `;
 
 const PriceLabel = styled.span`
   font-size: 12px;
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
 `;
 
 const PriceValue = styled.span`
   font-size: 12px;
   font-weight: 500;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
 `;
 
 const TotalValue = styled.span`
   font-size: 14px;
   font-weight: 600;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
 `;
 
 const TradingForm = () => {
-  const [optionType, setOptionType] = useState('call');
-  const [positionType, setPositionType] = useState('buy');
+  const [optionType, setOptionType] = useState("call");
+  const [positionType, setPositionType] = useState("buy");
 
   return (
     <TradingFormContainer>
       <ToggleContainer>
         <ToggleButton
-          active={optionType === 'call'}
+          active={optionType === "call"}
           activeColor="#26a69a"
-          onClick={() => setOptionType('call')}
+          onClick={() => setOptionType("call")}
         >
           Call
         </ToggleButton>
         <ToggleButton
-          active={optionType === 'put'}
+          active={optionType === "put"}
           activeColor="#ef5350"
-          onClick={() => setOptionType('put')}
+          onClick={() => setOptionType("put")}
         >
           Put
         </ToggleButton>
@@ -163,16 +171,16 @@ const TradingForm = () => {
 
       <ToggleContainer>
         <ToggleButton
-          active={positionType === 'buy'}
+          active={positionType === "buy"}
           activeColor="#26a69a"
-          onClick={() => setPositionType('buy')}
+          onClick={() => setPositionType("buy")}
         >
           Buy
         </ToggleButton>
         <ToggleButton
-          active={positionType === 'sell'}
+          active={positionType === "sell"}
           activeColor="#ef5350"
-          onClick={() => setPositionType('sell')}
+          onClick={() => setPositionType("sell")}
         >
           Sell
         </ToggleButton>
@@ -233,7 +241,7 @@ const TradingForm = () => {
 
       <SubmitButton>
         <FiCheckCircle />
-        {positionType === 'buy' ? 'Buy' : 'Sell'} {optionType.toUpperCase()}
+        {positionType === "buy" ? "Buy" : "Sell"} {optionType.toUpperCase()}
       </SubmitButton>
     </TradingFormContainer>
   );

@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { FiDollarSign, FiArrowUp, FiArrowDown, FiClock } from 'react-icons/fi';
+import React, { useState } from "react";
+import styled from "styled-components";
+import { FiDollarSign, FiArrowUp, FiArrowDown, FiClock } from "react-icons/fi";
 
 // Components for Dashboard
-import PriceChart from '../components/dashboard/PriceChart';
-import TradingForm from '../components/trading/TradingForm';
-import OptionChain from '../components/trading/OptionChain';
-import OrderBook from '../components/trading/OrderBook';
+import PriceChart from "../components/dashboard/PriceChart";
+import TradingForm from "../components/trading/TradingForm";
+import OptionChain from "../components/trading/OptionChain";
+import OrderBook from "../components/trading/OrderBook";
 
 const TradingContainer = styled.div`
   display: grid;
@@ -16,52 +16,52 @@ const TradingContainer = styled.div`
 
 const ChartSection = styled.div`
   grid-column: span 8;
-  background-color: ${props => props.theme.colors.cardBg};
+  background-color: ${(props) => props.theme.colors.cardBg};
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
 
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+  @media (max-width: ${(props) => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
 `;
 
 const TradingFormSection = styled.div`
   grid-column: span 4;
-  background-color: ${props => props.theme.colors.cardBg};
+  background-color: ${(props) => props.theme.colors.cardBg};
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
 
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+  @media (max-width: ${(props) => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
 `;
 
 const OptionChainSection = styled.div`
   grid-column: span 8;
-  background-color: ${props => props.theme.colors.cardBg};
+  background-color: ${(props) => props.theme.colors.cardBg};
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
 
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+  @media (max-width: ${(props) => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
 `;
 
 const OrderBookSection = styled.div`
   grid-column: span 4;
-  background-color: ${props => props.theme.colors.cardBg};
+  background-color: ${(props) => props.theme.colors.cardBg};
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid ${props => props.theme.colors.border};
+  border: 1px solid ${(props) => props.theme.colors.border};
 
-  @media (max-width: ${props => props.theme.breakpoints.tablet}) {
+  @media (max-width: ${(props) => props.theme.breakpoints.tablet}) {
     grid-column: span 12;
   }
 `;
@@ -69,7 +69,7 @@ const OrderBookSection = styled.div`
 const CardTitle = styled.h2`
   font-size: 18px;
   font-weight: 600;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
   margin: 0 0 20px 0;
   display: flex;
   align-items: center;
@@ -84,7 +84,7 @@ const MarketInfo = styled.div`
 `;
 
 const MarketItem = styled.div`
-  background-color: ${props => props.theme.colors.backgroundDark};
+  background-color: ${(props) => props.theme.colors.backgroundDark};
   border-radius: 6px;
   padding: 10px 15px;
   flex: 1;
@@ -92,7 +92,7 @@ const MarketItem = styled.div`
 
   h4 {
     font-size: 12px;
-    color: ${props => props.theme.colors.textSecondary};
+    color: ${(props) => props.theme.colors.textSecondary};
     margin: 0 0 5px 0;
     display: flex;
     align-items: center;
@@ -106,35 +106,41 @@ const MarketItem = styled.div`
     font-size: 16px;
     font-weight: 600;
     margin: 0;
-    color: ${props => props.color || props.theme.colors.textPrimary};
+    color: ${(props) => props.color || props.theme.colors.textPrimary};
   }
 `;
 
 const Trading = () => {
-  const [selectedAsset, setSelectedAsset] = useState('BTC-USD');
+  const [selectedAsset, setSelectedAsset] = useState("BTC-USD");
 
   return (
     <TradingContainer>
       <ChartSection>
-        <CardTitle>
-          {selectedAsset} Price Chart
-        </CardTitle>
+        <CardTitle>{selectedAsset} Price Chart</CardTitle>
 
         <MarketInfo>
           <MarketItem>
-            <h4><FiDollarSign /> Price</h4>
+            <h4>
+              <FiDollarSign /> Price
+            </h4>
             <p>$42,567.89</p>
           </MarketItem>
-          <MarketItem color={props => props.theme.colors.success}>
-            <h4><FiArrowUp /> 24h High</h4>
+          <MarketItem color={(props) => props.theme.colors.success}>
+            <h4>
+              <FiArrowUp /> 24h High
+            </h4>
             <p>$43,120.45</p>
           </MarketItem>
-          <MarketItem color={props => props.theme.colors.danger}>
-            <h4><FiArrowDown /> 24h Low</h4>
+          <MarketItem color={(props) => props.theme.colors.danger}>
+            <h4>
+              <FiArrowDown /> 24h Low
+            </h4>
             <p>$41,890.32</p>
           </MarketItem>
           <MarketItem>
-            <h4><FiClock /> 24h Volume</h4>
+            <h4>
+              <FiClock /> 24h Volume
+            </h4>
             <p>$1.2B</p>
           </MarketItem>
         </MarketInfo>

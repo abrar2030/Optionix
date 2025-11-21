@@ -36,6 +36,7 @@ web-frontend/
 ### Public Directory
 
 The `public` directory contains static assets that are copied directly to the build output without processing by Webpack, such as:
+
 - HTML template files
 - Favicon and other icons
 - Static images
@@ -48,7 +49,7 @@ The `src` directory contains the main application code organized into several su
 
 - **App.js**: The root React component that sets up the application structure
 - **index.js**: The entry point that renders the React application to the DOM
-- **__tests__/**: Contains test files for components and functionality
+- ****tests**/**: Contains test files for components and functionality
 - **components/**: Reusable UI components organized by feature or function
 - **pages/**: Top-level page components that correspond to different routes in the application
 - **services/**: Modules for API communication, data processing, and business logic
@@ -65,12 +66,14 @@ The `src` directory contains the main application code organized into several su
 ### Installation
 
 1. Install dependencies:
+
    ```bash
    cd web-frontend
    npm install
    ```
 
 2. Start the development server:
+
    ```bash
    npm start
    ```

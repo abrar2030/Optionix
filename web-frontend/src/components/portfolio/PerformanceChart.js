@@ -1,6 +1,6 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Line } from 'react-chartjs-2';
+import React from "react";
+import styled from "styled-components";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,8 +10,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js';
+  Filler,
+} from "chart.js";
 
 // Register ChartJS components
 ChartJS.register(
@@ -22,7 +22,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 const ChartContainer = styled.div`
@@ -37,9 +37,13 @@ const TimeframeSelector = styled.div`
 `;
 
 const TimeButton = styled.button`
-  background-color: ${props => props.active ? props.theme.colors.primary : 'transparent'};
-  color: ${props => props.active ? 'white' : props.theme.colors.textSecondary};
-  border: 1px solid ${props => props.active ? props.theme.colors.primary : props.theme.colors.border};
+  background-color: ${(props) =>
+    props.active ? props.theme.colors.primary : "transparent"};
+  color: ${(props) =>
+    props.active ? "white" : props.theme.colors.textSecondary};
+  border: 1px solid
+    ${(props) =>
+      props.active ? props.theme.colors.primary : props.theme.colors.border};
   border-radius: 4px;
   padding: 6px 12px;
   font-size: 12px;
@@ -47,32 +51,49 @@ const TimeButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: ${props => props.active ? props.theme.colors.primary : 'rgba(41, 98, 255, 0.1)'};
-    color: ${props => props.active ? 'white' : props.theme.colors.primary};
+    background-color: ${(props) =>
+      props.active ? props.theme.colors.primary : "rgba(41, 98, 255, 0.1)"};
+    color: ${(props) => (props.active ? "white" : props.theme.colors.primary)};
   }
 `;
 
 const PerformanceChart = () => {
-  const [timeframe, setTimeframe] = React.useState('1M');
+  const [timeframe, setTimeframe] = React.useState("1M");
 
   // Sample data
   const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    labels: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
     datasets: [
       {
-        label: 'Portfolio Value',
-        data: [20000, 21500, 20800, 22000, 23500, 25000, 24500, 26000, 27500, 26800, 28000, 29500],
-        borderColor: '#2962ff',
-        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+        label: "Portfolio Value",
+        data: [
+          20000, 21500, 20800, 22000, 23500, 25000, 24500, 26000, 27500, 26800,
+          28000, 29500,
+        ],
+        borderColor: "#2962ff",
+        backgroundColor: "rgba(41, 98, 255, 0.1)",
         fill: true,
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#2962ff',
-        pointHoverBorderColor: 'white',
+        pointHoverBackgroundColor: "#2962ff",
+        pointHoverBorderColor: "white",
         pointHoverBorderWidth: 2,
-      }
-    ]
+      },
+    ],
   };
 
   const options = {
@@ -83,21 +104,21 @@ const PerformanceChart = () => {
         display: false,
       },
       tooltip: {
-        mode: 'index',
+        mode: "index",
         intersect: false,
-        backgroundColor: '#1e222d',
-        titleColor: '#b2b5be',
-        bodyColor: 'white',
-        borderColor: '#2a2e39',
+        backgroundColor: "#1e222d",
+        titleColor: "#b2b5be",
+        bodyColor: "white",
+        borderColor: "#2a2e39",
         borderWidth: 1,
         padding: 10,
         displayColors: false,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `$${context.raw.toLocaleString()}`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       x: {
@@ -106,43 +127,43 @@ const PerformanceChart = () => {
           drawBorder: false,
         },
         ticks: {
-          color: '#b2b5be',
-          font: {
-            size: 10,
-          }
-        }
-      },
-      y: {
-        grid: {
-          color: 'rgba(42, 46, 57, 0.6)',
-          drawBorder: false,
-        },
-        ticks: {
-          color: '#b2b5be',
+          color: "#b2b5be",
           font: {
             size: 10,
           },
-          callback: function(value) {
-            return '$' + value.toLocaleString();
-          }
-        }
-      }
+        },
+      },
+      y: {
+        grid: {
+          color: "rgba(42, 46, 57, 0.6)",
+          drawBorder: false,
+        },
+        ticks: {
+          color: "#b2b5be",
+          font: {
+            size: 10,
+          },
+          callback: function (value) {
+            return "$" + value.toLocaleString();
+          },
+        },
+      },
     },
     interaction: {
-      mode: 'index',
+      mode: "index",
       intersect: false,
     },
     elements: {
       line: {
         borderWidth: 2,
-      }
-    }
+      },
+    },
   };
 
   return (
     <>
       <TimeframeSelector>
-        {['1W', '1M', '3M', '6M', '1Y', 'ALL'].map(time => (
+        {["1W", "1M", "3M", "6M", "1Y", "ALL"].map((time) => (
           <TimeButton
             key={time}
             active={timeframe === time}

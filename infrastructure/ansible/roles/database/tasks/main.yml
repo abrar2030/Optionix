@@ -48,7 +48,7 @@
     dest: /etc/mysql/mysql.conf.d/security.cnf
     owner: root
     group: root
-    mode: '0600'
+    mode: "0600"
     backup: yes
   become: yes
   notify: restart mysql
@@ -99,8 +99,8 @@
 - name: Enable MySQL binary logging for audit trail
   lineinfile:
     path: /etc/mysql/mysql.conf.d/mysqld.cnf
-    regexp: '^#log_bin'
-    line: 'log_bin = /var/log/mysql/mysql-bin.log'
+    regexp: "^#log_bin"
+    line: "log_bin = /var/log/mysql/mysql-bin.log"
     state: present
   become: yes
   notify: restart mysql
@@ -108,8 +108,8 @@
 - name: Configure MySQL slow query log
   lineinfile:
     path: /etc/mysql/mysql.conf.d/mysqld.cnf
-    regexp: '^#slow_query_log'
-    line: 'slow_query_log = 1'
+    regexp: "^#slow_query_log"
+    line: "slow_query_log = 1"
     state: present
   become: yes
   notify: restart mysql
@@ -120,7 +120,7 @@
     dest: /etc/logrotate.d/mysql-server
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
 
 - name: Create database backup script
@@ -129,7 +129,7 @@
     dest: /usr/local/bin/db_backup.sh
     owner: root
     group: root
-    mode: '0750'
+    mode: "0750"
   become: yes
 
 - name: Schedule daily database backups
@@ -152,8 +152,8 @@
 - name: Configure MySQL performance schema for monitoring
   lineinfile:
     path: /etc/mysql/mysql.conf.d/mysqld.cnf
-    regexp: '^#performance_schema'
-    line: 'performance_schema = ON'
+    regexp: "^#performance_schema"
+    line: "performance_schema = ON"
     state: present
   become: yes
   notify: restart mysql
@@ -161,8 +161,8 @@
 - name: Set up database connection encryption
   lineinfile:
     path: /etc/mysql/mysql.conf.d/mysqld.cnf
-    regexp: '^#require_secure_transport'
-    line: 'require_secure_transport = ON'
+    regexp: "^#require_secure_transport"
+    line: "require_secure_transport = ON"
     state: present
   become: yes
   notify: restart mysql
@@ -170,7 +170,7 @@
 - name: Configure MySQL firewall rules
   ufw:
     rule: allow
-    port: '3306'
+    port: "3306"
     src: "{{ item }}"
   become: yes
   loop: "{{ mysql_allowed_hosts | default(['127.0.0.1']) }}"

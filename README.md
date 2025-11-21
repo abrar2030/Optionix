@@ -15,6 +15,7 @@ Optionix is a comprehensive options trading and analytics platform that combines
 > **Note**: This project is under active development. Features and functionalities are continuously being enhanced to improve user experience and trading capabilities.
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Features](#features)
 - [Architecture](#architecture)
@@ -30,56 +31,56 @@ Optionix is a comprehensive options trading and analytics platform that combines
 
 Optionix is a next-generation options trading platform that leverages advanced algorithms, machine learning, and blockchain technology to provide traders with powerful tools for options analysis and trading. The platform includes:
 
-| Component | Description |
-| :--- | :--- |
-| **Options Pricing Engine** | Advanced mathematical models for accurate options pricing |
-| **Market Data Integration** | Real-time market data for informed decision-making |
-| **AI Trading Signals** | Machine learning algorithms to identify trading opportunities |
-| **Portfolio Management** | Comprehensive tools for tracking and managing options positions |
-| **Blockchain Integration** | Smart contracts for decentralized options trading |
-| **Risk Analysis** | Sophisticated risk assessment and visualization tools |
+| Component                   | Description                                                     |
+| :-------------------------- | :-------------------------------------------------------------- |
+| **Options Pricing Engine**  | Advanced mathematical models for accurate options pricing       |
+| **Market Data Integration** | Real-time market data for informed decision-making              |
+| **AI Trading Signals**      | Machine learning algorithms to identify trading opportunities   |
+| **Portfolio Management**    | Comprehensive tools for tracking and managing options positions |
+| **Blockchain Integration**  | Smart contracts for decentralized options trading               |
+| **Risk Analysis**           | Sophisticated risk assessment and visualization tools           |
 
 ## Features
 
 ### Options Trading
 
-| Feature | Description |
-| :--- | :--- |
-| **Real-time Options Chain** | Access to up-to-the-second options chain data |
+| Feature                        | Description                                                |
+| :----------------------------- | :--------------------------------------------------------- |
+| **Real-time Options Chain**    | Access to up-to-the-second options chain data              |
 | **Multi-leg Strategy Builder** | Tool for constructing complex multi-leg options strategies |
-| **One-click Trade Execution** | Streamlined process for rapid trade execution |
-| **Position Tracking** | Detailed tracking and P&L analysis of current positions |
-| **Historical Performance** | Metrics and analysis of past trading performance |
+| **One-click Trade Execution**  | Streamlined process for rapid trade execution              |
+| **Position Tracking**          | Detailed tracking and P&L analysis of current positions    |
+| **Historical Performance**     | Metrics and analysis of past trading performance           |
 
 ### Analytics
 
-| Feature | Description |
-| :--- | :--- |
-| **Volatility Surface** | Visualization of the volatility surface |
-| **Greeks Calculation** | Calculation and visualization of options Greeks (Delta, Gamma, Theta, Vega, Rho) |
-| **Implied Volatility** | In-depth analysis of implied volatility |
-| **Strategy Payoff Diagrams** | Visual representation of options strategy payoff profiles |
-| **Risk/Reward Ratios** | Calculations for risk and reward ratios |
+| Feature                      | Description                                                                      |
+| :--------------------------- | :------------------------------------------------------------------------------- |
+| **Volatility Surface**       | Visualization of the volatility surface                                          |
+| **Greeks Calculation**       | Calculation and visualization of options Greeks (Delta, Gamma, Theta, Vega, Rho) |
+| **Implied Volatility**       | In-depth analysis of implied volatility                                          |
+| **Strategy Payoff Diagrams** | Visual representation of options strategy payoff profiles                        |
+| **Risk/Reward Ratios**       | Calculations for risk and reward ratios                                          |
 
 ### AI Features
 
-| Feature | Description |
-| :--- | :--- |
-| **Volatility Prediction** | Models for forecasting future market volatility |
-| **Mispricing Detection** | Algorithms to identify options that may be mispriced |
-| **Market Sentiment** | Analysis of market sentiment from various data sources |
+| Feature                       | Description                                              |
+| :---------------------------- | :------------------------------------------------------- |
+| **Volatility Prediction**     | Models for forecasting future market volatility          |
+| **Mispricing Detection**      | Algorithms to identify options that may be mispriced     |
+| **Market Sentiment**          | Analysis of market sentiment from various data sources   |
 | **Automated Trading Signals** | AI-generated signals for potential trading opportunities |
-| **Personalized Strategy** | Tailored recommendations for trading strategies |
+| **Personalized Strategy**     | Tailored recommendations for trading strategies          |
 
 ### Blockchain Integration
 
-| Feature | Description |
-| :--- | :--- |
-| **Decentralized Contracts** | Implementation of decentralized options contracts |
-| **Smart Contract Settlement** | Automated and secure trade settlement via smart contracts |
-| **On-chain Verification** | Transparent verification of options positions on the blockchain |
-| **Cross-chain Collateralization** | Support for using assets from different chains as collateral |
-| **Transparent History** | Immutable and transparent transaction history |
+| Feature                           | Description                                                     |
+| :-------------------------------- | :-------------------------------------------------------------- |
+| **Decentralized Contracts**       | Implementation of decentralized options contracts               |
+| **Smart Contract Settlement**     | Automated and secure trade settlement via smart contracts       |
+| **On-chain Verification**         | Transparent verification of options positions on the blockchain |
+| **Cross-chain Collateralization** | Support for using assets from different chains as collateral    |
+| **Transparent History**           | Immutable and transparent transaction history                   |
 
 ## Architecture
 
@@ -87,57 +88,57 @@ Optionix is built on a robust, microservices-based architecture designed for hig
 
 ### Core Components
 
-| Component | Description |
-| :--- | :--- |
+| Component            | Description                                                                                               |
+| :------------------- | :-------------------------------------------------------------------------------------------------------- |
 | **Backend Services** | Core business logic, options pricing, AI models, and data processing. Built with Python/Rust and FastAPI. |
-| **Web Frontend** | Primary user interface for trading and analytics, built with React and TypeScript. |
-| **Mobile Frontend** | Native mobile application for on-the-go access, built with React Native. |
-| **Blockchain Layer** | Smart contracts (Solidity) for decentralized options and on-chain verification. |
-| **Infrastructure** | Managed by Kubernetes, Terraform, and Ansible for reliable, scalable deployment. |
+| **Web Frontend**     | Primary user interface for trading and analytics, built with React and TypeScript.                        |
+| **Mobile Frontend**  | Native mobile application for on-the-go access, built with React Native.                                  |
+| **Blockchain Layer** | Smart contracts (Solidity) for decentralized options and on-chain verification.                           |
+| **Infrastructure**   | Managed by Kubernetes, Terraform, and Ansible for reliable, scalable deployment.                          |
 
 ## Technology Stack
 
 ### Backend
 
-| Component | Technologies |
-| :--- | :--- |
-| **Language** | Python, Rust (for performance-critical components) |
-| **Framework** | FastAPI |
-| **Database** | PostgreSQL, TimescaleDB (for time-series data) |
-| **Caching** | Redis |
-| **Message Queue** | RabbitMQ |
-| **ML Framework** | PyTorch, scikit-learn |
-| **Blockchain** | Ethereum, Solidity |
+| Component         | Technologies                                       |
+| :---------------- | :------------------------------------------------- |
+| **Language**      | Python, Rust (for performance-critical components) |
+| **Framework**     | FastAPI                                            |
+| **Database**      | PostgreSQL, TimescaleDB (for time-series data)     |
+| **Caching**       | Redis                                              |
+| **Message Queue** | RabbitMQ                                           |
+| **ML Framework**  | PyTorch, scikit-learn                              |
+| **Blockchain**    | Ethereum, Solidity                                 |
 
 ### Web Frontend
 
-| Component | Technologies |
-| :--- | :--- |
-| **Framework** | React with TypeScript |
-| **State Management** | Redux Toolkit |
-| **Styling** | Styled Components, TailwindCSS |
-| **Data Visualization** | D3.js, TradingView Charts |
-| **Web3** | ethers.js |
+| Component              | Technologies                   |
+| :--------------------- | :----------------------------- |
+| **Framework**          | React with TypeScript          |
+| **State Management**   | Redux Toolkit                  |
+| **Styling**            | Styled Components, TailwindCSS |
+| **Data Visualization** | D3.js, TradingView Charts      |
+| **Web3**               | ethers.js                      |
 
 ### Mobile Frontend
 
-| Component | Technologies |
-| :--- | :--- |
-| **Framework** | React Native |
-| **State Management** | Redux Toolkit |
-| **Navigation** | React Navigation |
-| **UI Components** | React Native Paper |
-| **Charts** | Victory Native |
+| Component            | Technologies       |
+| :------------------- | :----------------- |
+| **Framework**        | React Native       |
+| **State Management** | Redux Toolkit      |
+| **Navigation**       | React Navigation   |
+| **UI Components**    | React Native Paper |
+| **Charts**           | Victory Native     |
 
 ### Infrastructure
 
-| Component | Technologies |
-| :--- | :--- |
-| **Containerization** | Docker |
-| **Orchestration** | Kubernetes |
-| **CI/CD** | GitHub Actions |
-| **Monitoring** | Prometheus, Grafana |
-| **Logging** | ELK Stack |
+| Component            | Technologies        |
+| :------------------- | :------------------ |
+| **Containerization** | Docker              |
+| **Orchestration**    | Kubernetes          |
+| **CI/CD**            | GitHub Actions      |
+| **Monitoring**       | Prometheus, Grafana |
+| **Logging**          | ELK Stack           |
 
 ## Security and Compliance
 
@@ -145,40 +146,40 @@ The infrastructure is designed to meet stringent financial industry standards, i
 
 ### Key Security Measures
 
-| Category | Measure | Description |
-| :--- | :--- | :--- |
-| **Network Security** | Micro-segmentation, IDPS, DDoS Protection, WAF | Granular network policies and perimeter defense to limit attack surface. |
-| **Data Security** | Encryption at Rest and in Transit, DLP | All sensitive data is encrypted, and Data Loss Prevention is implemented. |
-| **Endpoint Security** | Continuous Vulnerability Management | Regular scanning and patching for all servers, containers, and applications. |
-| **IAM** | Least Privilege, MFA, RBAC | Strict access controls, Multi-Factor Authentication, and Role-Based Access Control for all users and services. |
+| Category              | Measure                                        | Description                                                                                                    |
+| :-------------------- | :--------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| **Network Security**  | Micro-segmentation, IDPS, DDoS Protection, WAF | Granular network policies and perimeter defense to limit attack surface.                                       |
+| **Data Security**     | Encryption at Rest and in Transit, DLP         | All sensitive data is encrypted, and Data Loss Prevention is implemented.                                      |
+| **Endpoint Security** | Continuous Vulnerability Management            | Regular scanning and patching for all servers, containers, and applications.                                   |
+| **IAM**               | Least Privilege, MFA, RBAC                     | Strict access controls, Multi-Factor Authentication, and Role-Based Access Control for all users and services. |
 
 ### Key Compliance Features
 
-| Category | Feature | Description |
-| :--- | :--- | :--- |
-| **Auditing** | Centralized Logging, Comprehensive Auditing | Immutable logs and detailed audit trails for all administrative and data access actions. |
-| **Resilience** | Disaster Recovery (DR) and BC Plan | Regularly tested plans for continuous operation and rapid recovery from major outages. |
-| **Configuration** | Version Control, Automated Drift Detection | All infrastructure as code (IaC) is version-controlled with automated tools to prevent configuration drift. |
-| **Assessment** | Regular Security and Compliance Audits | Periodic internal and external assessments, penetration testing, and vulnerability assessments. |
+| Category          | Feature                                     | Description                                                                                                 |
+| :---------------- | :------------------------------------------ | :---------------------------------------------------------------------------------------------------------- |
+| **Auditing**      | Centralized Logging, Comprehensive Auditing | Immutable logs and detailed audit trails for all administrative and data access actions.                    |
+| **Resilience**    | Disaster Recovery (DR) and BC Plan          | Regularly tested plans for continuous operation and rapid recovery from major outages.                      |
+| **Configuration** | Version Control, Automated Drift Detection  | All infrastructure as code (IaC) is version-controlled with automated tools to prevent configuration drift. |
+| **Assessment**    | Regular Security and Compliance Audits      | Periodic internal and external assessments, penetration testing, and vulnerability assessments.             |
 
 ## Getting Started
 
 ### Backend Setup
 
-| Step | Command/Action |
-| :--- | :--- |
-| **Navigate** | `cd code/backend` |
-| **Install Dependencies** | `pip install -r requirements.txt` |
-| **Start Server** | `uvicorn app:app --host 0.0.0.0 --port 8000` |
+| Step                     | Command/Action                               |
+| :----------------------- | :------------------------------------------- |
+| **Navigate**             | `cd code/backend`                            |
+| **Install Dependencies** | `pip install -r requirements.txt`            |
+| **Start Server**         | `uvicorn app:app --host 0.0.0.0 --port 8000` |
 
 ### Frontend Setup
 
-| Step | Command/Action |
-| :--- | :--- |
-| **Navigate** | `cd code/frontend` |
-| **Install Dependencies** | `npm install` |
-| **Start Dev Server** | `npm start` |
-| **Build Production** | `npm run build` |
+| Step                     | Command/Action     |
+| :----------------------- | :----------------- |
+| **Navigate**             | `cd code/frontend` |
+| **Install Dependencies** | `npm install`      |
+| **Start Dev Server**     | `npm start`        |
+| **Build Production**     | `npm run build`    |
 
 For a quick setup of the entire application:
 
@@ -200,37 +201,37 @@ The project maintains comprehensive test coverage across all components to ensur
 
 ### Test Coverage
 
-| Component | Coverage | Status |
-| :--- | :--- | :--- |
-| Backend API | 85% | ✅ |
-| Options Pricing Engine | 90% | ✅ |
-| Frontend Components | 78% | ✅ |
-| Blockchain Integration | 75% | ✅ |
-| AI Models | 77% | ✅ |
-| Overall | 81% | ✅ |
+| Component              | Coverage | Status |
+| :--------------------- | :------- | :----- |
+| Backend API            | 85%      | ✅     |
+| Options Pricing Engine | 90%      | ✅     |
+| Frontend Components    | 78%      | ✅     |
+| Blockchain Integration | 75%      | ✅     |
+| AI Models              | 77%      | ✅     |
+| Overall                | 81%      | ✅     |
 
 ### Backend Testing
 
-| Test Type | Description |
-| :--- | :--- |
-| **Unit Tests** | For API endpoints using pytest |
-| **Integration Tests** | For blockchain interaction |
+| Test Type             | Description                    |
+| :-------------------- | :----------------------------- |
+| **Unit Tests**        | For API endpoints using pytest |
+| **Integration Tests** | For blockchain interaction     |
 | **Performance Tests** | For options pricing algorithms |
 
 ### Frontend Testing
 
-| Test Type | Description |
-| :--- | :--- |
-| **Component Tests** | Using React Testing Library |
-| **End-to-end Tests** | With Cypress |
+| Test Type            | Description                      |
+| :------------------- | :------------------------------- |
+| **Component Tests**  | Using React Testing Library      |
+| **End-to-end Tests** | With Cypress                     |
 | **State Management** | Tests for state management logic |
 
 ### AI Model Testing
 
-| Test Type | Description |
-| :--- | :--- |
-| **Accuracy Validation** | Validation of model accuracy |
-| **Backtesting** | Against historical data |
+| Test Type                    | Description                       |
+| :--------------------------- | :-------------------------------- |
+| **Accuracy Validation**      | Validation of model accuracy      |
+| **Backtesting**              | Against historical data           |
 | **Performance Benchmarking** | Benchmarking of model performance |
 
 To run tests:
@@ -256,22 +257,22 @@ python -m unittest discover
 
 The project uses GitHub Actions for continuous integration and deployment:
 
-| CI/CD Step | Description |
-| :--- | :--- |
-| **Automated Testing** | Runs on pull requests |
-| **Code Quality Checks** | With ESLint and Pylint |
-| **Docker Image** | Building and publishing of Docker images |
-| **Automated Deployment** | To staging and production environments |
+| CI/CD Step               | Description                              |
+| :----------------------- | :--------------------------------------- |
+| **Automated Testing**    | Runs on pull requests                    |
+| **Code Quality Checks**  | With ESLint and Pylint                   |
+| **Docker Image**         | Building and publishing of Docker images |
+| **Automated Deployment** | To staging and production environments   |
 
 ## Contributing
 
-| Step | Command/Action |
-| :--- | :--- |
-| **Fork** | Fork the repository |
-| **Branch** | Create your feature branch (`git checkout -b feature/amazing-feature`) |
-| **Commit** | Commit your changes (`git commit -m 'Add some amazing feature'`) |
-| **Push** | Push to the branch (`git push origin feature/amazing-feature`) |
-| **Pull Request** | Open a Pull Request |
+| Step             | Command/Action                                                         |
+| :--------------- | :--------------------------------------------------------------------- |
+| **Fork**         | Fork the repository                                                    |
+| **Branch**       | Create your feature branch (`git checkout -b feature/amazing-feature`) |
+| **Commit**       | Commit your changes (`git commit -m 'Add some amazing feature'`)       |
+| **Push**         | Push to the branch (`git push origin feature/amazing-feature`)         |
+| **Pull Request** | Open a Pull Request                                                    |
 
 ## License
 

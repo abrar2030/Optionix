@@ -1,6 +1,6 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Line } from 'react-chartjs-2';
+import React from "react";
+import styled from "styled-components";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,8 +10,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
-} from 'chart.js';
+  Filler,
+} from "chart.js";
 
 // Register ChartJS components
 ChartJS.register(
@@ -22,7 +22,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 const ChartContainer = styled.div`
@@ -37,9 +37,13 @@ const TimeframeSelector = styled.div`
 `;
 
 const TimeButton = styled.button`
-  background-color: ${props => props.active ? props.theme.colors.primary : 'transparent'};
-  color: ${props => props.active ? 'white' : props.theme.colors.textSecondary};
-  border: 1px solid ${props => props.active ? props.theme.colors.primary : props.theme.colors.border};
+  background-color: ${(props) =>
+    props.active ? props.theme.colors.primary : "transparent"};
+  color: ${(props) =>
+    props.active ? "white" : props.theme.colors.textSecondary};
+  border: 1px solid
+    ${(props) =>
+      props.active ? props.theme.colors.primary : props.theme.colors.border};
   border-radius: 4px;
   padding: 6px 12px;
   font-size: 12px;
@@ -47,45 +51,59 @@ const TimeButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: ${props => props.active ? props.theme.colors.primary : 'rgba(41, 98, 255, 0.1)'};
-    color: ${props => props.active ? 'white' : props.theme.colors.primary};
+    background-color: ${(props) =>
+      props.active ? props.theme.colors.primary : "rgba(41, 98, 255, 0.1)"};
+    color: ${(props) => (props.active ? "white" : props.theme.colors.primary)};
   }
 `;
 
 const VolatilityChart = () => {
-  const [timeframe, setTimeframe] = React.useState('1M');
+  const [timeframe, setTimeframe] = React.useState("1M");
 
   // Sample data
   const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    labels: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
     datasets: [
       {
-        label: 'Historical Volatility',
+        label: "Historical Volatility",
         data: [28, 32, 25, 30, 35, 40, 38, 32, 28, 30, 34, 32],
-        borderColor: '#2962ff',
-        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+        borderColor: "#2962ff",
+        backgroundColor: "rgba(41, 98, 255, 0.1)",
         fill: true,
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#2962ff',
-        pointHoverBorderColor: 'white',
+        pointHoverBackgroundColor: "#2962ff",
+        pointHoverBorderColor: "white",
         pointHoverBorderWidth: 2,
       },
       {
-        label: 'Implied Volatility',
+        label: "Implied Volatility",
         data: [30, 35, 28, 32, 38, 42, 40, 35, 30, 32, 36, 34],
-        borderColor: '#ff6d00',
-        backgroundColor: 'rgba(255, 109, 0, 0.1)',
+        borderColor: "#ff6d00",
+        backgroundColor: "rgba(255, 109, 0, 0.1)",
         fill: true,
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#ff6d00',
-        pointHoverBorderColor: 'white',
+        pointHoverBackgroundColor: "#ff6d00",
+        pointHoverBorderColor: "white",
         pointHoverBorderWidth: 2,
-      }
-    ]
+      },
+    ],
   };
 
   const options = {
@@ -93,30 +111,30 @@ const VolatilityChart = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
         labels: {
-          color: '#b2b5be',
+          color: "#b2b5be",
           font: {
-            size: 12
-          }
-        }
+            size: 12,
+          },
+        },
       },
       tooltip: {
-        mode: 'index',
+        mode: "index",
         intersect: false,
-        backgroundColor: '#1e222d',
-        titleColor: '#b2b5be',
-        bodyColor: 'white',
-        borderColor: '#2a2e39',
+        backgroundColor: "#1e222d",
+        titleColor: "#b2b5be",
+        bodyColor: "white",
+        borderColor: "#2a2e39",
         borderWidth: 1,
         padding: 10,
         displayColors: true,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `${context.dataset.label}: ${context.raw}%`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       x: {
@@ -125,43 +143,43 @@ const VolatilityChart = () => {
           drawBorder: false,
         },
         ticks: {
-          color: '#b2b5be',
-          font: {
-            size: 10,
-          }
-        }
-      },
-      y: {
-        grid: {
-          color: 'rgba(42, 46, 57, 0.6)',
-          drawBorder: false,
-        },
-        ticks: {
-          color: '#b2b5be',
+          color: "#b2b5be",
           font: {
             size: 10,
           },
-          callback: function(value) {
-            return value + '%';
-          }
-        }
-      }
+        },
+      },
+      y: {
+        grid: {
+          color: "rgba(42, 46, 57, 0.6)",
+          drawBorder: false,
+        },
+        ticks: {
+          color: "#b2b5be",
+          font: {
+            size: 10,
+          },
+          callback: function (value) {
+            return value + "%";
+          },
+        },
+      },
     },
     interaction: {
-      mode: 'index',
+      mode: "index",
       intersect: false,
     },
     elements: {
       line: {
         borderWidth: 2,
-      }
-    }
+      },
+    },
   };
 
   return (
     <>
       <TimeframeSelector>
-        {['1W', '1M', '3M', '6M', '1Y', '2Y', '5Y'].map(time => (
+        {["1W", "1M", "3M", "6M", "1Y", "2Y", "5Y"].map((time) => (
           <TimeButton
             key={time}
             active={timeframe === time}

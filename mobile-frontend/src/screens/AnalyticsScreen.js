@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
-import { ActivityIndicator, Card, Title, Paragraph, List, Divider, Text as PaperText, useTheme } from 'react-native-paper';
+import React, { useState, useEffect } from "react";
+import { StyleSheet, ScrollView, View, FlatList } from "react-native";
+import {
+  ActivityIndicator,
+  Card,
+  Title,
+  Paragraph,
+  List,
+  Divider,
+  Text as PaperText,
+  useTheme,
+} from "react-native-paper";
 // Removed unused import: import { analyticsService } from '../services/api';
 
 const AnalyticsScreen = () => {
@@ -24,32 +33,32 @@ const AnalyticsScreen = () => {
         const placeholderRisk = {
           overallScore: 75,
           factors: [
-            { name: 'Market Risk', level: 'High' },
-            { name: 'Credit Risk', level: 'Low' },
-            { name: 'Liquidity Risk', level: 'Medium' },
+            { name: "Market Risk", level: "High" },
+            { name: "Credit Risk", level: "Low" },
+            { name: "Liquidity Risk", level: "Medium" },
           ],
-          recommendation: 'Consider hedging strategies for market exposure.',
+          recommendation: "Consider hedging strategies for market exposure.",
         };
         const placeholderVolatility = [
-          { date: '2025-04-01', impliedVol: 0.25, historicalVol: 0.22 },
-          { date: '2025-04-15', impliedVol: 0.28, historicalVol: 0.24 },
-          { date: '2025-04-29', impliedVol: 0.26, historicalVol: 0.25 },
+          { date: "2025-04-01", impliedVol: 0.25, historicalVol: 0.22 },
+          { date: "2025-04-15", impliedVol: 0.28, historicalVol: 0.24 },
+          { date: "2025-04-29", impliedVol: 0.26, historicalVol: 0.25 },
         ];
         const placeholderSentiment = {
           index: 65, // Example: Fear & Greed Index
-          status: 'Greed',
-          summary: 'Market sentiment is leaning towards greed, potentially indicating overvaluation.',
+          status: "Greed",
+          summary:
+            "Market sentiment is leaning towards greed, potentially indicating overvaluation.",
         };
 
-        await new Promise(resolve => setTimeout(resolve, 1300)); // Simulate network delay
+        await new Promise((resolve) => setTimeout(resolve, 1300)); // Simulate network delay
 
         setRiskAssessment(placeholderRisk);
         setVolatilityAnalysis(placeholderVolatility);
         setMarketSentiment(placeholderSentiment);
-
       } catch (err) {
-        console.error('Error fetching analytics data:', err);
-        setError('Failed to load analytics data. Please try again later.');
+        console.error("Error fetching analytics data:", err);
+        setError("Failed to load analytics data. Please try again later.");
         setRiskAssessment(null);
         setVolatilityAnalysis([]);
         setMarketSentiment(null);
@@ -73,15 +82,21 @@ const AnalyticsScreen = () => {
 
   const getRiskLevelColor = (level) => {
     switch (level.toLowerCase()) {
-      case 'high': return theme.colors.error; // Red
-      case 'medium': return '#FFA500'; // Orange (adjust as needed)
-      case 'low': return '#34C759'; // Green
-      default: return theme.colors.text;
+      case "high":
+        return theme.colors.error; // Red
+      case "medium":
+        return "#FFA500"; // Orange (adjust as needed)
+      case "low":
+        return "#34C759"; // Green
+      default:
+        return theme.colors.text;
     }
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Title style={styles.title}>Analytics & Insights</Title>
 
       {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
@@ -91,17 +106,34 @@ const AnalyticsScreen = () => {
         <Card.Title title="Risk Assessment" />
         <Card.Content>
           {loadingRisk ? (
-            <ActivityIndicator animating={true} size="small" style={styles.loadingIndicator} />
+            <ActivityIndicator
+              animating={true}
+              size="small"
+              style={styles.loadingIndicator}
+            />
           ) : riskAssessment ? (
             <View>
-              <Paragraph style={styles.metricText}>Overall Score: {riskAssessment.overallScore}</Paragraph>
+              <Paragraph style={styles.metricText}>
+                Overall Score: {riskAssessment.overallScore}
+              </Paragraph>
               {riskAssessment.factors.map((factor, index) => (
                 <View key={index} style={styles.factorContainer}>
-                   <Paragraph style={styles.factorText}>{factor.name}: </Paragraph>
-                   <PaperText style={[styles.factorLevel, { color: getRiskLevelColor(factor.level) }]}>{factor.level}</PaperText>
+                  <Paragraph style={styles.factorText}>
+                    {factor.name}:{" "}
+                  </Paragraph>
+                  <PaperText
+                    style={[
+                      styles.factorLevel,
+                      { color: getRiskLevelColor(factor.level) },
+                    ]}
+                  >
+                    {factor.level}
+                  </PaperText>
                 </View>
               ))}
-              <Paragraph style={styles.recommendationText}>Recommendation: {riskAssessment.recommendation}</Paragraph>
+              <Paragraph style={styles.recommendationText}>
+                Recommendation: {riskAssessment.recommendation}
+              </Paragraph>
             </View>
           ) : (
             <Paragraph>Could not load risk assessment.</Paragraph>
@@ -114,14 +146,22 @@ const AnalyticsScreen = () => {
         <Card.Title title="Volatility Analysis (AAPL - 1M)" />
         <Card.Content>
           {loadingVolatility ? (
-            <ActivityIndicator animating={true} size="large" style={styles.loadingIndicator} />
+            <ActivityIndicator
+              animating={true}
+              size="large"
+              style={styles.loadingIndicator}
+            />
           ) : (
             <FlatList
               data={volatilityAnalysis}
               renderItem={renderVolatilityItem}
               keyExtractor={(item) => item.date}
               ItemSeparatorComponent={() => <Divider />}
-              ListEmptyComponent={<Paragraph style={styles.emptyListText}>No volatility data available.</Paragraph>}
+              ListEmptyComponent={
+                <Paragraph style={styles.emptyListText}>
+                  No volatility data available.
+                </Paragraph>
+              }
             />
           )}
         </Card.Content>
@@ -132,18 +172,25 @@ const AnalyticsScreen = () => {
         <Card.Title title="Market Sentiment" />
         <Card.Content>
           {loadingSentiment ? (
-            <ActivityIndicator animating={true} size="small" style={styles.loadingIndicator} />
+            <ActivityIndicator
+              animating={true}
+              size="small"
+              style={styles.loadingIndicator}
+            />
           ) : marketSentiment ? (
             <View>
-              <Paragraph style={styles.metricText}>Index: {marketSentiment.index} ({marketSentiment.status})</Paragraph>
-              <Paragraph style={styles.summaryText}>{marketSentiment.summary}</Paragraph>
+              <Paragraph style={styles.metricText}>
+                Index: {marketSentiment.index} ({marketSentiment.status})
+              </Paragraph>
+              <Paragraph style={styles.summaryText}>
+                {marketSentiment.summary}
+              </Paragraph>
             </View>
           ) : (
             <Paragraph>Could not load market sentiment.</Paragraph>
           )}
         </Card.Content>
       </Card>
-
     </ScrollView>
   );
 };
@@ -155,9 +202,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   card: {
     marginBottom: 20,
@@ -168,12 +215,12 @@ const styles = StyleSheet.create({
   },
   metricText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 10,
   },
   factorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 5,
     marginLeft: 10,
   },
@@ -182,12 +229,12 @@ const styles = StyleSheet.create({
   },
   factorLevel: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 5,
   },
   recommendationText: {
     fontSize: 15,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: 15,
   },
   summaryText: {
@@ -198,16 +245,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    color: '#FF3B30',
-    textAlign: 'center',
+    color: "#FF3B30",
+    textAlign: "center",
     marginVertical: 10,
     fontSize: 16,
     padding: 10,
   },
   emptyListText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginVertical: 10,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 });
 

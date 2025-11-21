@@ -23,7 +23,7 @@
     dest: /etc/nginx/nginx.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
     backup: yes
   become: yes
   notify: restart nginx
@@ -34,7 +34,7 @@
     dest: /etc/nginx/sites-available/optionix
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart nginx
 
@@ -52,7 +52,7 @@
     state: directory
     owner: root
     group: root
-    mode: '0700'
+    mode: "0700"
   become: yes
 
 - name: Generate strong DH parameters
@@ -66,7 +66,7 @@
     dest: /etc/nginx/conf.d/security_headers.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart nginx
 
@@ -76,7 +76,7 @@
     dest: /etc/nginx/conf.d/rate_limiting.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart nginx
 
@@ -94,7 +94,7 @@
     dest: /etc/nginx/modsec/modsecurity.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart nginx
 
@@ -104,7 +104,7 @@
     state: directory
     owner: www-data
     group: adm
-    mode: '0755'
+    mode: "0755"
   become: yes
 
 - name: Configure Nginx log rotation
@@ -113,7 +113,7 @@
     dest: /etc/logrotate.d/nginx
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
 
 - name: Create fail2ban filter for Nginx
@@ -122,7 +122,7 @@
     dest: /etc/fail2ban/filter.d/nginx-limit-req.conf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   become: yes
   notify: restart fail2ban
 
@@ -133,8 +133,8 @@
     proto: tcp
   become: yes
   loop:
-    - '80'
-    - '443'
+    - "80"
+    - "443"
 
 - name: Create Nginx monitoring script
   template:
@@ -142,7 +142,7 @@
     dest: /usr/local/bin/nginx_monitor.sh
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
   become: yes
 
 - name: Schedule Nginx monitoring
@@ -159,7 +159,7 @@
     dest: /usr/local/bin/ssl_renewal.sh
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
   become: yes
 
 - name: Schedule SSL certificate renewal

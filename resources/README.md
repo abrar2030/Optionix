@@ -40,6 +40,7 @@ These resources are utilized across multiple components of the Optionix platform
 ### Data Sources
 
 The datasets in this directory may be:
+
 - Snapshots of historical market data
 - Synthetic data generated for testing purposes
 - Curated data for specific analysis scenarios

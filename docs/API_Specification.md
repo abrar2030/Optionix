@@ -1,15 +1,19 @@
 # Optionix API Specification
 
 ## Overview
+
 This document details the API endpoints provided by the Optionix backend service. The API is built using FastAPI and provides endpoints for options pricing, volatility prediction, and blockchain integration.
 
 ## Base URL
+
 ```
 https://hzuesgxl.manus.space/api/v1
 ```
 
 ## Authentication
+
 All API endpoints require authentication using JWT tokens. Include the token in the Authorization header:
+
 ```
 Authorization: Bearer <your_token>
 ```
@@ -19,9 +23,11 @@ Authorization: Bearer <your_token>
 ### Options Pricing
 
 #### GET /options/pricing
+
 Calculate the price of an option using the Black-Scholes model.
 
 **Request Parameters:**
+
 ```json
 {
     "underlying_price": float,
@@ -34,6 +40,7 @@ Calculate the price of an option using the Black-Scholes model.
 ```
 
 **Response:**
+
 ```json
 {
     "price": float,
@@ -48,9 +55,11 @@ Calculate the price of an option using the Black-Scholes model.
 ### Volatility Prediction
 
 #### GET /volatility/predict
+
 Get volatility predictions using AI models.
 
 **Request Parameters:**
+
 ```json
 {
     "symbol": string,
@@ -64,6 +73,7 @@ Get volatility predictions using AI models.
 ```
 
 **Response:**
+
 ```json
 {
     "predicted_volatility": float,
@@ -78,9 +88,11 @@ Get volatility predictions using AI models.
 ### Blockchain Integration
 
 #### POST /blockchain/contract
+
 Interact with smart contracts.
 
 **Request Parameters:**
+
 ```json
 {
     "contract_address": string,
@@ -90,6 +102,7 @@ Interact with smart contracts.
 ```
 
 **Response:**
+
 ```json
 {
     "transaction_hash": string,
@@ -113,6 +126,7 @@ All API endpoints return appropriate HTTP status codes and error messages in the
 ```
 
 Common error codes:
+
 - 400: Bad Request
 - 401: Unauthorized
 - 403: Forbidden
@@ -120,16 +134,20 @@ Common error codes:
 - 500: Internal Server Error
 
 ## Rate Limiting
+
 API requests are limited to:
+
 - 100 requests per minute per IP address
 - 1000 requests per hour per authenticated user
 
 ## WebSocket Endpoints
 
 ### /ws/market-data
+
 Real-time market data stream.
 
 **Message Format:**
+
 ```json
 {
     "type": "price_update" | "order_book_update" | "trade",
@@ -139,7 +157,9 @@ Real-time market data stream.
 ```
 
 ## Versioning
+
 API version is included in the URL path. Current version: v1
 
 ## Support
+
 For API support or to report issues, please contact the development team.

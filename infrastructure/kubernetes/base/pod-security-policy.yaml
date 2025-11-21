@@ -4,10 +4,10 @@ metadata:
   name: optionix-restricted
   namespace: optionix
   annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'runtime/default'
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: 'runtime/default'
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: 'runtime/default'
-    apparmor.security.beta.kubernetes.io/defaultProfileName: 'runtime/default'
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "runtime/default"
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: "runtime/default"
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: "runtime/default"
+    apparmor.security.beta.kubernetes.io/defaultProfileName: "runtime/default"
 spec:
   # Privilege and access controls
   privileged: false
@@ -23,41 +23,41 @@ spec:
 
   # Volumes and file systems
   volumes:
-    - 'configMap'
-    - 'emptyDir'
-    - 'projected'
-    - 'secret'
-    - 'downwardAPI'
-    - 'persistentVolumeClaim'
+    - "configMap"
+    - "emptyDir"
+    - "projected"
+    - "secret"
+    - "downwardAPI"
+    - "persistentVolumeClaim"
   allowedHostPaths: []
   readOnlyRootFilesystem: true
 
   # Users and groups
   runAsUser:
-    rule: 'MustRunAsNonRoot'
+    rule: "MustRunAsNonRoot"
   runAsGroup:
-    rule: 'MustRunAs'
+    rule: "MustRunAs"
     ranges:
       - min: 1000
         max: 65535
   supplementalGroups:
-    rule: 'MustRunAs'
+    rule: "MustRunAs"
     ranges:
       - min: 1000
         max: 65535
   fsGroup:
-    rule: 'MustRunAs'
+    rule: "MustRunAs"
     ranges:
       - min: 1000
         max: 65535
 
   # SELinux
   seLinux:
-    rule: 'RunAsAny'
+    rule: "RunAsAny"
 
   # Forbidden sysctls
   forbiddenSysctls:
-    - '*'
+    - "*"
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -65,11 +65,11 @@ kind: ClusterRole
 metadata:
   name: optionix-restricted-psp-user
 rules:
-- apiGroups: ['policy']
-  resources: ['podsecuritypolicies']
-  verbs: ['use']
-  resourceNames:
-  - optionix-restricted
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs: ["use"]
+    resourceNames:
+      - optionix-restricted
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -81,6 +81,6 @@ roleRef:
   name: optionix-restricted-psp-user
   apiGroup: rbac.authorization.k8s.io
 subjects:
-- kind: Group
-  name: system:serviceaccounts:optionix
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: system:serviceaccounts:optionix
+    apiGroup: rbac.authorization.k8s.io

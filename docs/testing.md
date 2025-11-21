@@ -1,26 +1,31 @@
 # Optionix Testing Guide
 
 ## Overview
+
 This guide outlines the testing strategy and procedures for the Optionix platform, covering both frontend and backend components.
 
 ## Testing Types
 
 ### 1. Unit Testing
+
 - Tests individual components and functions
 - Fast execution
 - Isolated from external dependencies
 
 ### 2. Integration Testing
+
 - Tests interaction between components
 - Verifies API endpoints
 - Tests database operations
 
 ### 3. End-to-End Testing
+
 - Tests complete user workflows
 - Simulates real user interactions
 - Tests across multiple components
 
 ### 4. Performance Testing
+
 - Tests system under load
 - Measures response times
 - Identifies bottlenecks
@@ -28,12 +33,14 @@ This guide outlines the testing strategy and procedures for the Optionix platfor
 ## Testing Tools
 
 ### Frontend Testing
+
 - Jest - Test runner
 - React Testing Library - Component testing
 - Cypress - E2E testing
 - MSW - API mocking
 
 ### Backend Testing
+
 - pytest - Test runner
 - FastAPI TestClient - API testing
 - SQLAlchemy - Database testing
@@ -42,6 +49,7 @@ This guide outlines the testing strategy and procedures for the Optionix platfor
 ## Test Structure
 
 ### Frontend Tests
+
 ```
 frontend/
 ├── src/
@@ -57,6 +65,7 @@ frontend/
 ```
 
 ### Backend Tests
+
 ```
 backend/
 ├── tests/
@@ -71,6 +80,7 @@ backend/
 ## Running Tests
 
 ### Frontend Tests
+
 ```bash
 # Run all tests
 npm test
@@ -86,6 +96,7 @@ npm run test:e2e
 ```
 
 ### Backend Tests
+
 ```bash
 # Run all tests
 pytest
@@ -103,26 +114,28 @@ locust -f tests/performance/locustfile.py
 ## Writing Tests
 
 ### Frontend Component Test Example
-```javascript
-import { render, screen } from '@testing-library/react';
-import { TradingView } from './TradingView';
 
-describe('TradingView', () => {
-  it('renders trading interface', () => {
+```javascript
+import { render, screen } from "@testing-library/react";
+import { TradingView } from "./TradingView";
+
+describe("TradingView", () => {
+  it("renders trading interface", () => {
     render(<TradingView />);
-    expect(screen.getByText('Trading Interface')).toBeInTheDocument();
+    expect(screen.getByText("Trading Interface")).toBeInTheDocument();
   });
 
-  it('handles order placement', async () => {
+  it("handles order placement", async () => {
     render(<TradingView />);
-    const orderButton = screen.getByText('Place Order');
+    const orderButton = screen.getByText("Place Order");
     await userEvent.click(orderButton);
-    expect(screen.getByText('Order Placed')).toBeInTheDocument();
+    expect(screen.getByText("Order Placed")).toBeInTheDocument();
   });
 });
 ```
 
 ### Backend API Test Example
+
 ```python
 from fastapi.testclient import TestClient
 from app.main import app
@@ -146,11 +159,13 @@ def test_options_pricing():
 ## Test Data Management
 
 ### Fixtures
+
 - Use consistent test data
 - Create reusable fixtures
 - Maintain test data separately
 
 ### Mocking
+
 - Mock external services
 - Mock database operations
 - Mock API calls
@@ -158,6 +173,7 @@ def test_options_pricing():
 ## Continuous Integration
 
 ### GitHub Actions
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -176,6 +192,7 @@ jobs:
 ## Performance Testing
 
 ### Load Testing
+
 ```python
 from locust import HttpUser, task, between
 
@@ -192,6 +209,7 @@ class OptionixUser(HttpUser):
 ```
 
 ### Metrics to Monitor
+
 - Response time
 - Throughput
 - Error rate
@@ -200,12 +218,14 @@ class OptionixUser(HttpUser):
 ## Security Testing
 
 ### OWASP Testing
+
 - SQL injection
 - XSS attacks
 - CSRF protection
 - Authentication bypass
 
 ### Tools
+
 - OWASP ZAP
 - Burp Suite
 - SQLMap
@@ -213,11 +233,13 @@ class OptionixUser(HttpUser):
 ## Test Coverage
 
 ### Coverage Goals
+
 - Unit tests: 80%+
 - Integration tests: 70%+
 - Critical paths: 100%
 
 ### Coverage Reports
+
 ```bash
 # Generate coverage report
 npm run test:coverage
@@ -227,6 +249,7 @@ pytest --cov=app --cov-report=html
 ## Best Practices
 
 ### Writing Tests
+
 - Write tests before code (TDD)
 - Keep tests simple and focused
 - Use descriptive test names
@@ -234,6 +257,7 @@ pytest --cov=app --cov-report=html
 - Maintain test independence
 
 ### Maintaining Tests
+
 - Update tests with code changes
 - Remove obsolete tests
 - Regular test reviews
@@ -242,6 +266,7 @@ pytest --cov=app --cov-report=html
 ## Troubleshooting
 
 ### Common Issues
+
 1. Flaky tests
    - Fix timing issues
    - Use proper async handling
@@ -260,6 +285,7 @@ pytest --cov=app --cov-report=html
 ## Support
 
 For testing support:
+
 - Check test documentation
 - Review test logs
 - Contact QA team

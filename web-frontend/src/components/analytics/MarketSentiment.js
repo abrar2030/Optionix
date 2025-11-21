@@ -1,7 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import React from "react";
+import styled from "styled-components";
+import { Doughnut } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -30,12 +30,12 @@ const CenterText = styled.div`
 const SentimentValue = styled.div`
   font-size: 24px;
   font-weight: 700;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
 `;
 
 const SentimentLabel = styled.div`
   font-size: 12px;
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
 `;
 
 const StatsContainer = styled.div`
@@ -46,7 +46,7 @@ const StatsContainer = styled.div`
 `;
 
 const StatItem = styled.div`
-  background-color: ${props => props.theme.colors.backgroundDark};
+  background-color: ${(props) => props.theme.colors.backgroundDark};
   border-radius: 6px;
   padding: 12px;
   text-align: center;
@@ -55,28 +55,24 @@ const StatItem = styled.div`
 const StatValue = styled.div`
   font-size: 18px;
   font-weight: 600;
-  color: ${props => props.theme.colors.textPrimary};
+  color: ${(props) => props.theme.colors.textPrimary};
   margin-bottom: 4px;
 `;
 
 const StatLabel = styled.div`
   font-size: 12px;
-  color: ${props => props.theme.colors.textSecondary};
+  color: ${(props) => props.theme.colors.textSecondary};
 `;
 
 const MarketSentiment = () => {
   // Sample data
   const sentimentData = {
-    labels: ['Bullish', 'Neutral', 'Bearish'],
+    labels: ["Bullish", "Neutral", "Bearish"],
     datasets: [
       {
         data: [65, 20, 15],
-        backgroundColor: [
-          '#26a69a',
-          '#42a5f5',
-          '#ef5350',
-        ],
-        borderColor: 'transparent',
+        backgroundColor: ["#26a69a", "#42a5f5", "#ef5350"],
+        borderColor: "transparent",
         borderWidth: 0,
         hoverOffset: 4,
       },
@@ -91,21 +87,21 @@ const MarketSentiment = () => {
         display: false,
       },
       tooltip: {
-        backgroundColor: '#1e222d',
-        titleColor: '#b2b5be',
-        bodyColor: 'white',
-        borderColor: '#2a2e39',
+        backgroundColor: "#1e222d",
+        titleColor: "#b2b5be",
+        bodyColor: "white",
+        borderColor: "#2a2e39",
         borderWidth: 1,
         padding: 10,
         displayColors: false,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `${context.label}: ${context.raw}%`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
-    cutout: '70%',
+    cutout: "70%",
   };
 
   return (

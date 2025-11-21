@@ -11,7 +11,7 @@ contract("OptionsContract", (accounts) => {
   it("should create valid call options", async () => {
     await instance.createOption(3000, 30, 0, {
       value: ethers.utils.parseEther("1"),
-      from: accounts[0]
+      from: accounts[0],
     });
     const option = await instance.options(0);
     assert.equal(option.holder, accounts[0], "Option creation failed");
