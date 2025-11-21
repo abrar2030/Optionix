@@ -27,13 +27,14 @@ import bcrypt
 import jwt
 import pyotp
 import qrcode
-from config import settings
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
+
+from .config import settings
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()
@@ -394,29 +395,17 @@ async def get_current_verified_user(current_user: dict = Depends(get_current_use
 
 
 def require_permission(permission: Permission):
-    """Decorator to require specific permission"""
+    """Dependency function to require specific permission"""
 
-    def decorator(func):
-        async def wrapper(*args, **kwargs):
-            current_user = kwargs.get("current_user")
-            if not current_user:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required",
-                )
+    def permission_checker(current_user: dict = Depends(get_current_user)):
+        user_role = current_user.get("role")
+        if not rbac_service.check_permission(user_role, permission.value):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+            )
+        return current_user
 
-            user_role = current_user.get("role")
-            if not rbac_service.check_permission(user_role, permission.value):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Insufficient permissions",
-                )
-
-            return await func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
+    return permission_checker
 
 
 def log_auth_event(

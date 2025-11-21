@@ -167,13 +167,13 @@ class KYCDataRequest(BaseModel):
     """KYC data submission schema"""
 
     full_name: str = Field(..., min_length=2, max_length=255)
-    date_of_birth: str = Field(..., regex=r"^\d{4}-\d{2}-\d{2}$")
+    date_of_birth: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
     nationality: str = Field(..., min_length=2, max_length=3)
     address: AddressData
-    document_type: str = Field(..., regex=r"^(passport|national_id|drivers_license)$")
+    document_type: str = Field(..., pattern=r"^(passport|national_id|drivers_license)$")
     document_number: str = Field(..., min_length=5, max_length=50)
     document_country: str = Field(..., min_length=2, max_length=3)
-    document_expiry: str = Field(..., regex=r"^\d{4}-\d{2}-\d{2}$")
+    document_expiry: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
 
     @validator("date_of_birth")
     def validate_date_of_birth(cls, v):
@@ -195,9 +195,9 @@ class KYCDataRequest(BaseModel):
 class AccountCreate(BaseModel):
     """Account creation schema"""
 
-    ethereum_address: str = Field(..., regex=r"^0x[a-fA-F0-9]{40}$")
+    ethereum_address: str = Field(..., pattern=r"^0x[a-fA-F0-9]{40}$")
     account_type: str = Field(
-        default="standard", regex=r"^(standard|premium|institutional|demo)$"
+        default="standard", pattern=r"^(standard|premium|institutional|demo)$"
     )
     initial_deposit: Optional[Decimal] = Field(None, ge=0, le=1000000)
 
@@ -225,8 +225,8 @@ class TradeRequest(BaseModel):
 
     account_id: int
     symbol: str = Field(..., min_length=3, max_length=20)
-    trade_type: str = Field(..., regex=r"^(buy|sell)$")
-    order_type: str = Field(..., regex=r"^(market|limit|stop|stop_limit)$")
+    trade_type: str = Field(..., pattern=r"^(buy|sell)$")
+    order_type: str = Field(..., pattern=r"^(market|limit|stop|stop_limit)$")
     quantity: Decimal = Field(..., gt=0, le=1000000)
     price: Optional[Decimal] = Field(None, gt=0, le=1000000)
     stop_loss: Optional[Decimal] = Field(None, gt=0)
@@ -307,7 +307,11 @@ class MarketDataRequest(BaseModel):
     """Market data request schema"""
 
     symbol: str = Field(..., min_length=3, max_length=20)
-    timeframe: str = Field(default="1h", regex=r"^(1m|5m|15m|1h|4h|1d)$")
+    open: Decimal = Field(..., gt=0)
+    high: Decimal = Field(..., gt=0)
+    low: Decimal = Field(..., gt=0)
+    volume: Decimal = Field(..., ge=0)
+    timeframe: str = Field(default="1h", pattern=r"^(1m|5m|15m|1h|4h|1d)$")
     limit: int = Field(default=100, ge=1, le=1000)
 
 
@@ -316,8 +320,10 @@ class VolatilityResponse(BaseModel):
 
     symbol: str
     volatility: Decimal
+
     confidence: Optional[Decimal]
-    model_version: str
+    model_version: Optional[str]
+
     prediction_horizon: str
     timestamp: datetime
 
@@ -432,9 +438,9 @@ class AuditLogQuery(BaseModel):
 class FinancialReportRequest(BaseModel):
     """Financial report request schema"""
 
-    report_type: str = Field(..., regex=r"^(daily|weekly|monthly|quarterly|annual)$")
+    report_type: str = Field(..., pattern=r"^(daily|weekly|monthly|quarterly|annual)$")
     regulation_type: str = Field(
-        ..., regex=r"^(sox|mifid_ii|dodd_frank|basel_iii|cftc)$"
+        ..., pattern=r"^(sox|mifid_ii|dodd_frank|basel_iii|cftc)$"
     )
     period_start: datetime
     period_end: datetime
@@ -459,10 +465,12 @@ class DataSubjectRequest(BaseModel):
     """GDPR data subject request schema"""
 
     request_type: str = Field(
-        ..., regex=r"^(access|rectification|erasure|portability|restriction)$"
+        ..., pattern=r"^(access|rectification|erasure|portability|restriction)$"
     )
     description: Optional[str] = Field(None, max_length=1000)
-    verification_method: Optional[str] = Field(None, regex=r"^(email|phone|document)$")
+    verification_method: Optional[str] = Field(
+        None, pattern=r"^(email|phone|document)$"
+    )
 
 
 class DataSubjectRequestResponse(BaseResponse):
@@ -488,7 +496,7 @@ class DataExportResponse(BaseResponse):
 class ReconciliationRequest(BaseModel):
     """Reconciliation request schema"""
 
-    reconciliation_type: str = Field(..., regex=r"^(daily|monthly|trade|position)$")
+    reconciliation_type: str = Field(..., pattern=r"^(daily|monthly|trade|position)$")
     business_date: datetime
     tolerance_threshold: Optional[Decimal] = Field(Decimal("0.01"), ge=0)
 

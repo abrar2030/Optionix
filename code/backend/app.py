@@ -8,22 +8,25 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 import uvicorn
-
-# Import enhanced authentication and authorization
-from auth import UserRole, auth_service, log_auth_event
-
-# Import configuration and database
-from config import settings
-from data_protection import data_protection_service
-from database import create_tables, get_db
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
+from sqlalchemy.orm import Session
+
+# Import enhanced authentication and authorization
+from .auth import UserRole, auth_service, log_auth_event
+
+# Import configuration and database
+from .config import settings
+
+# Import enhanced compliance and security
+from .data_protection import data_protection_service
+from .database import create_tables, get_db
 
 # Import enhanced middleware
-from middleware.security import (
+from .middleware.security import (
     AdvancedRateLimitMiddleware,
     AuditLoggingMiddleware,
     RequestValidationMiddleware,
@@ -31,20 +34,22 @@ from middleware.security import (
 )
 
 # Import enhanced models
-from models import User
+from .models import User
 
 # Import enhanced schemas
-from schemas import HealthCheckResponse, UserCreate, UserResponse
-from security import security_service
+from .schemas import (
+    HealthCheckResponse,
+    MarketDataRequest,
+    UserCreate,
+    UserResponse,
+    VolatilityResponse,
+)
+from .security import security_service
 
 # Import services
-from services.blockchain_service import BlockchainService
-from services.financial_service import FinancialCalculationService
-from services.model_service import ModelService
-from sqlalchemy.orm import Session
-
-# Import enhanced compliance and security
-
+from .services.blockchain_service import BlockchainService
+from .services.financial_service import FinancialCalculationService
+from .services.model_service import ModelService
 
 # Setup logging
 logging.basicConfig(
@@ -180,6 +185,46 @@ async def enhanced_health_check():
             "compliance_monitoring": True,
         },
     )
+
+
+# Enhanced market data and model endpoints
+@app.post(
+    "/market/volatility",
+    response_model=VolatilityResponse,
+    tags=["Market Data", "Model"],
+)
+async def get_volatility_prediction(
+    market_data: MarketDataRequest, db: Session = Depends(get_db)
+):
+    """Get volatility prediction for a given market data point"""
+    try:
+        # Convert Pydantic model to dict for service
+        data_for_model = market_data.dict()
+
+        # Call the model service
+        prediction_result = model_service.get_volatility_prediction(data_for_model, db)
+
+        # Construct the response
+        return VolatilityResponse(
+            symbol=market_data.symbol,
+            volatility=Decimal(str(prediction_result["volatility"])),
+            confidence=(
+                Decimal(str(prediction_result["confidence"]))
+                if prediction_result["confidence"] is not None
+                else None
+            ),
+            model_version=prediction_result.get("model_version"),
+            prediction_horizon="24h",  # Placeholder, as it's not in the model service result
+            timestamp=datetime.utcnow(),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        logger.error(f"Volatility prediction failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Volatility prediction failed",
+        )
 
 
 # Enhanced authentication endpoints

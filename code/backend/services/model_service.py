@@ -12,9 +12,10 @@ from typing import Any, Dict, List, Optional
 
 import joblib
 import numpy as np
-from config import settings
-from models import AuditLog, MarketData
 from sqlalchemy.orm import Session
+
+from ..config import settings
+from ..models import AuditLog, MarketData
 
 logger = logging.getLogger(__name__)
 
@@ -269,7 +270,7 @@ class ModelService:
 
         return feature_array
 
-    def predict_volatility(
+    def get_volatility_prediction(
         self, market_data: Dict[str, Any], db: Optional[Session] = None
     ) -> Dict[str, Any]:
         """

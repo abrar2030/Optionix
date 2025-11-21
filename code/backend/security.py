@@ -22,10 +22,11 @@ from enum import Enum
 from typing import Any, Dict, List
 
 import bcrypt
-from config import settings
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+from .config import settings
 
 logger = logging.getLogger(__name__)
 

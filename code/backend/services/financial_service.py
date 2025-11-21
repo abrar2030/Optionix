@@ -8,7 +8,7 @@ import math
 from decimal import ROUND_HALF_UP, Decimal, getcontext
 from typing import Any, Dict, Optional
 
-from config import settings
+from ..config import settings
 
 # Set decimal precision for financial calculations
 getcontext().prec = 28

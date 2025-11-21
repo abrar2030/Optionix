@@ -9,9 +9,8 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from models import Account, Position, Trade, User
 from sqlalchemy import (
     Column,
     DateTime,
@@ -24,6 +23,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
+
+from .config import settings
+from .models import Trade
 
 logger = logging.getLogger(__name__)
 
@@ -450,38 +452,42 @@ class FinancialStandardsService:
         self,
         db: Session,
         reconciliation_type: str,
-        internal_source: str,
-        external_source: str,
+        business_date: datetime,
         internal_balance: Decimal,
         external_balance: Decimal,
-        tolerance_threshold: Decimal = Decimal("0.01"),
+        tolerance_threshold: Optional[Decimal] = None,
     ) -> ReconciliationRecord:
         """Perform financial reconciliation"""
         try:
             reconciliation_id = (
-                f"REC_{reconciliation_type}_{int(datetime.utcnow().timestamp())}"
+                f"RR_{int(datetime.utcnow().timestamp())}_{reconciliation_type}"
             )
 
-            difference = external_balance - internal_balance
-            abs_difference = abs(difference)
+            difference = internal_balance - external_balance
 
-            # Determine reconciliation status
-            if abs_difference <= tolerance_threshold:
-                status = "matched"
+            if tolerance_threshold is None:
+                tolerance_threshold = self.sox_controls.get(
+                    "reconciliation_tolerance", Decimal("0.01")
+                )
+
+            if abs(difference) <= tolerance_threshold:
+                reconciliation_status = "matched"
+            elif abs(difference) > tolerance_threshold:
+                reconciliation_status = "unmatched"
             else:
-                status = "unmatched"
+                reconciliation_status = "investigating"
 
             reconciliation = ReconciliationRecord(
                 reconciliation_id=reconciliation_id,
                 reconciliation_type=reconciliation_type,
-                internal_source=internal_source,
-                external_source=external_source,
+                internal_source="Optionix Internal Ledger",
+                external_source="External Custodian/Exchange",
                 internal_balance=internal_balance,
                 external_balance=external_balance,
                 difference=difference,
-                reconciliation_status=status,
+                reconciliation_status=reconciliation_status,
                 tolerance_threshold=tolerance_threshold,
-                business_date=datetime.utcnow().date(),
+                business_date=business_date.date(),
             )
 
             db.add(reconciliation)
@@ -491,378 +497,83 @@ class FinancialStandardsService:
             return reconciliation
 
         except Exception as e:
-            logger.error(f"Reconciliation failed: {e}")
+            logger.error(f"Financial reconciliation failed: {e}")
             raise ValueError(f"Reconciliation failed: {str(e)}")
 
-    def calculate_risk_metrics(
-        self,
-        db: Session,
-        entity_type: str,
-        entity_id: str,
-        metric_types: List[RiskMetricType],
-        business_date: Optional[datetime] = None,
-    ) -> List[RiskMetric]:
-        """Calculate risk metrics for Basel III compliance"""
-        try:
-            if business_date is None:
-                business_date = datetime.utcnow().date()
-
-            risk_metrics = []
-
-            for metric_type in metric_types:
-                metric_value = self._calculate_specific_risk_metric(
-                    db, entity_type, entity_id, metric_type, business_date
-                )
-
-                metric_id = f"RM_{metric_type.value}_{entity_type}_{entity_id}_{int(business_date.timestamp())}"
-
-                # Get limits for this metric type
-                limit_value = self._get_risk_limit(metric_type)
-                warning_threshold = (
-                    limit_value * Decimal("0.8") if limit_value else None
-                )
-
-                # Determine breach status
-                breach_status = "within_limits"
-                if limit_value:
-                    if metric_value > limit_value:
-                        breach_status = "breach"
-                    elif warning_threshold and metric_value > warning_threshold:
-                        breach_status = "warning"
-
-                risk_metric = RiskMetric(
-                    metric_id=metric_id,
-                    metric_type=metric_type.value,
-                    entity_type=entity_type,
-                    entity_id=entity_id,
-                    metric_value=metric_value,
-                    limit_value=limit_value,
-                    warning_threshold=warning_threshold,
-                    breach_status=breach_status,
-                    calculation_method="internal_model",
-                    business_date=business_date,
-                )
-
-                db.add(risk_metric)
-                risk_metrics.append(risk_metric)
-
-            db.commit()
-            return risk_metrics
-
-        except Exception as e:
-            logger.error(f"Risk metric calculation failed: {e}")
-            raise ValueError(f"Risk calculation failed: {str(e)}")
-
-    def _calculate_specific_risk_metric(
-        self,
-        db: Session,
-        entity_type: str,
-        entity_id: str,
-        metric_type: RiskMetricType,
-        business_date: datetime,
-    ) -> Decimal:
-        """Calculate specific risk metric"""
-        if metric_type == RiskMetricType.VAR:
-            return self._calculate_var(db, entity_type, entity_id, business_date)
-        elif metric_type == RiskMetricType.LEVERAGE_RATIO:
-            return self._calculate_leverage_ratio(
-                db, entity_type, entity_id, business_date
-            )
-        elif metric_type == RiskMetricType.LIQUIDITY_RATIO:
-            return self._calculate_liquidity_ratio(
-                db, entity_type, entity_id, business_date
-            )
-        else:
-            # Default calculation
-            return Decimal("0")
-
-    def _calculate_var(
-        self,
-        db: Session,
-        entity_type: str,
-        entity_id: str,
-        business_date: datetime,
-        confidence_level: Decimal = Decimal("0.95"),
-        time_horizon: int = 1,
-    ) -> Decimal:
-        """Calculate Value at Risk (simplified implementation)"""
-        try:
-            # Get historical positions/trades for the entity
-            if entity_type == "account":
-                positions = (
-                    db.query(Position)
-                    .filter(
-                        Position.account_id == int(entity_id), Position.status == "open"
-                    )
-                    .all()
-                )
-
-                total_exposure = sum(
-                    position.size * position.current_price
-                    for position in positions
-                    if position.current_price
-                )
-
-                # Simplified VaR calculation (1% of total exposure)
-                var = total_exposure * Decimal("0.01")
-                return var
-
-            return Decimal("0")
-
-        except Exception as e:
-            logger.error(f"VaR calculation failed: {e}")
-            return Decimal("0")
-
-    def _calculate_leverage_ratio(
-        self, db: Session, entity_type: str, entity_id: str, business_date: datetime
-    ) -> Decimal:
-        """Calculate leverage ratio for Basel III"""
-        try:
-            if entity_type == "account":
-                account = db.query(Account).filter(Account.id == int(entity_id)).first()
-                if account:
-                    # Simplified leverage ratio: margin_used / balance
-                    if account.balance_usd > 0:
-                        leverage_ratio = account.margin_used / account.balance_usd
-                        return leverage_ratio
-
-            return Decimal("0")
-
-        except Exception as e:
-            logger.error(f"Leverage ratio calculation failed: {e}")
-            return Decimal("0")
-
-    def _calculate_liquidity_ratio(
-        self, db: Session, entity_type: str, entity_id: str, business_date: datetime
-    ) -> Decimal:
-        """Calculate liquidity ratio"""
-        try:
-            if entity_type == "account":
-                account = db.query(Account).filter(Account.id == int(entity_id)).first()
-                if account:
-                    # Simplified liquidity ratio: available_margin / total_balance
-                    if account.balance_usd > 0:
-                        liquidity_ratio = account.margin_available / account.balance_usd
-                        return liquidity_ratio
-
-            return Decimal("0")
-
-        except Exception as e:
-            logger.error(f"Liquidity ratio calculation failed: {e}")
-            return Decimal("0")
-
-    def _get_risk_limit(self, metric_type: RiskMetricType) -> Optional[Decimal]:
-        """Get risk limit for metric type"""
-        if metric_type == RiskMetricType.LEVERAGE_RATIO:
-            return self.basel_limits["leverage_ratio_minimum"]
-        elif metric_type == RiskMetricType.LIQUIDITY_RATIO:
-            return self.basel_limits["liquidity_coverage_ratio"]
-        else:
-            return None
-
-    def check_sox_compliance(
-        self, db: Session, transaction_data: Dict[str, Any], user_id: int
-    ) -> Dict[str, Any]:
-        """Check SOX compliance for financial transactions"""
-        try:
-            compliance_results = {
-                "compliant": True,
-                "violations": [],
-                "controls_checked": [],
-                "recommendations": [],
-            }
-
-            # Check segregation of duties
-            if self.sox_controls["segregation_of_duties"]:
-                compliance_results["controls_checked"].append("segregation_of_duties")
-                # Implementation would check if same user is performing conflicting roles
-
-            # Check authorization levels
-            transaction_type = transaction_data.get("transaction_type", "")
-            required_roles = self.sox_controls["authorization_levels"].get(
-                transaction_type, []
-            )
-
-            if required_roles:
-                compliance_results["controls_checked"].append("authorization_levels")
-                user = db.query(User).filter(User.id == user_id).first()
-                user_role = getattr(user, "role", "viewer")
-
-                if user_role not in required_roles:
-                    compliance_results["compliant"] = False
-                    compliance_results["violations"].append(
-                        f"Insufficient authorization level for {transaction_type}"
-                    )
-
-            # Check transaction amount thresholds
-            amount = Decimal(str(transaction_data.get("amount", 0)))
-            if amount > Decimal("100000"):  # Large transaction threshold
-                compliance_results["controls_checked"].append(
-                    "large_transaction_approval"
-                )
-                # Would check for additional approvals
-
-            return compliance_results
-
-        except Exception as e:
-            logger.error(f"SOX compliance check failed: {e}")
-            return {
-                "compliant": False,
-                "violations": [f"Compliance check error: {str(e)}"],
-                "controls_checked": [],
-                "recommendations": ["Manual review required"],
-            }
-
-    def generate_mifid_transaction_report(
-        self, db: Session, period_start: datetime, period_end: datetime
-    ) -> Dict[str, Any]:
-        """Generate MiFID II transaction report"""
-        try:
-            # Get reportable transactions
-            trades = (
-                db.query(Trade)
-                .filter(
-                    Trade.created_at >= period_start,
-                    Trade.created_at <= period_end,
-                    Trade.status == "executed",
-                )
-                .all()
-            )
-
-            reportable_trades = []
-            for trade in trades:
-                # Check if trade meets MiFID II reporting thresholds
-                if self._is_mifid_reportable(trade):
-                    reportable_trades.append(
-                        {
-                            "transaction_id": trade.trade_id,
-                            "instrument_id": trade.symbol,
-                            "quantity": str(trade.quantity),
-                            "price": str(trade.price),
-                            "transaction_time": trade.created_at.isoformat(),
-                            "venue": "Optionix",
-                            "counterparty": "CLIENT",
-                            "transaction_type": trade.trade_type.upper(),
-                        }
-                    )
-
-            report_data = {
-                "reporting_entity": "Optionix Trading Platform",
-                "report_type": "MiFID_II_Transaction_Report",
-                "period": {
-                    "start": period_start.isoformat(),
-                    "end": period_end.isoformat(),
-                },
-                "total_transactions": len(trades),
-                "reportable_transactions": len(reportable_trades),
-                "transactions": reportable_trades,
-            }
-
-            # Store report
-            report_id = f"MIFID_{int(datetime.utcnow().timestamp())}"
-            data_hash = hashlib.sha256(
-                json.dumps(report_data, sort_keys=True, default=str).encode()
-            ).hexdigest()
-
-            report = RegulatoryReport(
-                report_id=report_id,
-                regulation_type=FinancialRegulation.MIFID_II.value,
-                report_type="transaction_report",
-                period_start=period_start,
-                period_end=period_end,
-                report_data=json.dumps(report_data, default=str),
-                data_hash=data_hash,
-                generated_by=1,  # System user
-            )
-
-            db.add(report)
-            db.commit()
-
-            return {"report_id": report_id, "status": "generated", "data": report_data}
-
-        except Exception as e:
-            logger.error(f"MiFID II report generation failed: {e}")
-            raise ValueError(f"Report generation failed: {str(e)}")
-
-    def _is_mifid_reportable(self, trade: Trade) -> bool:
-        """Check if trade is reportable under MiFID II"""
+    def check_mifid_ii_reporting(self, trade: Trade) -> bool:
+        """Check if a trade is reportable under MiFID II"""
+        # Simplified check based on trade value and instrument type
         trade_value = trade.total_value
 
-        # Simplified threshold check (in production, would be more sophisticated)
-        if trade_value >= self.mifid_thresholds["derivative_threshold"]:
+        if (
+            trade.symbol in settings.equity_symbols
+            and trade_value >= self.mifid_thresholds["equity_threshold"]
+        ):
+            return True
+
+        if (
+            trade.symbol in settings.bond_symbols
+            and trade_value >= self.mifid_thresholds["bond_threshold"]
+        ):
+            return True
+
+        if (
+            trade.symbol in settings.derivative_symbols
+            and trade_value >= self.mifid_thresholds["derivative_threshold"]
+        ):
             return True
 
         return False
 
-    def perform_daily_reconciliation(
-        self, db: Session, business_date: datetime
-    ) -> List[ReconciliationRecord]:
-        """Perform end-of-day reconciliation"""
+    def generate_regulatory_report(
+        self,
+        db: Session,
+        regulation_type: FinancialRegulation,
+        report_type: str,
+        period_start: datetime,
+        period_end: datetime,
+        generated_by_user_id: int,
+    ) -> RegulatoryReport:
+        """Generate a regulatory report"""
         try:
-            reconciliations = []
+            report_id = f"RR_{regulation_type.value}_{report_type}_{period_start.strftime('%Y%m%d')}"
 
-            # Account balance reconciliation
-            accounts = db.query(Account).filter(Account.is_active == True).all()
+            # Mock report data generation
+            report_data = {
+                "regulation": regulation_type.value,
+                "period_start": period_start.isoformat(),
+                "period_end": period_end.isoformat(),
+                "summary": f"Mock summary for {regulation_type.value} {report_type} report.",
+                "data_points": 1000,
+                "compliance_status": "compliant",
+            }
 
-            for account in accounts:
-                # Calculate expected balance from transactions
-                expected_balance = self._calculate_expected_balance(
-                    db, account.id, business_date
-                )
-                actual_balance = account.balance_usd
+            report_data_json = json.dumps(report_data, sort_keys=True, default=str)
+            data_hash = hashlib.sha256(report_data_json.encode()).hexdigest()
 
-                reconciliation = self.perform_reconciliation(
-                    db=db,
-                    reconciliation_type="daily_balance",
-                    internal_source="account_balance",
-                    external_source="transaction_sum",
-                    internal_balance=actual_balance,
-                    external_balance=expected_balance,
-                    tolerance_threshold=Decimal("0.01"),
-                )
-
-                reconciliations.append(reconciliation)
-
-            return reconciliations
-
-        except Exception as e:
-            logger.error(f"Daily reconciliation failed: {e}")
-            raise ValueError(f"Reconciliation failed: {str(e)}")
-
-    def _calculate_expected_balance(
-        self, db: Session, account_id: int, business_date: datetime
-    ) -> Decimal:
-        """Calculate expected account balance from transactions"""
-        try:
-            # Get all executed trades for the account up to business date
-            trades = (
-                db.query(Trade)
-                .filter(
-                    Trade.account_id == account_id,
-                    Trade.status == "executed",
-                    Trade.created_at <= business_date,
-                )
-                .all()
+            report = RegulatoryReport(
+                report_id=report_id,
+                regulation_type=regulation_type.value,
+                report_type=report_type,
+                period_start=period_start,
+                period_end=period_end,
+                report_data=report_data_json,
+                data_hash=data_hash,
+                submission_status="draft",
+                validation_status="pending",
+                generated_by_user_id=generated_by_user_id,
             )
 
-            # Calculate net position
-            net_value = Decimal("0")
-            for trade in trades:
-                if trade.trade_type == "buy":
-                    net_value -= trade.total_value  # Money out
-                else:
-                    net_value += trade.total_value  # Money in
+            db.add(report)
+            db.commit()
+            db.refresh(report)
 
-            # Add initial balance (would be stored separately in production)
-            initial_balance = Decimal("10000")  # Mock initial balance
-            expected_balance = initial_balance + net_value
-
-            return expected_balance
+            return report
 
         except Exception as e:
-            logger.error(f"Expected balance calculation failed: {e}")
-            return Decimal("0")
+            logger.error(f"Regulatory report generation failed: {e}")
+            raise ValueError(f"Report generation failed: {str(e)}")
 
 
-# Global service instance
+# Initialize the service
 financial_standards_service = FinancialStandardsService()

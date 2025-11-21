@@ -10,12 +10,13 @@ import time
 from decimal import Decimal
 from typing import Any, Dict, Optional
 
-from config import settings
 from eth_account import Account
-from models import AuditLog
 from sqlalchemy.orm import Session
 from web3 import Web3
 from web3.exceptions import ContractLogicError, Web3Exception
+
+from ..config import settings
+from ..models import AuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,13 @@ class BlockchainService:
 
         for attempt in range(max_retries):
             try:
+                if "your-project-id" in settings.ethereum_provider_url:
+                    logger.warning(
+                        "Using placeholder Ethereum URL. Skipping connection attempt."
+                    )
+                    self.w3 = None
+                    return
+
                 self.w3 = Web3(
                     Web3.HTTPProvider(
                         settings.ethereum_provider_url, request_kwargs={"timeout": 30}

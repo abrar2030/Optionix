@@ -6,7 +6,8 @@ Includes security, compliance, and financial standards settings.
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseSettings, validator
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
 
     # Security settings
     secret_key: str = "your-super-secret-key-change-in-production"
-    encryption_key: str = "your-encryption-key-32-bytes-long"
+    encryption_key: str = "A_32_CHAR_DEFAULT_ENCRYPTION_KEY"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -100,6 +101,10 @@ class Settings(BaseSettings):
     basel_iii_monitoring_enabled: bool = True
     dodd_frank_compliance_enabled: bool = True
 
+    # Model settings
+    model_path: str = "models/volatility_model.pkl"
+    scaler_path: str = "models/feature_scaler.pkl"
+
     # Risk management
     default_leverage_limit: Decimal = Decimal("10.0")
     max_leverage_limit: Decimal = Decimal("100.0")
@@ -122,6 +127,7 @@ class Settings(BaseSettings):
 
     # Blockchain settings
     ethereum_rpc_url: str = "https://mainnet.infura.io/v3/your-project-id"
+    ethereum_provider_url: str = "https://mainnet.infura.io/v3/your-project-id"
     ethereum_chain_id: int = 1
     gas_price_gwei: int = 20
     gas_limit: int = 21000

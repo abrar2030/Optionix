@@ -619,3 +619,29 @@ class FinancialAuditLog(Base):
         Index("idx_financial_audit_date", "business_date"),
         Index("idx_financial_audit_regulation", "regulation_type"),
     )
+
+
+class MarketData(Base):
+    """Market data for volatility prediction and historical analysis"""
+
+    __tablename__ = "market_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String(20), nullable=False)
+    timestamp = Column(DateTime(timezone=True), nullable=False)
+
+    # OHLCV data
+    open_price = Column(Numeric(precision=18, scale=8), nullable=False)
+    high_price = Column(Numeric(precision=18, scale=8), nullable=False)
+    low_price = Column(Numeric(precision=18, scale=8), nullable=False)
+    close_price = Column(Numeric(precision=18, scale=8), nullable=False)
+    volume = Column(Numeric(precision=18, scale=8), nullable=False)
+
+    # Model prediction
+    volatility = Column(Numeric(precision=10, scale=6), nullable=True)
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_market_data_symbol_time", "symbol", "timestamp", unique=True),
+        Index("idx_market_data_time", "timestamp"),
+    )

@@ -4,11 +4,12 @@ Database connection and session management for Optionix backend.
 
 import logging
 
-from config import settings
-from models import Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
+
+from .config import settings
+from .models import Base
 
 logger = logging.getLogger(__name__)
 
