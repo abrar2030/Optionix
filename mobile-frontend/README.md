@@ -35,7 +35,7 @@ mobile-frontend/
 
 The `src` directory contains the main application code organized into several subdirectories:
 
-- ****tests**/**: Contains test files for components and functionality using Jest
+- \***\*tests**/\*\*: Contains test files for components and functionality using Jest
 - **navigation/**: Manages the application's navigation structure, likely using React Navigation
 - **screens/**: Contains screen components that represent full pages in the application
 - **services/**: Houses service modules that handle API communication, data processing, and business logic
