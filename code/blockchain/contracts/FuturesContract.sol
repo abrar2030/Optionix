@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/access/AccessControl.sol';
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import '@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol';
 
 /**
  * @title Enhanced Futures Contract for Optionix Platform
@@ -25,15 +25,25 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
     using SafeMath for uint256;
 
     // Role definitions
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
-    bytes32 public constant RISK_MANAGER_ROLE = keccak256("RISK_MANAGER_ROLE");
-    bytes32 public constant LIQUIDATOR_ROLE = keccak256("LIQUIDATOR_ROLE");
-    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256('ADMIN_ROLE');
+    bytes32 public constant COMPLIANCE_ROLE = keccak256('COMPLIANCE_ROLE');
+    bytes32 public constant RISK_MANAGER_ROLE = keccak256('RISK_MANAGER_ROLE');
+    bytes32 public constant LIQUIDATOR_ROLE = keccak256('LIQUIDATOR_ROLE');
+    bytes32 public constant ORACLE_ROLE = keccak256('ORACLE_ROLE');
 
     // Position status
-    enum PositionStatus { ACTIVE, CLOSED, LIQUIDATED, SETTLED }
-    enum ComplianceStatus { PENDING, APPROVED, REJECTED, SUSPENDED }
+    enum PositionStatus {
+        ACTIVE,
+        CLOSED,
+        LIQUIDATED,
+        SETTLED
+    }
+    enum ComplianceStatus {
+        PENDING,
+        APPROVED,
+        REJECTED,
+        SUSPENDED
+    }
 
     struct Position {
         uint256 positionId;
@@ -148,23 +158,11 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         uint256 liquidationFee
     );
 
-    event MarginDeposited(
-        address indexed user,
-        address indexed asset,
-        uint256 amount
-    );
+    event MarginDeposited(address indexed user, address indexed asset, uint256 amount);
 
-    event MarginWithdrawn(
-        address indexed user,
-        address indexed asset,
-        uint256 amount
-    );
+    event MarginWithdrawn(address indexed user, address indexed asset, uint256 amount);
 
-    event FundingPayment(
-        address indexed asset,
-        int256 fundingRate,
-        uint256 timestamp
-    );
+    event FundingPayment(address indexed asset, int256 fundingRate, uint256 timestamp);
 
     event RiskParametersUpdated(
         uint256 initialMarginRate,
@@ -172,35 +170,31 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         uint256 maxLeverage
     );
 
-    event EmergencyAction(
-        string action,
-        address indexed initiator,
-        uint256 timestamp
-    );
+    event EmergencyAction(string action, address indexed initiator, uint256 timestamp);
 
     // Modifiers
     modifier onlyCompliantUser() {
         require(
             userProfiles[msg.sender].isKYCVerified &&
-            userProfiles[msg.sender].complianceStatus == ComplianceStatus.APPROVED,
-            "User not compliant"
+                userProfiles[msg.sender].complianceStatus == ComplianceStatus.APPROVED,
+            'User not compliant'
         );
         _;
     }
 
     modifier notEmergencyStop() {
-        require(!emergencyStop, "Emergency stop active");
+        require(!emergencyStop, 'Emergency stop active');
         _;
     }
 
     modifier validPosition(uint256 _positionId) {
-        require(_positionId > 0 && _positionId < nextPositionId, "Invalid position ID");
-        require(positions[_positionId].status == PositionStatus.ACTIVE, "Position not active");
+        require(_positionId > 0 && _positionId < nextPositionId, 'Invalid position ID');
+        require(positions[_positionId].status == PositionStatus.ACTIVE, 'Position not active');
         _;
     }
 
     modifier onlyPositionOwner(uint256 _positionId) {
-        require(positions[_positionId].trader == msg.sender, "Not position owner");
+        require(positions[_positionId].trader == msg.sender, 'Not position owner');
         _;
     }
 
@@ -208,7 +202,7 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         UserProfile memory profile = userProfiles[_user];
         require(
             profile.totalExposure.add(_exposure) <= profile.maxPositionSize,
-            "Exceeds position limit"
+            'Exceeds position limit'
         );
         _;
     }
@@ -304,20 +298,22 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         address _asset,
         uint256 _amount
     ) external payable onlyCompliantUser nonReentrant {
-        require(_amount > 0, "Amount must be positive");
+        require(_amount > 0, 'Amount must be positive');
 
         if (_asset == address(0)) {
             // ETH deposit
-            require(msg.value == _amount, "ETH amount mismatch");
+            require(msg.value == _amount, 'ETH amount mismatch');
         } else {
             // ERC20 token deposit
-            require(msg.value == 0, "No ETH for token deposit");
+            require(msg.value == 0, 'No ETH for token deposit');
             // Transfer tokens from user (implementation depends on token contract)
         }
 
         marginBalances[msg.sender][_asset] = marginBalances[msg.sender][_asset].add(_amount);
         userProfiles[msg.sender].totalMargin = userProfiles[msg.sender].totalMargin.add(_amount);
-        userProfiles[msg.sender].availableMargin = userProfiles[msg.sender].availableMargin.add(_amount);
+        userProfiles[msg.sender].availableMargin = userProfiles[msg.sender].availableMargin.add(
+            _amount
+        );
 
         emit MarginDeposited(msg.sender, _asset, _amount);
     }
@@ -330,36 +326,29 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         uint256 _size,
         bool _isLong,
         uint256 _leverage
-    ) external
-        onlyCompliantUser
-        nonReentrant
-        notEmergencyStop
-        whenNotPaused
-        returns (uint256)
-    {
-        require(_size > 0, "Size must be positive");
-        require(_leverage > 0 && _leverage <= riskParams.maxLeverage, "Invalid leverage");
-        require(priceOracles[_underlyingAsset].isActive, "Oracle not available");
+    ) external onlyCompliantUser nonReentrant notEmergencyStop whenNotPaused returns (uint256) {
+        require(_size > 0, 'Size must be positive');
+        require(_leverage > 0 && _leverage <= riskParams.maxLeverage, 'Invalid leverage');
+        require(priceOracles[_underlyingAsset].isActive, 'Oracle not available');
 
         // Get current price
         uint256 currentPrice = _getAssetPrice(_underlyingAsset);
-        require(currentPrice > 0, "Invalid price");
+        require(currentPrice > 0, 'Invalid price');
 
         // Calculate required margin
         uint256 notionalValue = _size.mul(currentPrice).div(1e18);
-        uint256 requiredMargin = notionalValue.mul(riskParams.initialMarginRate).div(100).div(_leverage);
+        uint256 requiredMargin = notionalValue.mul(riskParams.initialMarginRate).div(100).div(
+            _leverage
+        );
 
         // Check margin sufficiency
-        require(
-            userProfiles[msg.sender].availableMargin >= requiredMargin,
-            "Insufficient margin"
-        );
+        require(userProfiles[msg.sender].availableMargin >= requiredMargin, 'Insufficient margin');
 
         // Check position limits
         require(
             userProfiles[msg.sender].totalExposure.add(notionalValue) <=
-            userProfiles[msg.sender].maxPositionSize,
-            "Exceeds position limit"
+                userProfiles[msg.sender].maxPositionSize,
+            'Exceeds position limit'
         );
 
         // Check daily volume limits
@@ -387,10 +376,12 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         });
 
         // Update user profile
-        userProfiles[msg.sender].availableMargin =
-            userProfiles[msg.sender].availableMargin.sub(requiredMargin);
-        userProfiles[msg.sender].totalExposure =
-            userProfiles[msg.sender].totalExposure.add(notionalValue);
+        userProfiles[msg.sender].availableMargin = userProfiles[msg.sender].availableMargin.sub(
+            requiredMargin
+        );
+        userProfiles[msg.sender].totalExposure = userProfiles[msg.sender].totalExposure.add(
+            notionalValue
+        );
         userProfiles[msg.sender].lastActivityTime = block.timestamp;
 
         // Update market data
@@ -426,7 +417,8 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
      */
     function closePosition(
         uint256 _positionId
-    ) external
+    )
+        external
         onlyCompliantUser
         nonReentrant
         notEmergencyStop
@@ -437,7 +429,7 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
 
         // Get current price
         uint256 currentPrice = _getAssetPrice(position.underlyingAsset);
-        require(currentPrice > 0, "Invalid price");
+        require(currentPrice > 0, 'Invalid price');
 
         // Calculate PnL
         int256 pnl = _calculatePnL(position, currentPrice);
@@ -470,12 +462,14 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         }
 
         // Update user profile
-        userProfiles[msg.sender].availableMargin =
-            userProfiles[msg.sender].availableMargin.add(marginToReturn);
+        userProfiles[msg.sender].availableMargin = userProfiles[msg.sender].availableMargin.add(
+            marginToReturn
+        );
 
         uint256 notionalValue = position.size.mul(position.entryPrice).div(1e18);
-        userProfiles[msg.sender].totalExposure =
-            userProfiles[msg.sender].totalExposure.sub(notionalValue);
+        userProfiles[msg.sender].totalExposure = userProfiles[msg.sender].totalExposure.sub(
+            notionalValue
+        );
 
         // Update market data
         MarketData storage market = marketData[position.underlyingAsset];
@@ -494,19 +488,18 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
      */
     function liquidatePosition(
         uint256 _positionId
-    ) external
-        onlyRole(LIQUIDATOR_ROLE)
-        nonReentrant
-        validPosition(_positionId)
-    {
+    ) external onlyRole(LIQUIDATOR_ROLE) nonReentrant validPosition(_positionId) {
         Position storage position = positions[_positionId];
 
         // Get current price
         uint256 currentPrice = _getAssetPrice(position.underlyingAsset);
-        require(currentPrice > 0, "Invalid price");
+        require(currentPrice > 0, 'Invalid price');
 
         // Check if position is eligible for liquidation
-        require(_isLiquidationEligible(position, currentPrice), "Position not eligible for liquidation");
+        require(
+            _isLiquidationEligible(position, currentPrice),
+            'Position not eligible for liquidation'
+        );
 
         // Calculate liquidation fee
         uint256 liquidationFee = position.margin.mul(5).div(100); // 5% liquidation fee
@@ -515,22 +508,26 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         position.status = PositionStatus.LIQUIDATED;
 
         // Update user profile
-        userProfiles[position.trader].liquidationCount =
-            userProfiles[position.trader].liquidationCount.add(1);
+        userProfiles[position.trader].liquidationCount = userProfiles[position.trader]
+            .liquidationCount
+            .add(1);
 
         uint256 notionalValue = position.size.mul(position.entryPrice).div(1e18);
-        userProfiles[position.trader].totalExposure =
-            userProfiles[position.trader].totalExposure.sub(notionalValue);
+        userProfiles[position.trader].totalExposure = userProfiles[position.trader]
+            .totalExposure
+            .sub(notionalValue);
 
         // Transfer liquidation fee to liquidator
         if (liquidationFee > 0) {
-            marginBalances[msg.sender][position.underlyingAsset] =
-                marginBalances[msg.sender][position.underlyingAsset].add(liquidationFee);
+            marginBalances[msg.sender][position.underlyingAsset] = marginBalances[msg.sender][
+                position.underlyingAsset
+            ].add(liquidationFee);
         }
 
         // Add remaining margin to insurance fund
-        uint256 remainingMargin = position.margin > liquidationFee ?
-            position.margin.sub(liquidationFee) : 0;
+        uint256 remainingMargin = position.margin > liquidationFee
+            ? position.margin.sub(liquidationFee)
+            : 0;
         if (remainingMargin > 0) {
             insuranceFund = insuranceFund.add(remainingMargin);
         }
@@ -544,16 +541,19 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         }
         market.openInterest = market.openInterest.sub(notionalValue);
 
-        emit PositionLiquidated(_positionId, position.trader, msg.sender, currentPrice, liquidationFee);
+        emit PositionLiquidated(
+            _positionId,
+            position.trader,
+            msg.sender,
+            currentPrice,
+            liquidationFee
+        );
     }
 
     /**
      * @dev Update funding rates for an asset
      */
-    function updateFundingRate(
-        address _asset,
-        int256 _fundingRate
-    ) external onlyRole(ORACLE_ROLE) {
+    function updateFundingRate(address _asset, int256 _fundingRate) external onlyRole(ORACLE_ROLE) {
         MarketData storage market = marketData[_asset];
         market.fundingRate = uint256(_fundingRate > 0 ? _fundingRate : -_fundingRate);
         market.lastFundingTime = block.timestamp;
@@ -566,11 +566,11 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
      */
     function _getAssetPrice(address _asset) internal view returns (uint256) {
         PriceOracle memory oracle = priceOracles[_asset];
-        require(oracle.isActive, "Oracle inactive");
+        require(oracle.isActive, 'Oracle inactive');
 
         (, int256 price, , uint256 updatedAt, ) = oracle.priceFeed.latestRoundData();
-        require(price > 0, "Invalid price");
-        require(block.timestamp.sub(updatedAt) <= oracle.heartbeat, "Price stale");
+        require(price > 0, 'Invalid price');
+        require(block.timestamp.sub(updatedAt) <= oracle.heartbeat, 'Price stale');
 
         return uint256(price);
     }
@@ -585,9 +585,9 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         int256 priceDiff = int256(_currentPrice) - int256(_position.entryPrice);
 
         if (_position.isLong) {
-            return priceDiff * int256(_position.size) / 1e18;
+            return (priceDiff * int256(_position.size)) / 1e18;
         } else {
-            return -priceDiff * int256(_position.size) / 1e18;
+            return (-priceDiff * int256(_position.size)) / 1e18;
         }
     }
 
@@ -642,7 +642,7 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
             lastVolumeResetTime = block.timestamp;
         }
 
-        require(dailyVolume.add(_volume) <= maxDailyVolume, "Daily volume limit exceeded");
+        require(dailyVolume.add(_volume) <= maxDailyVolume, 'Daily volume limit exceeded');
     }
 
     /**
@@ -651,7 +651,7 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
     function emergencyStop() external onlyRole(ADMIN_ROLE) {
         emergencyStop = true;
         _pause();
-        emit EmergencyAction("Emergency stop activated", msg.sender, block.timestamp);
+        emit EmergencyAction('Emergency stop activated', msg.sender, block.timestamp);
     }
 
     /**
@@ -660,7 +660,7 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
     function resumeOperations() external onlyRole(ADMIN_ROLE) {
         emergencyStop = false;
         _unpause();
-        emit EmergencyAction("Operations resumed", msg.sender, block.timestamp);
+        emit EmergencyAction('Operations resumed', msg.sender, block.timestamp);
     }
 
     /**
@@ -685,19 +685,18 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
         address _asset,
         uint256 _amount
     ) external onlyCompliantUser nonReentrant {
-        require(_amount > 0, "Amount must be positive");
+        require(_amount > 0, 'Amount must be positive');
         require(
             userProfiles[msg.sender].availableMargin >= _amount,
-            "Insufficient available margin"
+            'Insufficient available margin'
         );
-        require(
-            marginBalances[msg.sender][_asset] >= _amount,
-            "Insufficient balance"
-        );
+        require(marginBalances[msg.sender][_asset] >= _amount, 'Insufficient balance');
 
         marginBalances[msg.sender][_asset] = marginBalances[msg.sender][_asset].sub(_amount);
         userProfiles[msg.sender].totalMargin = userProfiles[msg.sender].totalMargin.sub(_amount);
-        userProfiles[msg.sender].availableMargin = userProfiles[msg.sender].availableMargin.sub(_amount);
+        userProfiles[msg.sender].availableMargin = userProfiles[msg.sender].availableMargin.sub(
+            _amount
+        );
 
         if (_asset == address(0)) {
             payable(msg.sender).transfer(_amount);
@@ -718,16 +717,22 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
     /**
      * @dev Get position details
      */
-    function getPositionDetails(uint256 _positionId) external view returns (
-        address trader,
-        address underlyingAsset,
-        uint256 size,
-        bool isLong,
-        uint256 entryPrice,
-        uint256 margin,
-        uint256 leverage,
-        PositionStatus status
-    ) {
+    function getPositionDetails(
+        uint256 _positionId
+    )
+        external
+        view
+        returns (
+            address trader,
+            address underlyingAsset,
+            uint256 size,
+            bool isLong,
+            uint256 entryPrice,
+            uint256 margin,
+            uint256 leverage,
+            PositionStatus status
+        )
+    {
         Position memory position = positions[_positionId];
         return (
             position.trader,
@@ -744,13 +749,19 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
     /**
      * @dev Get market data for an asset
      */
-    function getMarketData(address _asset) external view returns (
-        uint256 totalLongPositions,
-        uint256 totalShortPositions,
-        uint256 totalVolume,
-        uint256 openInterest,
-        uint256 fundingRate
-    ) {
+    function getMarketData(
+        address _asset
+    )
+        external
+        view
+        returns (
+            uint256 totalLongPositions,
+            uint256 totalShortPositions,
+            uint256 totalVolume,
+            uint256 openInterest,
+            uint256 fundingRate
+        )
+    {
         MarketData memory market = marketData[_asset];
         return (
             market.totalLongPositions,
@@ -764,11 +775,11 @@ contract EnhancedFuturesContract is ReentrancyGuard, Pausable, AccessControl {
     /**
      * @dev Get contract metrics
      */
-    function getContractMetrics() external view returns (
-        uint256 _dailyVolume,
-        uint256 _nextPositionId,
-        uint256 _insuranceFund
-    ) {
+    function getContractMetrics()
+        external
+        view
+        returns (uint256 _dailyVolume, uint256 _nextPositionId, uint256 _insuranceFund)
+    {
         return (dailyVolume, nextPositionId, insuranceFund);
     }
 
