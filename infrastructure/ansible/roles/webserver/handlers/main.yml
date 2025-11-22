@@ -2,5 +2,5 @@
 # roles/webserver/handlers/main.yml
 - name: Restart Nginx
   systemd:
-    name: nginx
-    state: restarted
+      name: nginx
+      state: restarted

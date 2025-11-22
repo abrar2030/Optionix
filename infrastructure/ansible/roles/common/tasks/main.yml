@@ -2,79 +2,79 @@
 # Common security hardening tasks for all servers
 - name: Update all packages to latest version
   package:
-    name: "*"
-    state: latest
+      name: '*'
+      state: latest
   become: yes
 
 - name: Install essential security packages
   package:
-    name:
-      - fail2ban
-      - ufw
-      - aide
-      - rkhunter
-      - chkrootkit
-      - auditd
-      - rsyslog
-      - ntp
-      - unattended-upgrades
-      - logrotate
-      - clamav
-      - clamav-daemon
-    state: present
+      name:
+          - fail2ban
+          - ufw
+          - aide
+          - rkhunter
+          - chkrootkit
+          - auditd
+          - rsyslog
+          - ntp
+          - unattended-upgrades
+          - logrotate
+          - clamav
+          - clamav-daemon
+      state: present
   become: yes
 
 - name: Configure automatic security updates
   template:
-    src: 50unattended-upgrades.j2
-    dest: /etc/apt/apt.conf.d/50unattended-upgrades
-    owner: root
-    group: root
-    mode: "0644"
+      src: 50unattended-upgrades.j2
+      dest: /etc/apt/apt.conf.d/50unattended-upgrades
+      owner: root
+      group: root
+      mode: '0644'
   become: yes
   notify: restart unattended-upgrades
 
 - name: Enable and configure UFW firewall
   ufw:
-    state: enabled
-    policy: deny
-    direction: incoming
+      state: enabled
+      policy: deny
+      direction: incoming
   become: yes
 
 - name: Allow SSH through firewall
   ufw:
-    rule: allow
-    port: "22"
-    proto: tcp
+      rule: allow
+      port: '22'
+      proto: tcp
   become: yes
 
 - name: Configure SSH hardening
   template:
-    src: sshd_config.j2
-    dest: /etc/ssh/sshd_config
-    owner: root
-    group: root
-    mode: "0600"
-    backup: yes
+      src: sshd_config.j2
+      dest: /etc/ssh/sshd_config
+      owner: root
+      group: root
+      mode: '0600'
+      backup: yes
   become: yes
   notify: restart ssh
 
 - name: Disable root login
   lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: "^PermitRootLogin"
-    line: "PermitRootLogin no"
-    state: present
+      path: /etc/ssh/sshd_config
+      regexp: '^PermitRootLogin'
+      line: 'PermitRootLogin no'
+      state: present
   become: yes
   notify: restart ssh
 
 - name: Configure fail2ban
   template:
-    src: jail.local.j2
-    dest: /etc/fail2ban/jail.local
-    owner: root
-    group: root
-    mode: "0644"
+      src: jail.local.j2
+      dest: /etc/fail2ban/jail.local
+      owner: root
+      group: root
+      mode: '0644'
   become: yes
   notify: restart fail2ban
 
@@ -90,48 +90,48 @@
 
 - name: Configure audit daemon
   template:
-    src: auditd.conf.j2
-    dest: /etc/audit/auditd.conf
-    owner: root
-    group: root
-    mode: "0640"
+      src: auditd.conf.j2
+      dest: /etc/audit/auditd.conf
+      owner: root
+      group: root
+      mode: '0640'
   become: yes
   notify: restart auditd
 
 - name: Configure audit rules for financial compliance
   template:
-    src: audit.rules.j2
-    dest: /etc/audit/rules.d/audit.rules
-    owner: root
-    group: root
-    mode: "0640"
+      src: audit.rules.j2
+      dest: /etc/audit/rules.d/audit.rules
+      owner: root
+      group: root
+      mode: '0640'
   become: yes
   notify: restart auditd
 
 - name: Configure rsyslog for centralized logging
   template:
-    src: rsyslog.conf.j2
-    dest: /etc/rsyslog.conf
-    owner: root
-    group: root
-    mode: "0644"
+      src: rsyslog.conf.j2
+      dest: /etc/rsyslog.conf
+      owner: root
+      group: root
+      mode: '0644'
   become: yes
   notify: restart rsyslog
 
 - name: Configure logrotate for audit logs
   template:
-    src: audit-logrotate.j2
-    dest: /etc/logrotate.d/audit
-    owner: root
-    group: root
-    mode: "0644"
+      src: audit-logrotate.j2
+      dest: /etc/logrotate.d/audit
+      owner: root
+      group: root
+      mode: '0644'
   become: yes
 
 - name: Set up ClamAV antivirus
   systemd:
-    name: clamav-daemon
-    enabled: yes
-    state: started
+      name: clamav-daemon
+      enabled: yes
+      state: started
   become: yes
 
 - name: Update ClamAV virus definitions
@@ -141,66 +141,66 @@
 
 - name: Configure kernel parameters for security
   sysctl:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    state: present
-    reload: yes
+      name: '{{ item.name }}'
+      value: '{{ item.value }}'
+      state: present
+      reload: yes
   become: yes
   loop:
-    - { name: "net.ipv4.ip_forward", value: "0" }
-    - { name: "net.ipv4.conf.all.send_redirects", value: "0" }
-    - { name: "net.ipv4.conf.default.send_redirects", value: "0" }
-    - { name: "net.ipv4.conf.all.accept_source_route", value: "0" }
-    - { name: "net.ipv4.conf.default.accept_source_route", value: "0" }
-    - { name: "net.ipv4.conf.all.accept_redirects", value: "0" }
-    - { name: "net.ipv4.conf.default.accept_redirects", value: "0" }
-    - { name: "net.ipv4.conf.all.secure_redirects", value: "0" }
-    - { name: "net.ipv4.conf.default.secure_redirects", value: "0" }
-    - { name: "net.ipv4.conf.all.log_martians", value: "1" }
-    - { name: "net.ipv4.conf.default.log_martians", value: "1" }
-    - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: "1" }
-    - { name: "net.ipv4.icmp_ignore_bogus_error_responses", value: "1" }
-    - { name: "net.ipv4.tcp_syncookies", value: "1" }
-    - { name: "kernel.dmesg_restrict", value: "1" }
-    - { name: "kernel.kptr_restrict", value: "2" }
+      - { name: 'net.ipv4.ip_forward', value: '0' }
+      - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+      - { name: 'net.ipv4.conf.default.send_redirects', value: '0' }
+      - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
+      - { name: 'net.ipv4.conf.default.accept_source_route', value: '0' }
+      - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+      - { name: 'net.ipv4.conf.default.accept_redirects', value: '0' }
+      - { name: 'net.ipv4.conf.all.secure_redirects', value: '0' }
+      - { name: 'net.ipv4.conf.default.secure_redirects', value: '0' }
+      - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
+      - { name: 'net.ipv4.conf.default.log_martians', value: '1' }
+      - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }
+      - { name: 'net.ipv4.icmp_ignore_bogus_error_responses', value: '1' }
+      - { name: 'net.ipv4.tcp_syncookies', value: '1' }
+      - { name: 'kernel.dmesg_restrict', value: '1' }
+      - { name: 'kernel.kptr_restrict', value: '2' }
 
 - name: Create security monitoring user
   user:
-    name: secmon
-    system: yes
-    shell: /bin/false
-    home: /var/lib/secmon
-    create_home: yes
+      name: secmon
+      system: yes
+      shell: /bin/false
+      home: /var/lib/secmon
+      create_home: yes
   become: yes
 
 - name: Set up file integrity monitoring cron job
   cron:
-    name: "AIDE file integrity check"
-    minute: "0"
-    hour: "2"
-    job: "/usr/bin/aide --check | mail -s 'AIDE Report' admin@optionix.com"
-    user: root
+      name: 'AIDE file integrity check'
+      minute: '0'
+      hour: '2'
+      job: "/usr/bin/aide --check | mail -s 'AIDE Report' admin@optionix.com"
+      user: root
   become: yes
 
 - name: Configure NTP for time synchronization
   template:
-    src: ntp.conf.j2
-    dest: /etc/ntp.conf
-    owner: root
-    group: root
-    mode: "0644"
+      src: ntp.conf.j2
+      dest: /etc/ntp.conf
+      owner: root
+      group: root
+      mode: '0644'
   become: yes
   notify: restart ntp
 
 - name: Ensure critical services are enabled and started
   systemd:
-    name: "{{ item }}"
-    enabled: yes
-    state: started
+      name: '{{ item }}'
+      enabled: yes
+      state: started
   become: yes
   loop:
-    - fail2ban
-    - auditd
-    - rsyslog
-    - ntp
-    - clamav-daemon
+      - fail2ban
+      - auditd
+      - rsyslog
+      - ntp
+      - clamav-daemon
