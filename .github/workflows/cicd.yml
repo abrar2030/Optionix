@@ -66,27 +66,24 @@ jobs:
         with:
           node-version: '18'
 
-      # Web frontend
-      - name: Install Web Frontend Dependencies
-        working-directory: ${{ env.WEB_FRONTEND_DIR }}
-        run: npm install
+      # Install Node dependencies (root)
+      - name: Install Node Dependencies
+        working-directory: .
+        run: npm ci
 
+      # Prettier: web-frontend
       - name: Run Prettier Checks (web-frontend)
-        working-directory: ${{ env.WEB_FRONTEND_DIR }}
+        working-directory: .
         run: |
           echo "=== Running Prettier (web-frontend) ==="
-          npx prettier --check "**/*.{js,jsx,ts,tsx,json,html,css,md}"
+          ./node_modules/.bin/prettier --check "web-frontend/**/*.{js,jsx,ts,tsx,json,html,css,md,sol}"
 
-      # Mobile frontend
-      - name: Install Mobile Frontend Dependencies
-        working-directory: ${{ env.MOBILE_FRONTEND_DIR }}
-        run: npm install
-
+      # Prettier: mobile-frontend
       - name: Run Prettier Checks (mobile-frontend)
-        working-directory: ${{ env.MOBILE_FRONTEND_DIR }}
+        working-directory: .
         run: |
           echo "=== Running Prettier (mobile-frontend) ==="
-          npx prettier --check "**/*.{js,jsx,ts,tsx,json,html,css,md}"
+          ./node_modules/.bin/prettier --check "mobile-frontend/**/*.{js,jsx,ts,tsx,json,html,css,md,sol}"
 
       # -------------------------------
       # Done
