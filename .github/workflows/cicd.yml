@@ -1,26 +1,95 @@
-name: CI Check
+name: CI Formatting Check
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main, develop]
-    workflow_dispatch:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
 
 jobs:
-    build_check:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
+  formatting_check:
+    runs-on: ubuntu-latest
 
-            - name: Run Basic Health Check
-              run: echo "Repository checkout complete. Starting basic checks."
+    env:
+      BACKEND_DIR: code
+      WEB_FRONTEND_DIR: web-frontend
+      MOBILE_FRONTEND_DIR: mobile-frontend
 
-            - name: Validate Configuration Files
-              run: |
-                  echo "No configuration files to validate. Proceeding."
-                  # A real step would be: find . -name "*.yml" | xargs yamllint
+    steps:
+      # -------------------------------
+      # Checkout
+      # -------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-            - name: Finalize Check
-              run: echo "Basic CI check finished."
+      # -------------------------------
+      # Python Setup + Formatting
+      # -------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python Formatters
+        run: |
+          pip install autoflake black
+
+      - name: Run Python Formatting Checks
+        working-directory: ${{ env.BACKEND_DIR }}
+        run: |
+          echo "=== Running autoflake (diff mode) ==="
+          cp -r . /tmp/python_copy
+
+          autoflake \
+            --remove-all-unused-imports \
+            --remove-unused-variables \
+            --recursive \
+            --ignore-init-module-imports \
+            --in-place \
+            /tmp/python_copy
+
+          echo "Comparing files..."
+          diff -r . /tmp/python_copy > /dev/null || {
+            echo "autoflake found issues."
+            exit 1
+          }
+
+          echo "=== Running black ==="
+          black . --check
+
+      # -------------------------------
+      # Node + Prettier Setup
+      # -------------------------------
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # Web frontend
+      - name: Install Web Frontend Dependencies
+        working-directory: ${{ env.WEB_FRONTEND_DIR }}
+        run: npm install
+
+      - name: Run Prettier Checks (web-frontend)
+        working-directory: ${{ env.WEB_FRONTEND_DIR }}
+        run: |
+          echo "=== Running Prettier (web-frontend) ==="
+          npx prettier --check "**/*.{js,jsx,ts,tsx,json,html,css,md}"
+
+      # Mobile frontend
+      - name: Install Mobile Frontend Dependencies
+        working-directory: ${{ env.MOBILE_FRONTEND_DIR }}
+        run: npm install
+
+      - name: Run Prettier Checks (mobile-frontend)
+        working-directory: ${{ env.MOBILE_FRONTEND_DIR }}
+        run: |
+          echo "=== Running Prettier (mobile-frontend) ==="
+          npx prettier --check "**/*.{js,jsx,ts,tsx,json,html,css,md}"
+
+      # -------------------------------
+      # Done
+      # -------------------------------
+      - name: Finalize Check
+        run: echo "All formatting checks completed successfully."
