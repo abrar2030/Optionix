@@ -139,48 +139,48 @@ infrastructure/
 
 1. **Configure AWS Credentials**
 
-   ```bash
-   aws configure
-   ```
+    ```bash
+    aws configure
+    ```
 
 2. **Initialize Terraform**
 
-   ```bash
-   cd terraform/environments/prod
-   terraform init
-   terraform plan
-   terraform apply
-   ```
+    ```bash
+    cd terraform/environments/prod
+    terraform init
+    terraform plan
+    terraform apply
+    ```
 
 3. **Deploy Kubernetes Resources**
 
-   ```bash
-   kubectl apply -f kubernetes/base/
-   ```
+    ```bash
+    kubectl apply -f kubernetes/base/
+    ```
 
 4. **Run Ansible Playbooks**
-   ```bash
-   ansible-playbook ansible/playbooks/site.yml
-   ```
+    ```bash
+    ansible-playbook ansible/playbooks/site.yml
+    ```
 
 ### Security Configuration
 
 1. **Enable Security Monitoring**
 
-   ```bash
-   ./scripts/security_monitor.sh
-   ```
+    ```bash
+    ./scripts/security_monitor.sh
+    ```
 
 2. **Configure Backup and Recovery**
 
-   ```bash
-   ./scripts/backup_recovery.sh
-   ```
+    ```bash
+    ./scripts/backup_recovery.sh
+    ```
 
 3. **Validate Infrastructure**
-   ```bash
-   ./scripts/validate_infrastructure.sh
-   ```
+    ```bash
+    ./scripts/validate_infrastructure.sh
+    ```
 
 ## Operational Procedures
 

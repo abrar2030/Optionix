@@ -11,14 +11,14 @@ This package contains a collection of automation scripts for the Optionix projec
 - **Purpose:** Runs comprehensive tests across all components of Optionix
 - **Usage:**
 
-  ```bash
-  ./comprehensive_test.sh
-  ```
+    ```bash
+    ./comprehensive_test.sh
+    ```
 
 - **Features:**
-  - Tests backend, frontend, mobile, blockchain, and AI components
-  - Generates detailed test reports in HTML format
-  - Provides test summary with pass/fail statistics
+    - Tests backend, frontend, mobile, blockchain, and AI components
+    - Generates detailed test reports in HTML format
+    - Provides test summary with pass/fail statistics
 
 ---
 
@@ -27,15 +27,15 @@ This package contains a collection of automation scripts for the Optionix projec
 - **Purpose:** Automates the CI/CD process for Optionix
 - **Usage:**
 
-  ```bash
-  ./ci_cd_pipeline.sh [--environment=ENV] [--skip-tests] [--skip-lint] [--skip-build] [--skip-deploy]
-  ```
+    ```bash
+    ./ci_cd_pipeline.sh [--environment=ENV] [--skip-tests] [--skip-lint] [--skip-build] [--skip-deploy]
+    ```
 
 - **Features:**
-  - Checks out code from repository
-  - Runs linting and tests
-  - Builds application and creates Docker containers
-  - Deploys to specified environment (development, staging, production)
+    - Checks out code from repository
+    - Runs linting and tests
+    - Builds application and creates Docker containers
+    - Deploys to specified environment (development, staging, production)
 
 ---
 
@@ -44,15 +44,15 @@ This package contains a collection of automation scripts for the Optionix projec
 - **Purpose:** Validates and fixes the development environment setup
 - **Usage:**
 
-  ```bash
-  ./env_validator.sh
-  ```
+    ```bash
+    ./env_validator.sh
+    ```
 
 - **Features:**
-  - Checks for required tools and dependencies
-  - Validates project structure
-  - Creates missing scripts and configurations
-  - Sets up Docker Compose configuration
+    - Checks for required tools and dependencies
+    - Validates project structure
+    - Creates missing scripts and configurations
+    - Sets up Docker Compose configuration
 
 ---
 
@@ -61,17 +61,17 @@ This package contains a collection of automation scripts for the Optionix projec
 - **Purpose:** Manages database operations for Optionix
 - **Usage:**
 
-  ```bash
-  ./db_manager.sh [command] [options]
-  ```
+    ```bash
+    ./db_manager.sh [command] [options]
+    ```
 
 - **Commands:**
-  - `setup` – Sets up database schema
-  - `migrate` – Runs migrations
-  - `seed` – Seeds database with test data
-  - `backup` – Backs up the database
-  - `restore` – Restores database from backup
-  - `reset` – Drops and recreates the database
+    - `setup` – Sets up database schema
+    - `migrate` – Runs migrations
+    - `seed` – Seeds database with test data
+    - `backup` – Backs up the database
+    - `restore` – Restores database from backup
+    - `reset` – Drops and recreates the database
 
 ---
 
@@ -80,15 +80,15 @@ This package contains a collection of automation scripts for the Optionix projec
 - **Purpose:** Monitors and reports on system performance
 - **Usage:**
 
-  ```bash
-  ./performance_monitor.sh [command] [options]
-  ```
+    ```bash
+    ./performance_monitor.sh [command] [options]
+    ```
 
 - **Commands:**
-  - `monitor` – Monitors CPU, memory, and disk usage
-  - `benchmark` – Runs API benchmarks
-  - `loadtest` – Performs load testing
-  - `report` – Generates performance reports
+    - `monitor` – Monitors CPU, memory, and disk usage
+    - `benchmark` – Runs API benchmarks
+    - `loadtest` – Performs load testing
+    - `report` – Generates performance reports
 
 ---
 
@@ -97,16 +97,16 @@ This package contains a collection of automation scripts for the Optionix projec
 - **Purpose:** Generates documentation from code and project structure
 - **Usage:**
 
-  ```bash
-  ./doc_generator.sh [command] [options]
-  ```
+    ```bash
+    ./doc_generator.sh [command] [options]
+    ```
 
 - **Commands:**
-  - `api` – Generates API documentation
-  - `components` – Creates component documentation
-  - `project` – Documents project structure and architecture
-  - `changelog` – Generates changelog from git history
-  - `all` – Runs all documentation commands
+    - `api` – Generates API documentation
+    - `components` – Creates component documentation
+    - `project` – Documents project structure and architecture
+    - `changelog` – Generates changelog from git history
+    - `all` – Runs all documentation commands
 
 ---
 
@@ -115,9 +115,9 @@ This package contains a collection of automation scripts for the Optionix projec
 1. Extract the zip file into your Optionix project root directory.
 2. Make all scripts executable:
 
-   ```bash
-   chmod +x *.sh
-   ```
+    ```bash
+    chmod +x *.sh
+    ```
 
 3. Run the scripts as needed based on the usage instructions above.
 

@@ -83,54 +83,54 @@ code/
 
 1. **Clone and navigate to the code directory**:
 
-   ```bash
-   cd code/
-   ```
+    ```bash
+    cd code/
+    ```
 
 2. **Set environment variables**:
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+    ```bash
+    cp .env.example .env
+    # Edit .env with your configuration
+    ```
 
 3. **Start the platform**:
 
-   ```bash
-   docker-compose up -d
-   ```
+    ```bash
+    docker-compose up -d
+    ```
 
 4. **Verify installation**:
-   ```bash
-   curl http://localhost:8000/health
-   ```
+    ```bash
+    curl http://localhost:8000/health
+    ```
 
 ### Manual Installation
 
 1. **Install dependencies**:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 2. **Set up database**:
 
-   ```bash
-   # Configure PostgreSQL and Redis
-   export DATABASE_URL="postgresql://user:pass@localhost/optionix"
-   export REDIS_URL="redis://localhost:6379/0"
-   ```
+    ```bash
+    # Configure PostgreSQL and Redis
+    export DATABASE_URL="postgresql://user:pass@localhost/optionix"
+    export REDIS_URL="redis://localhost:6379/0"
+    ```
 
 3. **Run migrations**:
 
-   ```bash
-   alembic upgrade head
-   ```
+    ```bash
+    alembic upgrade head
+    ```
 
 4. **Start the application**:
-   ```bash
-   uvicorn app:app --host 0.0.0.0 --port 8000
-   ```
+    ```bash
+    uvicorn app:app --host 0.0.0.0 --port 8000
+    ```
 
 ## 🔧 Configuration
 
@@ -257,24 +257,24 @@ The test suite covers:
 
 1. **AWS Infrastructure** (using Terraform):
 
-   ```bash
-   cd ../infrastructure/terraform/
-   terraform init
-   terraform plan
-   terraform apply
-   ```
+    ```bash
+    cd ../infrastructure/terraform/
+    terraform init
+    terraform plan
+    terraform apply
+    ```
 
 2. **Container Deployment**:
 
-   ```bash
-   docker build -t optionix-platform .
-   docker push your-registry/optionix-platform:latest
-   ```
+    ```bash
+    docker build -t optionix-platform .
+    docker push your-registry/optionix-platform:latest
+    ```
 
 3. **Kubernetes Deployment** (if using K8s):
-   ```bash
-   kubectl apply -f k8s/
-   ```
+    ```bash
+    kubectl apply -f k8s/
+    ```
 
 ### Scaling Considerations
 

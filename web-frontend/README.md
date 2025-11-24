@@ -67,21 +67,21 @@ The `src` directory contains the main application code organized into several su
 
 1. Install dependencies:
 
-   ```bash
-   cd web-frontend
-   npm install
-   ```
+    ```bash
+    cd web-frontend
+    npm install
+    ```
 
 2. Start the development server:
 
-   ```bash
-   npm start
-   ```
+    ```bash
+    npm start
+    ```
 
 3. Build for production:
-   ```bash
-   npm run build
-   ```
+    ```bash
+    npm run build
+    ```
 
 ## Key Features
 

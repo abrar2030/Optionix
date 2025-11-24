@@ -116,21 +116,21 @@ locust -f tests/performance/locustfile.py
 ### Frontend Component Test Example
 
 ```javascript
-import { render, screen } from "@testing-library/react";
-import { TradingView } from "./TradingView";
+import { render, screen } from '@testing-library/react';
+import { TradingView } from './TradingView';
 
-describe("TradingView", () => {
-  it("renders trading interface", () => {
-    render(<TradingView />);
-    expect(screen.getByText("Trading Interface")).toBeInTheDocument();
-  });
+describe('TradingView', () => {
+    it('renders trading interface', () => {
+        render(<TradingView />);
+        expect(screen.getByText('Trading Interface')).toBeInTheDocument();
+    });
 
-  it("handles order placement", async () => {
-    render(<TradingView />);
-    const orderButton = screen.getByText("Place Order");
-    await userEvent.click(orderButton);
-    expect(screen.getByText("Order Placed")).toBeInTheDocument();
-  });
+    it('handles order placement', async () => {
+        render(<TradingView />);
+        const orderButton = screen.getByText('Place Order');
+        await userEvent.click(orderButton);
+        expect(screen.getByText('Order Placed')).toBeInTheDocument();
+    });
 });
 ```
 
@@ -178,15 +178,15 @@ def test_options_pricing():
 name: CI
 on: [push, pull_request]
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        run: |
-          npm install
-          npm test
-          pytest
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Run tests
+              run: |
+                  npm install
+                  npm test
+                  pytest
 ```
 
 ## Performance Testing
@@ -268,19 +268,19 @@ pytest --cov=app --cov-report=html
 ### Common Issues
 
 1. Flaky tests
-   - Fix timing issues
-   - Use proper async handling
-   - Add retries for external calls
+    - Fix timing issues
+    - Use proper async handling
+    - Add retries for external calls
 
 2. Slow tests
-   - Optimize test setup
-   - Use parallel execution
-   - Reduce database operations
+    - Optimize test setup
+    - Use parallel execution
+    - Reduce database operations
 
 3. Test failures
-   - Check test environment
-   - Verify test data
-   - Review recent changes
+    - Check test environment
+    - Verify test data
+    - Review recent changes
 
 ## Support
 

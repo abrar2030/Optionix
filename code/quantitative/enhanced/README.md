@@ -7,49 +7,49 @@ This directory contains enhanced quantitative models for the Optionix platform, 
 ### Stochastic Volatility Models
 
 - `stochastic_volatility.py`: Implementation of advanced stochastic volatility models including:
-  - Heston model with full calibration capabilities
-  - SABR (Stochastic Alpha Beta Rho) model
-  - Path simulation methods
-  - Implied volatility surface generation
+    - Heston model with full calibration capabilities
+    - SABR (Stochastic Alpha Beta Rho) model
+    - Path simulation methods
+    - Implied volatility surface generation
 
 ### Local Volatility Models
 
 - `local_volatility.py`: Implementation of Dupire's local volatility model with:
-  - Volatility surface construction
-  - Numerical methods for partial differential equations
-  - Calibration to market option prices
+    - Volatility surface construction
+    - Numerical methods for partial differential equations
+    - Calibration to market option prices
 
 ### Volatility Surface Construction
 
 - `volatility_surface.py`: Tools for building and managing volatility surfaces with:
-  - Interpolation methods (cubic spline, SVI parameterization)
-  - Arbitrage-free constraints
-  - Term structure modeling
-  - Surface visualization tools
+    - Interpolation methods (cubic spline, SVI parameterization)
+    - Arbitrage-free constraints
+    - Term structure modeling
+    - Surface visualization tools
 
 ### Market Calibration Framework
 
 - `calibration_engine.py`: Core engine for calibrating models to market data with:
-  - Optimization algorithms
-  - Objective function definitions
-  - Parameter constraints
-  - Multi-asset calibration
+    - Optimization algorithms
+    - Objective function definitions
+    - Parameter constraints
+    - Multi-asset calibration
 
 ### Market Data Management
 
 - `market_data.py`: Tools for managing and processing market data with:
-  - Data cleaning and normalization
-  - Implied volatility calculation
-  - Forward curve construction
-  - Historical data analysis
+    - Data cleaning and normalization
+    - Implied volatility calculation
+    - Forward curve construction
+    - Historical data analysis
 
 ### Model Validation
 
 - `model_validation.py`: Framework for validating calibrated models with:
-  - Backtesting framework
-  - Error metrics calculation
-  - Sensitivity analysis
-  - Stress testing for model parameters
+    - Backtesting framework
+    - Error metrics calculation
+    - Sensitivity analysis
+    - Stress testing for model parameters
 
 ## Usage
 

@@ -128,48 +128,48 @@ A comprehensive, enterprise-grade backend for options trading platform with adva
 
 1. **Clone the repository**
 
-   ```bash
-   git clone https://github.com/your-org/optionix-enhanced.git
-   cd optionix-enhanced/code/backend
-   ```
+    ```bash
+    git clone https://github.com/your-org/optionix-enhanced.git
+    cd optionix-enhanced/code/backend
+    ```
 
 2. **Create virtual environment**
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
 
 3. **Install dependencies**
 
-   ```bash
-   pip install -r requirements_enhanced.txt
-   ```
+    ```bash
+    pip install -r requirements_enhanced.txt
+    ```
 
 4. **Set up environment variables**
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+    ```bash
+    cp .env.example .env
+    # Edit .env with your configuration
+    ```
 
 5. **Initialize database**
 
-   ```bash
-   alembic upgrade head
-   ```
+    ```bash
+    alembic upgrade head
+    ```
 
 6. **Run the application**
-   ```bash
-   uvicorn app_enhanced:app --host 0.0.0.0 --port 8000 --reload
-   ```
+    ```bash
+    uvicorn app_enhanced:app --host 0.0.0.0 --port 8000 --reload
+    ```
 
 ### Docker Setup
 
 1. **Build and run with Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
+    ```bash
+    docker-compose up -d
+    ```
 
 ## 📝 Configuration
 
@@ -398,21 +398,21 @@ safety check
 ### Production Deployment
 
 1. **Environment Setup**
-   - Configure production environment variables
-   - Set up SSL certificates
-   - Configure firewall rules
-   - Set up monitoring and logging
+    - Configure production environment variables
+    - Set up SSL certificates
+    - Configure firewall rules
+    - Set up monitoring and logging
 
 2. **Database Migration**
 
-   ```bash
-   alembic upgrade head
-   ```
+    ```bash
+    alembic upgrade head
+    ```
 
 3. **Application Deployment**
-   ```bash
-   gunicorn app_enhanced:app -w 4 -k uvicorn.workers.UvicornWorker
-   ```
+    ```bash
+    gunicorn app_enhanced:app -w 4 -k uvicorn.workers.UvicornWorker
+    ```
 
 ### Docker Deployment
 

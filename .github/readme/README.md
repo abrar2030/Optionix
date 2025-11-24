@@ -25,24 +25,24 @@ The pipeline consists of the following jobs:
 - **Environment**: Runs on Ubuntu latest
 - **Setup**: Uses Python 3.10
 - **Process**:
-  1. Installs dependencies from `code/backend/requirements.txt`
-  2. Runs pytest on the backend code
+    1. Installs dependencies from `code/backend/requirements.txt`
+    2. Runs pytest on the backend code
 
 #### Frontend Testing
 
 - **Environment**: Runs on Ubuntu latest
 - **Setup**: Uses Node.js 18 with npm caching
 - **Process**:
-  1. Installs dependencies using `npm ci` in the `code/frontend` directory
-  2. Runs the frontend test suite
+    1. Installs dependencies using `npm ci` in the `code/frontend` directory
+    2. Runs the frontend test suite
 
 #### Docker Build
 
 - **Environment**: Runs on Ubuntu latest
 - **Setup**: Uses Docker Buildx
 - **Process**:
-  1. Builds a Docker image from the `infrastructure` directory
-  2. Tags the image as `optionix:latest`
+    1. Builds a Docker image from the `infrastructure` directory
+    2. Tags the image as `optionix:latest`
 
 #### Build and Deploy
 
@@ -50,11 +50,11 @@ The pipeline consists of the following jobs:
 - **Dependencies**: Requires successful completion of backend tests, frontend tests, and Docker build
 - **Environment**: Runs on Ubuntu latest
 - **Process**:
-  1. Sets up Node.js 18
-  2. Builds the frontend by installing dependencies and running the build script
-  3. Sets up Python 3.10
-  4. Installs backend dependencies
-  5. Includes placeholder for deployment steps (to be customized based on deployment strategy)
+    1. Sets up Node.js 18
+    2. Builds the frontend by installing dependencies and running the build script
+    3. Sets up Python 3.10
+    4. Installs backend dependencies
+    5. Includes placeholder for deployment steps (to be customized based on deployment strategy)
 
 ## Usage
 

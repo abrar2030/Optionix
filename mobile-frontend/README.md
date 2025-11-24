@@ -53,22 +53,22 @@ The `src` directory contains the main application code organized into several su
 
 1. Install dependencies:
 
-   ```bash
-   cd mobile-frontend
-   npm install
-   ```
+    ```bash
+    cd mobile-frontend
+    npm install
+    ```
 
 2. Start the development server:
 
-   ```bash
-   npm start
-   ```
+    ```bash
+    npm start
+    ```
 
 3. Run on a specific platform:
-   ```bash
-   npm run android  # For Android
-   npm run ios      # For iOS
-   ```
+    ```bash
+    npm run android  # For Android
+    npm run ios      # For iOS
+    ```
 
 ## Key Features
 
