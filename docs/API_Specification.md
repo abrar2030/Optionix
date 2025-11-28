@@ -4,10 +4,6 @@
 
 This document details the API endpoints provided by the Optionix backend service. The API is built using FastAPI and provides endpoints for options pricing, volatility prediction, and blockchain integration.
 
-## Base URL
-
-```
-https://hzuesgxl.manus.space/api/v1
 ```
 
 ## Authentication
@@ -159,7 +155,3 @@ Real-time market data stream.
 ## Versioning
 
 API version is included in the URL path. Current version: v1
-
-## Support
-
-For API support or to report issues, please contact the development team.

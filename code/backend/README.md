@@ -492,38 +492,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 4. Add tests for new features
 5. Ensure all tests pass
 6. Submit a pull request
-
-## 📞 Support
-
-For support and questions:
-
-- **Documentation**: [docs.optionix.com](https://docs.optionix.com)
-- **Email**: support@optionix.com
-- **Issues**: [GitHub Issues](https://github.com/your-org/optionix-enhanced/issues)
-
-## 🗺️ Roadmap
-
-### Version 2.1.0
-
-- [ ] Advanced machine learning risk models
-- [ ] Real-time streaming data
-- [ ] Mobile API optimization
-- [ ] Enhanced reporting dashboard
-
-### Version 2.2.0
-
-- [ ] Multi-asset support
-- [ ] Advanced order types
-- [ ] Social trading features
-- [ ] Enhanced mobile app
-
-### Version 3.0.0
-
-- [ ] Decentralized finance (DeFi) integration
-- [ ] Cryptocurrency support
-- [ ] Advanced algorithmic trading
-- [ ] AI-powered risk management
-
----
-
-**Built with ❤️ by the Optionix Team**

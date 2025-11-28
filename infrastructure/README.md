@@ -244,15 +244,6 @@ infrastructure/
 - **Daily Backups**: System logs and audit trails
 - **Weekly Backups**: Full system images and archives
 
-## Support and Maintenance
-
-### Contact Information
-
-- **Security Team**: security@optionix.com
-- **Operations Team**: ops@optionix.com
-- **Compliance Team**: compliance@optionix.com
-- **Emergency Hotline**: +1-800-OPTIONIX
-
 ### Documentation
 
 - **Architecture Design**: `architecture_design.md`
@@ -291,5 +282,3 @@ For contributions to this infrastructure, please follow the established change m
 5. Deploy through the CI/CD pipeline
 
 ---
-
-**Note**: This infrastructure has been designed to meet the highest standards of security and compliance for financial applications. Regular reviews and updates are essential to maintain the security posture and compliance status.
