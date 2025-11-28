@@ -11,8 +11,10 @@ This document details the API endpoints provided by the Optionix backend service
 All API endpoints require authentication using JWT tokens. Include the token in the Authorization header:
 
 ```
+
 Authorization: Bearer <your_token>
-```
+
+````
 
 ## Endpoints
 
@@ -33,7 +35,7 @@ Calculate the price of an option using the Black-Scholes model.
     "volatility": float,
     "option_type": "call" | "put"
 }
-```
+````
 
 **Response:**
 
