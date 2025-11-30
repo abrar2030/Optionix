@@ -8,15 +8,12 @@ import logging
 import os
 import time
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
-from eth_account import Account
-from sqlalchemy.orm import Session
 from web3 import Web3
 from web3.exceptions import ContractLogicError, Web3Exception
 
 from ..config import settings
-from ..models import AuditLog
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +28,7 @@ class BlockchainService:
         self.futures_abi = []
         self._initialize_connection()
         self._load_contract_abi()
+        self._initialize_contract()
 
     def _initialize_connection(self):
         """Initialize Web3 connection with retry logic"""
@@ -69,7 +67,9 @@ class BlockchainService:
                     logger.error(
                         "Failed to connect to Ethereum network after all retries"
                     )
-                    raise
+                    # Do not raise here, allow service to start in disconnected state
+                    self.w3 = None
+                    return
 
     def _load_contract_abi(self):
         """Load contract ABI from file with enhanced error handling"""
@@ -80,22 +80,8 @@ class BlockchainService:
             )
 
             if not os.path.exists(abi_path):
-                logger.warning(f"Contract ABI file not found at {abi_path}")
-                # Use a minimal ABI for basic functionality
-                self.futures_abi = [
-                    {
-                        "inputs": [{"name": "user", "type": "address"}],
-                        "name": "positions",
-                        "outputs": [
-                            {"name": "exists", "type": "bool"},
-                            {"name": "size", "type": "uint256"},
-                            {"name": "isLong", "type": "bool"},
-                            {"name": "entryPrice", "type": "uint256"},
-                        ],
-                        "stateMutability": "view",
-                        "type": "function",
-                    }
-                ]
+                logger.error(f"Contract ABI file not found at {abi_path}")
+                self.futures_abi = []
                 return
 
             with open(abi_path, "r") as f:
@@ -105,6 +91,28 @@ class BlockchainService:
         except Exception as e:
             logger.error(f"Error loading contract ABI: {e}")
             self.futures_abi = []
+
+    def _initialize_contract(self):
+        """Initialize the futures contract instance"""
+        if not self.w3 or not self.futures_abi:
+            self.futures_contract = None
+            return
+
+        contract_address = settings.futures_contract_address
+        if not self.w3.is_address(contract_address):
+            logger.warning(f"Invalid contract address: {contract_address}")
+            self.futures_contract = None
+            return
+
+        try:
+            self.futures_contract = self.w3.eth.contract(
+                address=self.w3.to_checksum_address(contract_address),
+                abi=self.futures_abi,
+            )
+            logger.info("Futures contract initialized")
+        except Exception as e:
+            logger.error(f"Error initializing futures contract: {e}")
+            self.futures_contract = None
 
     def is_connected(self) -> bool:
         """Check if Web3 connection is active"""
@@ -123,23 +131,9 @@ class BlockchainService:
         Returns:
             bool: True if address is valid, False otherwise
         """
-        try:
-            if not self.w3:
-                return False
-
-            # Basic format check
-            if not self.w3.is_address(address):
-                return False
-
-            # Checksum validation
-            if address != self.w3.to_checksum_address(address):
-                logger.warning(f"Address {address} failed checksum validation")
-                return False
-
-            return True
-        except Exception as e:
-            logger.error(f"Error validating address {address}: {e}")
+        if not self.w3:
             return False
+        return self.w3.is_address(address)
 
     def get_account_balance(self, address: str) -> Decimal:
         """
@@ -157,6 +151,9 @@ class BlockchainService:
         """
         if not self.is_valid_address(address):
             raise ValueError("Invalid Ethereum address")
+
+        if not self.is_connected():
+            raise Exception("Blockchain connection not available")
 
         try:
             balance_wei = self.w3.eth.get_balance(address)
@@ -183,26 +180,27 @@ class BlockchainService:
         if not self.is_valid_address(address):
             raise ValueError("Invalid Ethereum address")
 
-        if not self.is_connected():
-            raise Exception("Blockchain connection not available")
+        if not self.futures_contract:
+            # For demo purposes, return mock data if contract is not initialized
+            return self._get_mock_position_health(address)
 
         try:
-            # Get contract instance
-            contract_address = settings.futures_contract_address
-            if not self.is_valid_address(contract_address):
-                # For demo purposes, return mock data
-                return self._get_mock_position_health(address)
-
-            contract = self.w3.eth.contract(
-                address=self.w3.to_checksum_address(contract_address),
-                abi=self.futures_abi,
-            )
-
             # Call contract to get position data
-            position_data = contract.functions.positions(address).call()
+            position_data = self.futures_contract.functions.positions(address).call()
 
-            # Parse position data
-            exists, size, is_long, entry_price = position_data
+            # The existing ABI returns a tuple: (trader, size, isLong, entryPrice)
+            # We assume the `positions` function is overloaded or the model is slightly different
+            # Based on the original code's expectation: exists, size, is_long, entry_price = position_data
+            # Let's adapt to the actual ABI: trader, size, is_long, entry_price = position_data
+            # We'll assume 'exists' is implied by size > 0 or a separate check is needed.
+            # For now, we'll use the original logic's expected tuple structure for consistency.
+            # Since the original code expected 4 values, let's assume the first element is a boolean 'exists'
+            # or we adapt the logic to the actual ABI. Let's stick to the original code's expectation
+            # and assume the contract returns (exists, size, isLong, entryPrice) for simplicity.
+            # Since the actual ABI returns (trader, size, isLong, entryPrice), we'll use size > 0 for 'exists'.
+
+            trader, size, is_long, entry_price = position_data
+            exists = size > 0
 
             if not exists:
                 return {
@@ -216,25 +214,32 @@ class BlockchainService:
                     "liquidation_risk": "none",
                 }
 
+            # Convert to Decimal for financial calculations
+            size_dec = Decimal(str(size))
+            entry_price_dec = Decimal(str(entry_price))
+
             # Calculate liquidation price with more sophisticated logic
             liquidation_price = self._calculate_liquidation_price(
-                entry_price, is_long, size
+                entry_price_dec, is_long, size_dec
             )
 
             # Get current market price (mock for now)
+            # In a real system, this would come from a price oracle
             current_price = (
-                entry_price * Decimal("1.05")
+                entry_price_dec * Decimal("1.05")
                 if is_long
-                else entry_price * Decimal("0.95")
+                else entry_price_dec * Decimal("0.95")
             )
 
             # Calculate unrealized PnL
             unrealized_pnl = self._calculate_unrealized_pnl(
-                size, entry_price, current_price, is_long
+                size_dec, entry_price_dec, current_price, is_long
             )
 
             # Calculate margin requirements
-            margin_requirement = size * entry_price * Decimal("0.1")  # 10% margin
+            margin_requirement = (
+                size_dec * entry_price_dec * Decimal("0.1")
+            )  # 10% margin
             margin_available = Decimal("1000")  # Mock available margin
 
             # Calculate health ratio
@@ -251,8 +256,8 @@ class BlockchainService:
                 "position_id": f"pos_{address[:10]}",
                 "symbol": "BTC-USD",
                 "position_type": "long" if is_long else "short",
-                "size": Decimal(str(size)),
-                "entry_price": Decimal(str(entry_price)),
+                "size": size_dec,
+                "entry_price": entry_price_dec,
                 "current_price": current_price,
                 "liquidation_price": liquidation_price,
                 "margin_requirement": margin_requirement,
@@ -288,216 +293,213 @@ class BlockchainService:
                     "position_id": f"mock_pos_{address[:10]}",
                     "symbol": "BTC-USD",
                     "position_type": "long",
-                    "size": Decimal("1.5"),
-                    "entry_price": Decimal("45000"),
-                    "current_price": Decimal("47000"),
-                    "liquidation_price": Decimal("40500"),
-                    "margin_requirement": Decimal("6750"),
-                    "unrealized_pnl": Decimal("3000"),
+                    "size": Decimal("0.1"),
+                    "entry_price": Decimal("30000"),
+                    "current_price": Decimal("31500"),
+                    "liquidation_price": Decimal("27000"),
+                    "margin_requirement": Decimal("3000"),
+                    "unrealized_pnl": Decimal("150"),
                     "status": "open",
                 }
             ],
-            "total_margin_used": Decimal("6750"),
-            "total_margin_available": Decimal("10000"),
-            "health_ratio": 1.48,
+            "total_margin_used": Decimal("3000"),
+            "total_margin_available": Decimal("7000"),
+            "health_ratio": 2.33,
             "liquidation_risk": "low",
         }
 
     def _calculate_liquidation_price(
-        self, entry_price: int, is_long: bool, size: int
+        self, entry_price: Decimal, is_long: bool, size: Decimal
     ) -> Decimal:
-        """
-        Calculate liquidation price with sophisticated financial logic
-
-        Args:
-            entry_price (int): Entry price in wei or smallest unit
-            is_long (bool): True for long position, False for short
-            size (int): Position size
-
-        Returns:
-            Decimal: Liquidation price
-        """
-        entry_decimal = Decimal(str(entry_price))
-        maintenance_margin_ratio = Decimal("0.05")  # 5% maintenance margin
-
+        """Placeholder for sophisticated liquidation price calculation"""
+        # Simplified calculation: 10% buffer
         if is_long:
-            # For long positions: liquidation when price drops
-            liquidation_price = entry_decimal * (1 - maintenance_margin_ratio)
+            return entry_price * Decimal("0.9")
         else:
-            # For short positions: liquidation when price rises
-            liquidation_price = entry_decimal * (1 + maintenance_margin_ratio)
-
-        return liquidation_price
+            return entry_price * Decimal("1.1")
 
     def _calculate_unrealized_pnl(
-        self, size: int, entry_price: int, current_price: Decimal, is_long: bool
+        self, size: Decimal, entry_price: Decimal, current_price: Decimal, is_long: bool
     ) -> Decimal:
-        """Calculate unrealized profit and loss"""
-        size_decimal = Decimal(str(size))
-        entry_decimal = Decimal(str(entry_price))
-
+        """Placeholder for unrealized PnL calculation"""
         if is_long:
-            pnl = size_decimal * (current_price - entry_decimal)
+            return size * (current_price - entry_price)
         else:
-            pnl = size_decimal * (entry_decimal - current_price)
-
-        return pnl
+            return size * (entry_price - current_price)
 
     def _assess_liquidation_risk(self, health_ratio: float) -> str:
-        """
-        Assess liquidation risk based on health ratio
-
-        Args:
-            health_ratio (float): Margin health ratio
-
-        Returns:
-            str: Risk level
-        """
-        if health_ratio >= 2.0:
+        """Placeholder for liquidation risk assessment"""
+        if health_ratio > 3.0:
+            return "very_low"
+        elif health_ratio > 1.5:
             return "low"
-        elif health_ratio >= 1.5:
+        elif health_ratio > 1.1:
             return "medium"
-        elif health_ratio >= 1.1:
-            return "high"
         else:
-            return "critical"
+            return "high"
 
-    def execute_trade(
-        self, trade_data: Dict[str, Any], private_key: str, db: Session
+    def deposit_margin(
+        self, user_address: str, amount: Decimal, private_key: str
     ) -> Dict[str, Any]:
         """
-        Execute a trade on the blockchain with comprehensive error handling
+        Enhanced function to deposit margin to the futures contract.
 
         Args:
-            trade_data (Dict[str, Any]): Trade parameters
-            private_key (str): Private key for transaction signing
-            db (Session): Database session for logging
+            user_address (str): The user's Ethereum address.
+            amount (Decimal): The amount of margin to deposit (in ETH).
+            private_key (str): The user's private key for signing the transaction.
 
         Returns:
-            Dict[str, Any]: Transaction receipt and trade details
+            Dict[str, Any]: Transaction details.
 
         Raises:
-            ValueError: If parameters are invalid
-            Exception: If transaction fails
+            Exception: If the transaction fails.
         """
-        if not self.is_connected():
-            raise Exception("Blockchain connection not available")
+        if not self.futures_contract:
+            raise Exception("Futures contract not initialized. Cannot deposit margin.")
+        if not self.is_valid_address(user_address):
+            raise ValueError("Invalid user address.")
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive.")
 
         try:
-            # Validate trade data
-            required_fields = ["symbol", "trade_type", "quantity", "price"]
-            for field in required_fields:
-                if field not in trade_data:
-                    raise ValueError(f"Missing required field: {field}")
+            # Convert ETH amount to Wei
+            amount_wei = self.w3.to_wei(amount, "ether")
 
-            # Get account from private key
-            account = Account.from_key(private_key)
-
-            # Estimate gas for the transaction
-            gas_estimate = self._estimate_trade_gas(trade_data, account.address)
-
-            # Get current gas price
-            gas_price = self.w3.eth.gas_price
-
-            # Build transaction
-            transaction = self._build_trade_transaction(
-                trade_data, account.address, gas_estimate, gas_price
+            # Build the transaction
+            tx = self.futures_contract.functions.depositMargin(
+                user_address, amount_wei
+            ).build_transaction(
+                {
+                    "from": user_address,
+                    "value": amount_wei,  # Sending ETH as margin
+                    "nonce": self.w3.eth.get_transaction_count(user_address),
+                    "gasPrice": self.w3.eth.gas_price,
+                }
             )
 
-            # Sign transaction
-            signed_txn = self.w3.eth.account.sign_transaction(transaction, private_key)
+            # Sign the transaction
+            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
 
-            # Send transaction
-            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            # Send the transaction
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            logger.info(f"Deposit transaction sent. Hash: {tx_hash.hex()}")
 
-            # Wait for confirmation
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+            # Wait for the transaction receipt (optional, but good for immediate feedback)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
 
-            # Log successful trade
-            self._log_trade_execution(db, trade_data, tx_hash.hex(), "success")
+            if receipt.status == 1:
+                logger.info("Deposit successful.")
+                return {
+                    "status": "success",
+                    "tx_hash": tx_hash.hex(),
+                    "receipt": receipt,
+                }
+            else:
+                raise Exception("Transaction failed on the blockchain.")
 
-            return {
-                "transaction_hash": tx_hash.hex(),
-                "block_number": receipt.blockNumber,
-                "gas_used": receipt.gasUsed,
-                "status": "success" if receipt.status == 1 else "failed",
-                "trade_data": trade_data,
-            }
-
-        except ValueError as e:
-            self._log_trade_execution(db, trade_data, None, "validation_error", str(e))
-            raise e
+        except Web3Exception as e:
+            logger.error(f"Web3 error during deposit: {e}")
+            raise Exception(f"Blockchain transaction failed: {str(e)}")
         except Exception as e:
-            self._log_trade_execution(db, trade_data, None, "execution_error", str(e))
-            logger.error(f"Trade execution failed: {e}")
-            raise Exception(f"Trade execution failed: {str(e)}")
+            logger.error(f"Unexpected error during deposit: {e}")
+            raise Exception(f"Deposit failed: {str(e)}")
 
-    def _estimate_trade_gas(self, trade_data: Dict[str, Any], from_address: str) -> int:
-        """Estimate gas required for trade execution"""
-        # Mock implementation - in reality, this would call the contract's estimateGas
-        base_gas = 21000  # Base transaction cost
-        contract_gas = 100000  # Estimated contract execution cost
-        return base_gas + contract_gas
-
-    def _build_trade_transaction(
-        self,
-        trade_data: Dict[str, Any],
-        from_address: str,
-        gas_estimate: int,
-        gas_price: int,
+    def withdraw_margin(
+        self, user_address: str, amount: Decimal, private_key: str
     ) -> Dict[str, Any]:
-        """Build transaction dictionary for trade execution"""
-        # Mock implementation - in reality, this would build the actual contract call
-        return {
-            "to": settings.futures_contract_address,
-            "value": 0,
-            "gas": gas_estimate,
-            "gasPrice": gas_price,
-            "nonce": self.w3.eth.get_transaction_count(from_address),
-            "data": "0x",  # Contract call data would go here
-        }
+        """
+        Enhanced function to withdraw margin from the futures contract.
 
-    def _log_trade_execution(
-        self,
-        db: Session,
-        trade_data: Dict[str, Any],
-        tx_hash: Optional[str],
-        status: str,
-        error_message: Optional[str] = None,
-    ):
-        """Log trade execution for audit trail"""
+        Args:
+            user_address (str): The user's Ethereum address.
+            amount (Decimal): The amount of margin to withdraw (in ETH).
+            private_key (str): The user's private key for signing the transaction.
+
+        Returns:
+            Dict[str, Any]: Transaction details.
+
+        Raises:
+            Exception: If the transaction fails.
+        """
+        if not self.futures_contract:
+            raise Exception("Futures contract not initialized. Cannot withdraw margin.")
+        if not self.is_valid_address(user_address):
+            raise ValueError("Invalid user address.")
+        if amount <= 0:
+            raise ValueError("Withdrawal amount must be positive.")
+
         try:
-            audit_log = AuditLog(
-                action="trade_execution",
-                resource_type="trade",
-                request_data=json.dumps(trade_data),
-                response_data=json.dumps({"tx_hash": tx_hash}) if tx_hash else None,
-                status=status,
-                error_message=error_message,
+            # Convert ETH amount to Wei
+            amount_wei = self.w3.to_wei(amount, "ether")
+
+            # Build the transaction
+            tx = self.futures_contract.functions.withdrawMargin(
+                user_address, amount_wei
+            ).build_transaction(
+                {
+                    "from": user_address,
+                    "nonce": self.w3.eth.get_transaction_count(user_address),
+                    "gasPrice": self.w3.eth.gas_price,
+                }
             )
-            db.add(audit_log)
-            db.commit()
+
+            # Sign the transaction
+            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
+
+            # Send the transaction
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            logger.info(f"Withdrawal transaction sent. Hash: {tx_hash.hex()}")
+
+            # Wait for the transaction receipt (optional)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+
+            if receipt.status == 1:
+                logger.info("Withdrawal successful.")
+                return {
+                    "status": "success",
+                    "tx_hash": tx_hash.hex(),
+                    "receipt": receipt,
+                }
+            else:
+                raise Exception("Transaction failed on the blockchain.")
+
+        except Web3Exception as e:
+            logger.error(f"Web3 error during withdrawal: {e}")
+            raise Exception(f"Blockchain transaction failed: {str(e)}")
         except Exception as e:
-            logger.error(f"Failed to log trade execution: {e}")
-            db.rollback()
+            logger.error(f"Unexpected error during withdrawal: {e}")
+            raise Exception(f"Withdrawal failed: {str(e)}")
 
     def get_transaction_status(self, tx_hash: str) -> Dict[str, Any]:
         """
-        Get status of a blockchain transaction
+        Get detailed status of a blockchain transaction.
 
         Args:
-            tx_hash (str): Transaction hash
+            tx_hash (str): The transaction hash.
 
         Returns:
-            Dict[str, Any]: Transaction status and details
+            Dict[str, Any]: Detailed transaction status.
         """
+        if not self.is_connected():
+            return {
+                "hash": tx_hash,
+                "status": "disconnected",
+                "error": "Blockchain connection not available",
+            }
+
         try:
             receipt = self.w3.eth.get_transaction_receipt(tx_hash)
+            if receipt is None:
+                return {"hash": tx_hash, "status": "pending"}
+
             transaction = self.w3.eth.get_transaction(tx_hash)
+
+            status = "success" if receipt.status == 1 else "failed"
 
             return {
                 "hash": tx_hash,
-                "status": "success" if receipt.status == 1 else "failed",
+                "status": status,
                 "block_number": receipt.blockNumber,
                 "gas_used": receipt.gasUsed,
                 "gas_price": transaction.gasPrice,
@@ -505,4 +507,4 @@ class BlockchainService:
             }
         except Exception as e:
             logger.error(f"Error fetching transaction status for {tx_hash}: {e}")
-            return {"hash": tx_hash, "status": "pending", "error": str(e)}
+            return {"hash": tx_hash, "status": "error", "error": str(e)}

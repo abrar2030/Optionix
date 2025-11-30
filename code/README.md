@@ -8,76 +8,86 @@ Optionix is a comprehensive financial trading system with robust security, compl
 
 ### Security Features
 
-- **Advanced Authentication**: Multi-factor authentication (MFA) with TOTP support
-- **Data Encryption**: End-to-end encryption for sensitive data at rest and in transit
-- **Input Sanitization**: Comprehensive protection against SQL injection and XSS attacks
-- **Rate Limiting**: Intelligent rate limiting to prevent abuse and DDoS attacks
-- **Audit Logging**: Complete audit trail for all user actions and system events
-- **CSRF Protection**: Cross-site request forgery protection
-- **Session Management**: Secure session handling with automatic timeout
+| Feature | Description |
+| :--- | :--- |
+| **Advanced Authentication** | Multi-factor authentication (MFA) with TOTP support |
+| **Data Encryption** | End-to-end encryption for sensitive data at rest and in transit |
+| **Input Sanitization** | Comprehensive protection against SQL injection and XSS attacks |
+| **Rate Limiting** | Intelligent rate limiting to prevent abuse and DDoS attacks |
+| **Audit Logging** | Complete audit trail for all user actions and system events |
+| **CSRF Protection** | Cross-site request forgery protection |
+| **Session Management** | Secure session handling with automatic timeout |
 
 ### Compliance Features
 
-- **AML/KYC**: Anti-Money Laundering and Know Your Customer compliance
-- **Transaction Monitoring**: Real-time monitoring for suspicious activities
-- **Regulatory Reporting**: Automated reporting for MiFID II, EMIR, and Dodd-Frank
-- **Risk Assessment**: Comprehensive risk scoring and management
-- **Sanctions Screening**: Real-time sanctions list checking
-- **Data Retention**: Configurable data retention policies for compliance
-- **Audit Trail**: Immutable audit logs for regulatory requirements
+| Feature | Description |
+| :--- | :--- |
+| **AML/KYC** | Anti-Money Laundering and Know Your Customer compliance |
+| **Transaction Monitoring** | Real-time monitoring for suspicious activities |
+| **Regulatory Reporting** | Automated reporting for MiFID II, EMIR, and Dodd-Frank |
+| **Risk Assessment** | Comprehensive risk scoring and management |
+| **Sanctions Screening** | Real-time sanctions list checking |
+| **Data Retention** | Configurable data retention policies for compliance |
+| **Audit Trail** | Immutable audit logs for regulatory requirements |
 
 ### Financial Standards
 
-- **Black-Scholes**: Comprehensive option pricing with multiple option types
-- **Greeks Calculation**: Delta, Gamma, Theta, Vega, and Rho calculations
-- **Risk Management**: Advanced risk metrics and position limits
-- **AI/ML Models**: Volatility prediction and fraud detection models
-- **Market Data**: Real-time market data integration
-- **Portfolio Management**: Advanced portfolio optimization algorithms
+| Feature | Description |
+| :--- | :--- |
+| **Black-Scholes** | Comprehensive option pricing with multiple option types |
+| **Greeks Calculation** | Delta, Gamma, Theta, Vega, and Rho calculations |
+| **Risk Management** | Advanced risk metrics and position limits |
+| **AI/ML Models** | Volatility prediction and fraud detection models |
+| **Market Data** | Real-time market data integration |
+| **Portfolio Management** | Advanced portfolio optimization algorithms |
 
 ### Infrastructure Enhancements
 
-- **Containerization**: Production-ready Docker containers with security hardening
-- **Orchestration**: Comprehensive Docker Compose setup with monitoring
-- **Cloud Infrastructure**: Terraform configurations for AWS deployment
-- **Monitoring**: Prometheus, Grafana, and ELK stack integration
-- **High Availability**: Load balancing and failover mechanisms
-- **Scalability**: Horizontal scaling capabilities
+| Feature | Description |
+| :--- | :--- |
+| **Containerization** | Production-ready Docker containers with security hardening |
+| **Orchestration** | Comprehensive Docker Compose setup with monitoring |
+| **Cloud Infrastructure** | Terraform configurations for AWS deployment |
+| **Monitoring** | Prometheus, Grafana, and ELK stack integration |
+| **High Availability** | Load balancing and failover mechanisms |
+| **Scalability** | Horizontal scaling capabilities |
 
 ## 📁 Directory Structure
 
-```
-code/
-├── backend/                    # Backend API services
-│   ├── app.py                 # Main FastAPI application
-│   ├── auth.py                # Authentication and authorization
-│   ├── security.py            # Security services and utilities
-│   ├── monitoring.py          # Compliance and monitoring
-│   └── config.py              # Configuration management
-├── quantitative/              # Quantitative models
-│   └── black_scholes.py       # Enhanced Black-Scholes implementation
-├── ai_models/                 # AI/ML models
-│   └── create_model.py        # Model creation and management
-├── blockchain/                # Blockchain integration
-│   └── contracts/
-│       └── OptionsContract.sol # Smart contract for options
-├── tests/                     # Comprehensive test suite
-│   └── test_comprehensive.py  # All tests
-├── requirements.txt           # Python dependencies
-├── Dockerfile                 # Production Docker image
-├── docker-compose.yml         # Multi-service orchestration
-├── entrypoint.sh             # Container startup script
-└── validate.py       # Validation script
-```
+| Path | Description |
+| :--- | :--- |
+| `code/` | Root directory for all source code |
+| `├── backend/` | Backend API services |
+| `│   ├── app.py` | Main FastAPI application |
+| `│   ├── auth.py` | Authentication and authorization |
+| `│   ├── security.py` | Security services and utilities |
+| `│   ├── monitoring.py` | Compliance and monitoring |
+| `│   └── config.py` | Configuration management |
+| `├── quantitative/` | Quantitative models |
+| `│   └── black_scholes.py` | Enhanced Black-Scholes implementation |
+| `├── ai_models/` | AI/ML models |
+| `│   └── create_model.py` | Model creation and management |
+| `├── blockchain/` | Blockchain integration |
+| `│   └── contracts/` | Smart contracts directory |
+| `│       └── OptionsContract.sol` | Smart contract for options |
+| `├── tests/` | Comprehensive test suite |
+| `│   └── test_comprehensive.py` | All tests |
+| `├── requirements.txt` | Python dependencies |
+| `├── Dockerfile` | Production Docker image |
+| `├── docker-compose.yml` | Multi-service orchestration |
+| `├── entrypoint.sh` | Container startup script |
+| `└── validate.py` | Validation script |
 
 ## 🛠 Installation and Setup
 
 ### Prerequisites
 
-- Python 3.11+
-- Docker and Docker Compose
-- PostgreSQL 15+
-- Redis 7+
+| Component | Version/Requirement |
+| :--- | :--- |
+| Python | 3.11+ |
+| Containerization | Docker and Docker Compose |
+| Database | PostgreSQL 15+ |
+| Caching | Redis 7+ |
 
 ### Quick Start with Docker
 
@@ -136,29 +146,26 @@ code/
 
 ### Environment Variables
 
-| Variable         | Description                    | Required |
-| ---------------- | ------------------------------ | -------- |
-| `DATABASE_URL`   | PostgreSQL connection string   | Yes      |
-| `REDIS_URL`      | Redis connection string        | Yes      |
-| `SECRET_KEY`     | Application secret key         | Yes      |
-| `JWT_SECRET`     | JWT signing secret             | Yes      |
-| `ENCRYPTION_KEY` | Data encryption key            | Yes      |
-| `ENVIRONMENT`    | Environment (dev/staging/prod) | No       |
-| `LOG_LEVEL`      | Logging level                  | No       |
+| Variable | Description | Required |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `REDIS_URL` | Redis connection string | Yes |
+| `SECRET_KEY` | Application secret key | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `ENCRYPTION_KEY` | Data encryption key | Yes |
+| `ENVIRONMENT` | Environment (dev/staging/prod) | No |
+| `LOG_LEVEL` | Logging level | No |
 
 ### Security Configuration
 
-```python
-# Example security settings
-SECURITY_CONFIG = {
-    "password_min_length": 12,
-    "mfa_required": True,
-    "session_timeout": 3600,
-    "max_login_attempts": 5,
-    "rate_limit_requests": 100,
-    "rate_limit_window": 60
-}
-```
+| Setting | Description | Default Value |
+| :--- | :--- | :--- |
+| `password_min_length` | Minimum length for user passwords | 12 |
+| `mfa_required` | Flag to enforce Multi-Factor Authentication | `True` |
+| `session_timeout` | Session expiration time in seconds | 3600 |
+| `max_login_attempts` | Maximum failed login attempts before lockout | 5 |
+| `rate_limit_requests` | Max requests per rate limit window | 100 |
+| `rate_limit_window` | Rate limit window in seconds | 60 |
 
 ## 🧪 Testing
 
@@ -176,80 +183,98 @@ python validate.py .
 
 ### Test Coverage
 
-The test suite covers:
-
-- Security features (authentication, encryption, input validation)
-- Compliance features (AML, KYC, transaction monitoring)
-- Financial models (Black-Scholes, Greeks, risk management)
-- API endpoints and performance
-- Infrastructure and deployment
+| Area | Description |
+| :--- | :--- |
+| **Security Features** | Authentication, encryption, input validation |
+| **Compliance Features** | AML, KYC, transaction monitoring |
+| **Financial Models** | Black-Scholes, Greeks, risk management |
+| **API Endpoints** | Functional and performance testing of API |
+| **Infrastructure** | Deployment and container configuration |
 
 ## 📊 Monitoring and Observability
 
 ### Health Checks
 
-- **Application Health**: `GET /health`
-- **Database Health**: `GET /health/database`
-- **Cache Health**: `GET /health/cache`
+| Endpoint | Purpose |
+| :--- | :--- |
+| `GET /health` | Application Health Status |
+| `GET /health/database` | Database Connection Status |
+| `GET /health/cache` | Cache (Redis) Connection Status |
 
 ### Metrics and Monitoring
 
-- **Prometheus**: Metrics collection at `:9090`
-- **Grafana**: Dashboards at `:3000`
-- **Kibana**: Log analysis at `:5601`
+| Tool | Access/Purpose |
+| :--- | :--- |
+| **Prometheus** | Metrics collection at `:9090` |
+| **Grafana** | Visualization dashboards at `:3000` |
+| **Kibana** | Log analysis at `:5601` |
 
 ### Logging
 
-- **Structured Logging**: JSON format with correlation IDs
-- **Audit Logs**: Immutable audit trail for compliance
-- **Error Tracking**: Comprehensive error monitoring
-- **Performance Logs**: Request/response timing and metrics
+| Feature | Description |
+| :--- | :--- |
+| **Structured Logging** | JSON format with correlation IDs for easy parsing |
+| **Audit Logs** | Immutable audit trail for compliance |
+| **Error Tracking** | Comprehensive error monitoring and alerting |
+| **Performance Logs** | Request/response timing and metrics |
 
 ## 🔒 Security Best Practices
 
 ### Authentication
 
-- Multi-factor authentication (MFA) required for all users
-- JWT tokens with short expiration times
-- Secure password policies and hashing (bcrypt)
-- Session management with automatic timeout
+| Best Practice | Description |
+| :--- | :--- |
+| **MFA** | Multi-factor authentication (MFA) required for all users |
+| **JWT** | JWT tokens with short expiration times |
+| **Password Policy** | Secure password policies and hashing (bcrypt) |
+| **Session Mgmt** | Secure session management with automatic timeout |
 
 ### Data Protection
 
-- Encryption at rest using AES-256
-- Encryption in transit using TLS 1.3
-- Sensitive data tokenization
-- PII data masking in logs
+| Best Practice | Description |
+| :--- | :--- |
+| **Encryption at Rest** | Encryption at rest using AES-256 |
+| **Encryption in Transit** | Encryption in transit using TLS 1.3 |
+| **Tokenization** | Sensitive data tokenization for storage |
+| **PII Masking** | PII data masking in logs and non-production environments |
 
 ### Network Security
 
-- HTTPS only in production
-- CORS configuration for cross-origin requests
-- Rate limiting and DDoS protection
-- Input validation and sanitization
+| Best Practice | Description |
+| :--- | :--- |
+| **HTTPS** | HTTPS only in production |
+| **CORS** | Strict CORS configuration for cross-origin requests |
+| **Rate Limiting** | Rate limiting and DDoS protection |
+| **Input Validation** | Input validation and sanitization against injection attacks |
 
 ## 📋 Compliance Features
 
 ### Regulatory Compliance
 
-- **MiFID II**: Transaction reporting and best execution
-- **EMIR**: Derivatives reporting and risk mitigation
-- **Dodd-Frank**: Swap data reporting and clearing
-- **GDPR**: Data privacy and protection compliance
+| Regulation | Scope |
+| :--- | :--- |
+| **MiFID II** | Transaction reporting and best execution |
+| **EMIR** | Derivatives reporting and risk mitigation |
+| **Dodd-Frank** | Swap data reporting and clearing |
+| **GDPR** | Data privacy and protection compliance |
 
 ### Risk Management
 
-- Real-time transaction monitoring
-- Position limits and margin requirements
-- Stress testing and scenario analysis
-- Market risk and credit risk assessment
+| Feature | Description |
+| :--- | :--- |
+| **Transaction Monitoring** | Real-time monitoring for suspicious activities |
+| **Position Limits** | Enforced position limits and margin requirements |
+| **Stress Testing** | Stress testing and scenario analysis capabilities |
+| **Risk Assessment** | Market risk and credit risk assessment |
 
 ### Audit and Reporting
 
-- Comprehensive audit trails
-- Automated regulatory reporting
-- Suspicious activity monitoring
-- Data retention and archival
+| Feature | Description |
+| :--- | :--- |
+| **Audit Trails** | Comprehensive and immutable audit trails |
+| **Regulatory Reporting** | Automated reporting to regulatory bodies |
+| **Suspicious Activity** | Monitoring and alerting for suspicious activity |
+| **Data Retention** | Configurable data retention and archival policies |
 
 ## 🚀 Deployment
 
@@ -278,93 +303,91 @@ The test suite covers:
 
 ### Scaling Considerations
 
-- Horizontal scaling with load balancers
-- Database read replicas for performance
-- Redis clustering for cache scaling
-- CDN for static asset delivery
+| Strategy | Purpose |
+| :--- | :--- |
+| **Horizontal Scaling** | Scaling application instances with load balancers |
+| **Database Replicas** | Using read replicas for performance and reporting |
+| **Redis Clustering** | Scaling cache layer for high throughput |
+| **CDN** | Content Delivery Network for static asset delivery |
 
 ## 📈 Performance Optimization
 
 ### Database Optimization
 
-- Connection pooling and query optimization
-- Proper indexing for financial data
-- Partitioning for large datasets
-- Read replicas for reporting queries
+| Technique | Benefit |
+| :--- | :--- |
+| **Connection Pooling** | Efficiently manage database connections |
+| **Query Optimization** | Improve query execution time |
+| **Partitioning** | Manage and query large datasets more effectively |
+| **Read Replicas** | Offload reporting and read-heavy queries |
 
 ### Caching Strategy
 
-- Redis for session and application caching
-- Database query result caching
-- API response caching with TTL
-- Static asset caching with CDN
+| Component | Purpose |
+| :--- | :--- |
+| **Redis** | Session and application-level caching |
+| **Query Caching** | Caching database query results |
+| **API Response Caching** | Caching API responses with Time-To-Live (TTL) |
+| **Static Assets** | Caching static assets with CDN |
 
 ### Application Performance
 
-- Async/await for I/O operations
-- Connection pooling for external services
-- Background task processing with Celery
-- Memory optimization and garbage collection
+| Technique | Benefit |
+| :--- | :--- |
+| **Async/Await** | Non-blocking I/O operations |
+| **Connection Pooling** | Efficiently manage external service connections |
+| **Background Tasks** | Offload heavy processing with Celery |
+| **Memory Optimization** | Reduce memory footprint and improve garbage collection |
 
 ## 🔧 Maintenance
 
 ### Regular Tasks
 
-- Database backup and recovery testing
-- Security updates and vulnerability scanning
-- Performance monitoring and optimization
-- Compliance reporting and auditing
+| Task | Frequency/Importance |
+| :--- | :--- |
+| **Backup & Recovery** | Database backup and recovery testing |
+| **Security Updates** | Security updates and vulnerability scanning |
+| **Performance** | Performance monitoring and optimization |
+| **Compliance** | Compliance reporting and auditing |
 
 ### Monitoring Alerts
 
-- System health and availability
-- Security incidents and anomalies
-- Performance degradation
-- Compliance violations
+| Alert Type | Trigger |
+| :--- | :--- |
+| **System Health** | Availability and core service status |
+| **Security Incidents** | Anomalous activity or failed security checks |
+| **Performance** | Latency spikes or resource saturation |
+| **Compliance** | Potential compliance violations or data breaches |
 
 ## 📚 API Documentation
 
 ### Authentication Endpoints
 
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-- `POST /auth/logout` - User logout
-- `POST /auth/refresh` - Token refresh
-- `POST /auth/mfa/setup` - MFA setup
-- `POST /auth/mfa/verify` - MFA verification
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `POST` | `/auth/register` | User registration |
+| `POST` | `/auth/login` | User login |
+| `POST` | `/auth/logout` | User logout |
+| `POST` | `/auth/refresh` | Token refresh |
+| `POST` | `/auth/mfa/setup` | MFA setup |
+| `POST` | `/auth/mfa/verify` | MFA verification |
 
 ### Trading Endpoints
 
-- `GET /options` - List available options
-- `POST /options` - Create new option
-- `POST /options/{id}/buy` - Purchase option
-- `POST /options/{id}/exercise` - Exercise option
-- `GET /portfolio` - Get user portfolio
-- `GET /positions` - Get current positions
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/options` | List available options |
+| `POST` | `/options` | Create new option |
+| `POST` | `/options/{id}/buy` | Purchase option |
+| `POST` | `/options/{id}/exercise` | Exercise option |
+| `GET` | `/portfolio` | Get user portfolio |
+| `GET` | `/positions` | Get current positions |
 
-### Risk Management
+### Risk Management Endpoints
 
-- `GET /risk/assessment` - Get risk assessment
-- `GET /risk/limits` - Get position limits
-- `POST /risk/calculate` - Calculate risk metrics
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/risk/assessment` | Get risk assessment |
+| `GET` | `/risk/limits` | Get position limits |
+| `POST` | `/risk/calculate` | Calculate risk metrics |
 
-## 🤝 Contributing
-
-### Development Guidelines
-
-1. Follow PEP 8 style guidelines
-2. Write comprehensive tests for new features
-3. Update documentation for API changes
-4. Run security and compliance validation
-5. Ensure all tests pass before submission
-
-### Code Review Process
-
-1. Security review for all changes
-2. Compliance review for financial features
-3. Performance impact assessment
-4. Documentation review and updates
-
-## 📄 License
-
-This enhanced Optionix platform is proprietary software. All rights reserved.
