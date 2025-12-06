@@ -10,7 +10,6 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
-
 from sqlalchemy import (
     Column,
     DateTime,
@@ -23,26 +22,24 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
-
 from .config import settings
 from .models import Trade
 
 logger = logging.getLogger(__name__)
-
 Base = declarative_base()
 
 
 class FinancialRegulation(str, Enum):
     """Financial regulations"""
 
-    SOX = "sox"  # Sarbanes-Oxley Act
-    BASEL_III = "basel_iii"  # Basel III
-    MIFID_II = "mifid_ii"  # Markets in Financial Instruments Directive II
-    DODD_FRANK = "dodd_frank"  # Dodd-Frank Act
-    CFTC = "cftc"  # Commodity Futures Trading Commission
-    SEC = "sec"  # Securities and Exchange Commission
-    FINRA = "finra"  # Financial Industry Regulatory Authority
-    EMIR = "emir"  # European Market Infrastructure Regulation
+    SOX = "sox"
+    BASEL_III = "basel_iii"
+    MIFID_II = "mifid_ii"
+    DODD_FRANK = "dodd_frank"
+    CFTC = "cftc"
+    SEC = "sec"
+    FINRA = "finra"
+    EMIR = "emir"
 
 
 class TransactionStatus(str, Enum):
@@ -60,7 +57,7 @@ class TransactionStatus(str, Enum):
 class RiskMetricType(str, Enum):
     """Types of risk metrics"""
 
-    VAR = "var"  # Value at Risk
+    VAR = "var"
     EXPECTED_SHORTFALL = "expected_shortfall"
     LEVERAGE_RATIO = "leverage_ratio"
     LIQUIDITY_RATIO = "liquidity_ratio"
@@ -72,37 +69,24 @@ class FinancialAuditLog(Base):
     """Comprehensive financial audit log for SOX compliance"""
 
     __tablename__ = "financial_audit_logs"
-
     id = Column(Integer, primary_key=True)
     audit_id = Column(String(100), unique=True, nullable=False)
     transaction_id = Column(String(100), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
-
-    # Financial data
     transaction_type = Column(String(50), nullable=False)
     amount = Column(Numeric(precision=18, scale=8), nullable=False)
     currency = Column(String(10), default="USD")
-
-    # Audit trail
-    previous_state = Column(Text, nullable=True)  # JSON
-    new_state = Column(Text, nullable=False)  # JSON
-    state_hash = Column(String(64), nullable=False)  # SHA-256
-
-    # Compliance fields
+    previous_state = Column(Text, nullable=True)
+    new_state = Column(Text, nullable=False)
+    state_hash = Column(String(64), nullable=False)
     regulation_type = Column(String(50), nullable=False)
     compliance_status = Column(String(20), default="compliant")
     control_reference = Column(String(100), nullable=True)
-
-    # Authorization
     authorized_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     authorization_level = Column(String(50), nullable=True)
-
-    # Timestamps
     business_date = Column(DateTime, nullable=False)
     system_timestamp = Column(DateTime, default=datetime.utcnow)
-
-    # Indexes for performance
     __table_args__ = (
         Index("idx_financial_audit_transaction", "transaction_id"),
         Index("idx_financial_audit_user", "user_id"),
@@ -115,30 +99,21 @@ class DataIntegrityCheck(Base):
     """Data integrity verification records"""
 
     __tablename__ = "data_integrity_checks"
-
     id = Column(Integer, primary_key=True)
     check_id = Column(String(100), unique=True, nullable=False)
-    check_type = Column(String(50), nullable=False)  # balance, position, trade
-    entity_type = Column(String(50), nullable=False)  # account, user, system
+    check_type = Column(String(50), nullable=False)
+    entity_type = Column(String(50), nullable=False)
     entity_id = Column(String(100), nullable=False)
-
-    # Integrity data
-    expected_value = Column(Text, nullable=False)  # JSON
-    actual_value = Column(Text, nullable=False)  # JSON
-    variance = Column(Text, nullable=True)  # JSON
-
-    # Check results
-    integrity_status = Column(String(20), nullable=False)  # pass, fail, warning
+    expected_value = Column(Text, nullable=False)
+    actual_value = Column(Text, nullable=False)
+    variance = Column(Text, nullable=True)
+    integrity_status = Column(String(20), nullable=False)
     discrepancy_amount = Column(Numeric(precision=18, scale=8), nullable=True)
     tolerance_threshold = Column(Numeric(precision=18, scale=8), nullable=True)
-
-    # Resolution
     resolution_status = Column(String(20), default="pending")
     resolution_notes = Column(Text, nullable=True)
     resolved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     resolved_at = Column(DateTime, nullable=True)
-
-    # Timestamps
     check_timestamp = Column(DateTime, default=datetime.utcnow)
     business_date = Column(DateTime, nullable=False)
 
@@ -147,34 +122,21 @@ class ReconciliationRecord(Base):
     """Financial reconciliation records"""
 
     __tablename__ = "reconciliation_records"
-
     id = Column(Integer, primary_key=True)
     reconciliation_id = Column(String(100), unique=True, nullable=False)
-    reconciliation_type = Column(String(50), nullable=False)  # daily, monthly, trade
-
-    # Source data
+    reconciliation_type = Column(String(50), nullable=False)
     internal_source = Column(String(100), nullable=False)
     external_source = Column(String(100), nullable=False)
-
-    # Reconciliation data
     internal_balance = Column(Numeric(precision=18, scale=8), nullable=False)
     external_balance = Column(Numeric(precision=18, scale=8), nullable=False)
     difference = Column(Numeric(precision=18, scale=8), nullable=False)
-
-    # Status
-    reconciliation_status = Column(
-        String(20), nullable=False
-    )  # matched, unmatched, investigating
+    reconciliation_status = Column(String(20), nullable=False)
     tolerance_threshold = Column(
         Numeric(precision=18, scale=8), default=Decimal("0.01")
     )
-
-    # Investigation
     investigation_notes = Column(Text, nullable=True)
     investigated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     investigation_date = Column(DateTime, nullable=True)
-
-    # Timestamps
     business_date = Column(DateTime, nullable=False)
     reconciliation_date = Column(DateTime, default=datetime.utcnow)
 
@@ -183,34 +145,21 @@ class RiskMetric(Base):
     """Risk metrics for Basel III compliance"""
 
     __tablename__ = "risk_metrics"
-
     id = Column(Integer, primary_key=True)
     metric_id = Column(String(100), unique=True, nullable=False)
     metric_type = Column(String(50), nullable=False)
-    entity_type = Column(String(50), nullable=False)  # portfolio, account, position
+    entity_type = Column(String(50), nullable=False)
     entity_id = Column(String(100), nullable=False)
-
-    # Risk data
     metric_value = Column(Numeric(precision=18, scale=8), nullable=False)
-    confidence_level = Column(
-        Numeric(precision=5, scale=4), nullable=True
-    )  # e.g., 0.95 for 95%
-    time_horizon = Column(Integer, nullable=True)  # days
-
-    # Limits and thresholds
+    confidence_level = Column(Numeric(precision=5, scale=4), nullable=True)
+    time_horizon = Column(Integer, nullable=True)
     limit_value = Column(Numeric(precision=18, scale=8), nullable=True)
     warning_threshold = Column(Numeric(precision=18, scale=8), nullable=True)
     breach_status = Column(String(20), default="within_limits")
-
-    # Calculation details
     calculation_method = Column(String(100), nullable=False)
-    input_parameters = Column(Text, nullable=True)  # JSON
-
-    # Timestamps
+    input_parameters = Column(Text, nullable=True)
     calculation_date = Column(DateTime, default=datetime.utcnow)
     business_date = Column(DateTime, nullable=False)
-
-    # Indexes
     __table_args__ = (
         Index("idx_risk_metric_entity", "entity_type", "entity_id"),
         Index("idx_risk_metric_type_date", "metric_type", "business_date"),
@@ -221,30 +170,19 @@ class RegulatoryReport(Base):
     """Regulatory reporting records"""
 
     __tablename__ = "regulatory_reports_financial"
-
     id = Column(Integer, primary_key=True)
     report_id = Column(String(100), unique=True, nullable=False)
     regulation_type = Column(String(50), nullable=False)
     report_type = Column(String(100), nullable=False)
-
-    # Reporting period
     period_start = Column(DateTime, nullable=False)
     period_end = Column(DateTime, nullable=False)
-
-    # Report data
-    report_data = Column(Text, nullable=False)  # JSON
-    data_hash = Column(String(64), nullable=False)  # SHA-256
-
-    # Submission
+    report_data = Column(Text, nullable=False)
+    data_hash = Column(String(64), nullable=False)
     submission_status = Column(String(20), default="draft")
     submitted_at = Column(DateTime, nullable=True)
     submission_reference = Column(String(100), nullable=True)
-
-    # Validation
     validation_status = Column(String(20), default="pending")
-    validation_errors = Column(Text, nullable=True)  # JSON
-
-    # Timestamps
+    validation_errors = Column(Text, nullable=True)
     generated_at = Column(DateTime, default=datetime.utcnow)
     generated_by = Column(Integer, ForeignKey("users.id"), nullable=False)
 
@@ -252,8 +190,7 @@ class RegulatoryReport(Base):
 class FinancialStandardsService:
     """Service for financial standards compliance"""
 
-    def __init__(self):
-        # SOX compliance settings
+    def __init__(self) -> Any:
         self.sox_controls = {
             "segregation_of_duties": True,
             "authorization_levels": {
@@ -263,22 +200,18 @@ class FinancialStandardsService:
                 "large_transactions": ["senior_trader", "risk_manager"],
             },
             "audit_retention_years": 7,
-            "control_testing_frequency": 90,  # days
+            "control_testing_frequency": 90,
         }
-
-        # Basel III risk limits
         self.basel_limits = {
-            "leverage_ratio_minimum": Decimal("0.03"),  # 3%
-            "liquidity_coverage_ratio": Decimal("1.0"),  # 100%
-            "net_stable_funding_ratio": Decimal("1.0"),  # 100%
-            "capital_adequacy_ratio": Decimal("0.08"),  # 8%
+            "leverage_ratio_minimum": Decimal("0.03"),
+            "liquidity_coverage_ratio": Decimal("1.0"),
+            "net_stable_funding_ratio": Decimal("1.0"),
+            "capital_adequacy_ratio": Decimal("0.08"),
         }
-
-        # MiFID II transaction reporting thresholds
         self.mifid_thresholds = {
-            "equity_threshold": Decimal("15000"),  # EUR 15,000
-            "bond_threshold": Decimal("50000"),  # EUR 50,000
-            "derivative_threshold": Decimal("25000"),  # EUR 25,000
+            "equity_threshold": Decimal("15000"),
+            "bond_threshold": Decimal("50000"),
+            "derivative_threshold": Decimal("25000"),
         }
 
     def create_financial_audit_log(
@@ -298,11 +231,8 @@ class FinancialStandardsService:
         """Create comprehensive financial audit log entry"""
         try:
             audit_id = f"FA_{int(datetime.utcnow().timestamp())}_{transaction_id}"
-
-            # Create state hash for integrity
             state_data = json.dumps(new_state, sort_keys=True, default=str)
             state_hash = hashlib.sha256(state_data.encode()).hexdigest()
-
             audit_log = FinancialAuditLog(
                 audit_id=audit_id,
                 transaction_id=transaction_id,
@@ -322,13 +252,10 @@ class FinancialStandardsService:
                 authorization_level=authorization_level,
                 business_date=datetime.utcnow().date(),
             )
-
             db.add(audit_log)
             db.commit()
             db.refresh(audit_log)
-
             return audit_log
-
         except Exception as e:
             logger.error(f"Failed to create financial audit log: {e}")
             raise ValueError(f"Audit log creation failed: {str(e)}")
@@ -348,24 +275,17 @@ class FinancialStandardsService:
             check_id = (
                 f"DIC_{int(datetime.utcnow().timestamp())}_{entity_type}_{entity_id}"
             )
-
-            # Calculate variance
             variance = self._calculate_variance(expected_value, actual_value)
-
-            # Determine integrity status
             integrity_status = "pass"
             discrepancy_amount = Decimal("0")
-
             if variance:
                 discrepancy_amount = abs(
                     Decimal(str(variance.get("total_difference", 0)))
                 )
-
                 if tolerance_threshold and discrepancy_amount > tolerance_threshold:
                     integrity_status = "fail"
                 elif discrepancy_amount > Decimal("0"):
                     integrity_status = "warning"
-
             integrity_check = DataIntegrityCheck(
                 check_id=check_id,
                 check_type=check_type,
@@ -379,13 +299,10 @@ class FinancialStandardsService:
                 tolerance_threshold=tolerance_threshold,
                 business_date=datetime.utcnow().date(),
             )
-
             db.add(integrity_check)
             db.commit()
             db.refresh(integrity_check)
-
             return integrity_check
-
         except Exception as e:
             logger.error(f"Data integrity check failed: {e}")
             raise ValueError(f"Integrity check failed: {str(e)}")
@@ -396,15 +313,12 @@ class FinancialStandardsService:
         """Calculate variance between expected and actual values"""
         variance = {}
         total_difference = Decimal("0")
-
-        # Compare numeric values
         for key in expected:
             if key in actual:
                 try:
                     expected_val = Decimal(str(expected[key]))
                     actual_val = Decimal(str(actual[key]))
                     difference = actual_val - expected_val
-
                     if difference != 0:
                         variance[key] = {
                             "expected": str(expected_val),
@@ -417,9 +331,7 @@ class FinancialStandardsService:
                             ),
                         }
                         total_difference += abs(difference)
-
                 except (ValueError, TypeError, ZeroDivisionError):
-                    # Non-numeric or zero division
                     if str(expected[key]) != str(actual[key]):
                         variance[key] = {
                             "expected": str(expected[key]),
@@ -432,8 +344,6 @@ class FinancialStandardsService:
                     "actual": "missing",
                     "difference": "missing_field",
                 }
-
-        # Check for extra fields in actual
         for key in actual:
             if key not in expected:
                 variance[key] = {
@@ -441,11 +351,9 @@ class FinancialStandardsService:
                     "actual": str(actual[key]),
                     "difference": "extra_field",
                 }
-
         if variance:
             variance["total_difference"] = str(total_difference)
             return variance
-
         return None
 
     def perform_reconciliation(
@@ -462,21 +370,17 @@ class FinancialStandardsService:
             reconciliation_id = (
                 f"RR_{int(datetime.utcnow().timestamp())}_{reconciliation_type}"
             )
-
             difference = internal_balance - external_balance
-
             if tolerance_threshold is None:
                 tolerance_threshold = self.sox_controls.get(
                     "reconciliation_tolerance", Decimal("0.01")
                 )
-
             if abs(difference) <= tolerance_threshold:
                 reconciliation_status = "matched"
             elif abs(difference) > tolerance_threshold:
                 reconciliation_status = "unmatched"
             else:
                 reconciliation_status = "investigating"
-
             reconciliation = ReconciliationRecord(
                 reconciliation_id=reconciliation_id,
                 reconciliation_type=reconciliation_type,
@@ -489,40 +393,32 @@ class FinancialStandardsService:
                 tolerance_threshold=tolerance_threshold,
                 business_date=business_date.date(),
             )
-
             db.add(reconciliation)
             db.commit()
             db.refresh(reconciliation)
-
             return reconciliation
-
         except Exception as e:
             logger.error(f"Financial reconciliation failed: {e}")
             raise ValueError(f"Reconciliation failed: {str(e)}")
 
     def check_mifid_ii_reporting(self, trade: Trade) -> bool:
         """Check if a trade is reportable under MiFID II"""
-        # Simplified check based on trade value and instrument type
         trade_value = trade.total_value
-
         if (
             trade.symbol in settings.equity_symbols
             and trade_value >= self.mifid_thresholds["equity_threshold"]
         ):
             return True
-
         if (
             trade.symbol in settings.bond_symbols
             and trade_value >= self.mifid_thresholds["bond_threshold"]
         ):
             return True
-
         if (
             trade.symbol in settings.derivative_symbols
             and trade_value >= self.mifid_thresholds["derivative_threshold"]
         ):
             return True
-
         return False
 
     def generate_regulatory_report(
@@ -537,8 +433,6 @@ class FinancialStandardsService:
         """Generate a regulatory report"""
         try:
             report_id = f"RR_{regulation_type.value}_{report_type}_{period_start.strftime('%Y%m%d')}"
-
-            # Mock report data generation
             report_data = {
                 "regulation": regulation_type.value,
                 "period_start": period_start.isoformat(),
@@ -547,10 +441,8 @@ class FinancialStandardsService:
                 "data_points": 1000,
                 "compliance_status": "compliant",
             }
-
             report_data_json = json.dumps(report_data, sort_keys=True, default=str)
             data_hash = hashlib.sha256(report_data_json.encode()).hexdigest()
-
             report = RegulatoryReport(
                 report_id=report_id,
                 regulation_type=regulation_type.value,
@@ -563,17 +455,13 @@ class FinancialStandardsService:
                 validation_status="pending",
                 generated_by_user_id=generated_by_user_id,
             )
-
             db.add(report)
             db.commit()
             db.refresh(report)
-
             return report
-
         except Exception as e:
             logger.error(f"Regulatory report generation failed: {e}")
             raise ValueError(f"Report generation failed: {str(e)}")
 
 
-# Initialize the service
 financial_standards_service = FinancialStandardsService()

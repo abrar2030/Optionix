@@ -22,7 +22,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from io import BytesIO
 from typing import List, Optional
-
 import bcrypt
 import jwt
 import pyotp
@@ -33,7 +32,6 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
-
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -57,27 +55,18 @@ class UserRole(str, Enum):
 class Permission(str, Enum):
     """Granular permissions"""
 
-    # User management
     CREATE_USER = "create_user"
     READ_USER = "read_user"
     UPDATE_USER = "update_user"
     DELETE_USER = "delete_user"
-
-    # Trading permissions
     EXECUTE_TRADE = "execute_trade"
     VIEW_TRADES = "view_trades"
     CANCEL_TRADE = "cancel_trade"
-
-    # Financial data
     VIEW_FINANCIAL_DATA = "view_financial_data"
     EXPORT_FINANCIAL_DATA = "export_financial_data"
-
-    # Compliance
     VIEW_COMPLIANCE_DATA = "view_compliance_data"
     GENERATE_REPORTS = "generate_reports"
     APPROVE_KYC = "approve_kyc"
-
-    # System administration
     MANAGE_SYSTEM = "manage_system"
     VIEW_AUDIT_LOGS = "view_audit_logs"
     MANAGE_KEYS = "manage_keys"
@@ -122,7 +111,7 @@ class AuthenticationResult:
 class EnhancedAuthService:
     """Enhanced authentication and authorization service"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize enhanced auth service"""
         self._jwt_private_key = None
         self._jwt_public_key = None
@@ -131,7 +120,7 @@ class EnhancedAuthService:
         self._device_fingerprints = {}
         self._initialize_auth_service()
 
-    def _initialize_auth_service(self):
+    def _initialize_auth_service(self) -> Any:
         """Initialize authentication service"""
         try:
             self._generate_jwt_keys()
@@ -141,31 +130,25 @@ class EnhancedAuthService:
             logger.error(f"Failed to initialize auth service: {e}")
             raise
 
-    def _generate_jwt_keys(self):
+    def _generate_jwt_keys(self) -> Any:
         """Generate RSA key pair for JWT signing"""
         try:
-            # Generate RSA key pair
             private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-
-            # Serialize private key
             self._jwt_private_key = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption(),
             )
-
-            # Serialize public key
             public_key = private_key.public_key()
             self._jwt_public_key = public_key.public_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo,
             )
-
         except Exception as e:
             logger.error(f"Failed to generate JWT keys: {e}")
             raise
 
-    def _initialize_role_permissions(self):
+    def _initialize_role_permissions(self) -> Any:
         """Initialize role-permission mappings"""
         self._role_permissions = {
             UserRole.SUPER_ADMIN: [p.value for p in Permission],
@@ -232,7 +215,7 @@ class EnhancedAuthService:
 
     def create_access_token(
         self, data: dict, expires_delta: Optional[timedelta] = None
-    ):
+    ) -> Any:
         """Create JWT access token"""
         to_encode = data.copy()
         if expires_delta:
@@ -241,14 +224,13 @@ class EnhancedAuthService:
             expire = datetime.utcnow() + timedelta(
                 minutes=settings.access_token_expire_minutes
             )
-
         to_encode.update({"exp": expire, "type": "access"})
         encoded_jwt = jwt.encode(
             to_encode, settings.secret_key, algorithm=settings.algorithm
         )
         return encoded_jwt
 
-    def create_refresh_token(self, data: dict):
+    def create_refresh_token(self, data: dict) -> Any:
         """Create JWT refresh token"""
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
@@ -271,32 +253,26 @@ class EnhancedAuthService:
     def create_session(self, user_id: str, user_agent: str, ip_address: str) -> str:
         """Create user session"""
         session_id = secrets.token_urlsafe(32)
-        # Store session in cache/database
         return session_id
 
     def check_failed_attempts(self, key: str) -> dict:
         """Check failed login attempts"""
         attempts = self._failed_attempts.get(key, {"count": 0, "locked_until": None})
-
         if attempts["locked_until"] and datetime.utcnow() < attempts["locked_until"]:
             return {"locked": True, "count": attempts["count"]}
-
         return {"locked": False, "count": attempts["count"]}
 
-    def record_failed_attempt(self, key: str):
+    def record_failed_attempt(self, key: str) -> Any:
         """Record failed login attempt"""
         if key not in self._failed_attempts:
             self._failed_attempts[key] = {"count": 0, "locked_until": None}
-
         self._failed_attempts[key]["count"] += 1
-
-        # Lock account after 5 failed attempts for 15 minutes
         if self._failed_attempts[key]["count"] >= 5:
             self._failed_attempts[key]["locked_until"] = datetime.utcnow() + timedelta(
                 minutes=15
             )
 
-    def clear_failed_attempts(self, key: str):
+    def clear_failed_attempts(self, key: str) -> Any:
         """Clear failed login attempts"""
         if key in self._failed_attempts:
             del self._failed_attempts[key]
@@ -306,11 +282,9 @@ class EnhancedAuthService:
         return permission in self._role_permissions.get(user_role, [])
 
 
-# Initialize auth service
 auth_service = EnhancedAuthService()
 
 
-# MFA Service
 class MFAService:
     """Multi-factor authentication service"""
 
@@ -323,16 +297,13 @@ class MFAService:
         totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
             name=email, issuer_name="Optionix"
         )
-
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(totp_uri)
         qr.make(fit=True)
-
         img = qr.make_image(fill_color="black", back_color="white")
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         buffer.seek(0)
-
         return base64.b64encode(buffer.getvalue()).decode()
 
     def verify_totp_token(self, secret: str, token: str) -> bool:
@@ -349,11 +320,10 @@ class MFAService:
         return [hashlib.sha256(code.encode()).hexdigest() for code in codes]
 
 
-# RBAC Service
 class RBACService:
     """Role-based access control service"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         self.auth_service = auth_service
 
     def check_permission(self, user_role: str, permission: str) -> bool:
@@ -365,36 +335,31 @@ class RBACService:
         return self.auth_service._role_permissions.get(user_role, [])
 
 
-# Initialize services
 mfa_service = MFAService()
 rbac_service = RBACService()
 
 
-# Dependency functions
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
 ):
     """Get current authenticated user"""
     token = credentials.credentials
     payload = auth_service.verify_token(token)
-
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
     return payload
 
 
 async def get_current_verified_user(current_user: dict = Depends(get_current_user)):
     """Get current verified user"""
-    # Add additional verification logic here
     return current_user
 
 
-def require_permission(permission: Permission):
+def require_permission(permission: Permission) -> Any:
     """Dependency function to require specific permission"""
 
     def permission_checker(current_user: dict = Depends(get_current_user)):
@@ -416,9 +381,8 @@ def log_auth_event(
     user_agent: str,
     status: str,
     details: str = None,
-):
+) -> Any:
     """Log authentication event"""
-    # Implementation would log to audit table
     logger.info(
         f"Auth event: {event_type} for user {user_id} from {ip_address} - {status}"
     )

@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
 import redis
 from sqlalchemy import (
     JSON,
@@ -36,8 +35,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
-
-# Database setup
 Base = declarative_base()
 
 
@@ -98,10 +95,8 @@ class RegulatoryReport:
     file_path: Optional[str]
 
 
-# Database Models
 class TransactionLog(Base):
     __tablename__ = "transaction_logs"
-
     id = Column(Integer, primary_key=True)
     transaction_id = Column(String(255), unique=True, nullable=False)
     user_id = Column(String(255), nullable=False)
@@ -117,7 +112,6 @@ class TransactionLog(Base):
 
 class ComplianceAlertModel(Base):
     __tablename__ = "compliance_alerts"
-
     id = Column(Integer, primary_key=True)
     alert_id = Column(String(255), unique=True, nullable=False)
     severity = Column(String(20), nullable=False)
@@ -134,7 +128,6 @@ class ComplianceAlertModel(Base):
 
 class RegulatoryReportModel(Base):
     __tablename__ = "regulatory_reports"
-
     id = Column(Integer, primary_key=True)
     report_id = Column(String(255), unique=True, nullable=False)
     report_type = Column(String(100), nullable=False)
@@ -148,7 +141,6 @@ class RegulatoryReportModel(Base):
 
 class UserComplianceProfile(Base):
     __tablename__ = "user_compliance_profiles"
-
     id = Column(Integer, primary_key=True)
     user_id = Column(String(255), unique=True, nullable=False)
     kyc_status = Column(String(50), nullable=False)
@@ -164,7 +156,7 @@ class UserComplianceProfile(Base):
 class EnhancedMonitoringService:
     """Enhanced monitoring and compliance service"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any]) -> Any:
         """Initialize monitoring service"""
         self.config = config
         self.db_engine = create_engine(
@@ -173,15 +165,11 @@ class EnhancedMonitoringService:
         Base.metadata.create_all(self.db_engine)
         Session = sessionmaker(bind=self.db_engine)
         self.db_session = Session()
-
-        # Redis for caching and real-time data
         self.redis_client = redis.Redis(
             host=config.get("redis_host", "localhost"),
             port=config.get("redis_port", 6379),
             db=config.get("redis_db", 0),
         )
-
-        # Alert thresholds
         self.alert_thresholds = {
             "large_transaction": config.get("large_transaction_threshold", 10000),
             "velocity_limit": config.get("velocity_limit", 100000),
@@ -200,16 +188,10 @@ class EnhancedMonitoringService:
             user_id = transaction_data.get("user_id")
             amount = transaction_data.get("amount", 0)
             transaction_type = transaction_data.get("type")
-
-            # Calculate risk score
             risk_score = await self._calculate_transaction_risk_score(transaction_data)
-
-            # Check for compliance violations
             violations = await self._check_compliance_violations(
                 transaction_data, risk_score
             )
-
-            # Log transaction
             transaction_log = TransactionLog(
                 transaction_id=transaction_id,
                 user_id=user_id,
@@ -222,19 +204,14 @@ class EnhancedMonitoringService:
                 risk_score=risk_score,
                 compliance_status="compliant" if not violations else "flagged",
             )
-
             self.db_session.add(transaction_log)
             self.db_session.commit()
-
-            # Generate alerts if needed
             if violations:
                 alert = await self._generate_compliance_alert(
                     transaction_data, violations, risk_score
                 )
                 return alert
-
             return None
-
         except Exception as e:
             logger.error(f"Transaction monitoring failed: {e}")
             raise
@@ -246,31 +223,20 @@ class EnhancedMonitoringService:
         try:
             user_id = transaction_data.get("user_id")
             amount = transaction_data.get("amount", 0)
-
-            # Base risk score
             risk_score = 0.0
-
-            # Amount-based risk
             if amount > self.alert_thresholds["large_transaction"]:
                 risk_score += 30.0
-
-            # User history risk
             user_profile = (
                 self.db_session.query(UserComplianceProfile)
                 .filter_by(user_id=user_id)
                 .first()
             )
-
             if user_profile:
                 risk_score += user_profile.risk_score * 0.3
-
                 if user_profile.pep_status:
                     risk_score += 20.0
-
                 if user_profile.enhanced_due_diligence:
                     risk_score += 15.0
-
-            # Transaction pattern risk
             recent_transactions = (
                 self.db_session.query(TransactionLog)
                 .filter(
@@ -279,49 +245,33 @@ class EnhancedMonitoringService:
                 )
                 .all()
             )
-
             if len(recent_transactions) > 10:
                 risk_score += 25.0
-
-            # Velocity risk
-            total_24h_volume = sum(t.amount or 0 for t in recent_transactions)
+            total_24h_volume = sum((t.amount or 0 for t in recent_transactions))
             if total_24h_volume > self.alert_thresholds["velocity_limit"]:
                 risk_score += 35.0
-
-            return min(risk_score, 100.0)  # Cap at 100
-
+            return min(risk_score, 100.0)
         except Exception as e:
             logger.error(f"Risk score calculation failed: {e}")
-            return 50.0  # Default medium risk
+            return 50.0
 
     async def _check_compliance_violations(
         self, transaction_data: Dict[str, Any], risk_score: float
     ) -> List[str]:
         """Check for compliance violations"""
         violations = []
-
         try:
             user_id = transaction_data.get("user_id")
             amount = transaction_data.get("amount", 0)
-
-            # High risk score violation
             if risk_score > self.alert_thresholds["risk_score_threshold"]:
                 violations.append(f"High risk score: {risk_score}")
-
-            # Large transaction violation
             if amount > self.alert_thresholds["large_transaction"]:
                 violations.append(f"Large transaction: {amount}")
-
-            # Sanctions check
             if await self._check_sanctions_list(user_id):
                 violations.append("User on sanctions list")
-
-            # Suspicious pattern detection
             if await self._detect_suspicious_patterns(user_id):
                 violations.append("Suspicious trading pattern detected")
-
             return violations
-
         except Exception as e:
             logger.error(f"Compliance violation check failed: {e}")
             return ["Compliance check error"]
@@ -332,8 +282,6 @@ class EnhancedMonitoringService:
         """Generate compliance alert"""
         try:
             alert_id = f"ALERT_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{transaction_data.get('transaction_id', 'UNKNOWN')}"
-
-            # Determine severity
             severity = AlertSeverity.LOW
             if risk_score > 90:
                 severity = AlertSeverity.CRITICAL
@@ -341,7 +289,6 @@ class EnhancedMonitoringService:
                 severity = AlertSeverity.HIGH
             elif risk_score > 50:
                 severity = AlertSeverity.MEDIUM
-
             alert = ComplianceAlert(
                 alert_id=alert_id,
                 severity=severity,
@@ -357,8 +304,6 @@ class EnhancedMonitoringService:
                     "transaction_data": transaction_data,
                 },
             )
-
-            # Save to database
             alert_model = ComplianceAlertModel(
                 alert_id=alert.alert_id,
                 severity=alert.severity.value,
@@ -370,12 +315,9 @@ class EnhancedMonitoringService:
                 status=alert.status,
                 metadata=alert.metadata,
             )
-
             self.db_session.add(alert_model)
             self.db_session.commit()
-
             return alert
-
         except Exception as e:
             logger.error(f"Alert generation failed: {e}")
             raise
@@ -383,21 +325,14 @@ class EnhancedMonitoringService:
     async def _check_sanctions_list(self, user_id: str) -> bool:
         """Check if user is on sanctions list"""
         try:
-            # This would integrate with actual sanctions databases
             cached_result = self.redis_client.get(f"sanctions_check:{user_id}")
             if cached_result:
                 return json.loads(cached_result)
-
-            # Simulate sanctions check
-            is_sanctioned = False  # Would be actual API call
-
-            # Cache result for 24 hours
+            is_sanctioned = False
             self.redis_client.setex(
                 f"sanctions_check:{user_id}", 86400, json.dumps(is_sanctioned)
             )
-
             return is_sanctioned
-
         except Exception as e:
             logger.error(f"Sanctions check failed: {e}")
             return False
@@ -405,7 +340,6 @@ class EnhancedMonitoringService:
     async def _detect_suspicious_patterns(self, user_id: str) -> bool:
         """Detect suspicious trading patterns"""
         try:
-            # Get recent transactions
             recent_transactions = (
                 self.db_session.query(TransactionLog)
                 .filter(
@@ -414,32 +348,21 @@ class EnhancedMonitoringService:
                 )
                 .all()
             )
-
             if len(recent_transactions) < 5:
                 return False
-
-            # Check for unusual patterns
             amounts = [t.amount or 0 for t in recent_transactions]
-
-            # Check for round number bias
-            round_numbers = sum(1 for amount in amounts if amount % 1000 == 0)
+            round_numbers = sum((1 for amount in amounts if amount % 1000 == 0))
             if round_numbers / len(amounts) > 0.8:
                 return True
-
-            # Check for rapid succession trades
             timestamps = [t.timestamp for t in recent_transactions]
             timestamps.sort()
-
             rapid_trades = 0
             for i in range(1, len(timestamps)):
                 if (timestamps[i] - timestamps[i - 1]).total_seconds() < 60:
                     rapid_trades += 1
-
             if rapid_trades / len(timestamps) > 0.5:
                 return True
-
             return False
-
         except Exception as e:
             logger.error(f"Suspicious pattern detection failed: {e}")
             return False
@@ -450,8 +373,6 @@ class EnhancedMonitoringService:
         """Generate regulatory report"""
         try:
             report_id = f"REP_{report_type}_{period}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-
-            # Get data based on report type
             if report_type == "mifid_ii":
                 data = self._generate_mifid_ii_report(period)
             elif report_type == "emir":
@@ -460,7 +381,6 @@ class EnhancedMonitoringService:
                 data = self._generate_dodd_frank_report(period)
             else:
                 raise ValueError(f"Unknown report type: {report_type}")
-
             report = RegulatoryReport(
                 report_id=report_id,
                 report_type=report_type,
@@ -470,8 +390,6 @@ class EnhancedMonitoringService:
                 status="generated",
                 file_path=None,
             )
-
-            # Save to database
             report_model = RegulatoryReportModel(
                 report_id=report.report_id,
                 report_type=report.report_type,
@@ -481,19 +399,15 @@ class EnhancedMonitoringService:
                 status=report.status,
                 file_path=report.file_path,
             )
-
             self.db_session.add(report_model)
             self.db_session.commit()
-
             return report
-
         except Exception as e:
             logger.error(f"Regulatory report generation failed: {e}")
             raise
 
     def _generate_mifid_ii_report(self, period: str) -> Dict[str, Any]:
         """Generate MiFID II report data"""
-        # Implementation for MiFID II reporting
         return {
             "report_type": "mifid_ii",
             "period": period,
@@ -503,7 +417,6 @@ class EnhancedMonitoringService:
 
     def _generate_emir_report(self, period: str) -> Dict[str, Any]:
         """Generate EMIR report data"""
-        # Implementation for EMIR reporting
         return {
             "report_type": "emir",
             "period": period,
@@ -513,7 +426,6 @@ class EnhancedMonitoringService:
 
     def _generate_dodd_frank_report(self, period: str) -> Dict[str, Any]:
         """Generate Dodd-Frank report data"""
-        # Implementation for Dodd-Frank reporting
         return {
             "report_type": "dodd_frank",
             "period": period,
@@ -522,7 +434,6 @@ class EnhancedMonitoringService:
         }
 
 
-# Initialize monitoring service
 def create_monitoring_service(config: Dict[str, Any]) -> EnhancedMonitoringService:
     """Create monitoring service instance"""
     return EnhancedMonitoringService(config)

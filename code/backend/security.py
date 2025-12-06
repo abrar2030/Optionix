@@ -20,12 +20,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
-
 import bcrypt
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -90,7 +88,7 @@ class EncryptionResult:
 class EnhancedSecurityService:
     """Enhanced security service implementing financial industry standards"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize enhanced security service"""
         self._master_key = None
         self._encryption_keys = {}
@@ -99,7 +97,7 @@ class EnhancedSecurityService:
         self._rate_limits = {}
         self._initialize_security()
 
-    def _initialize_security(self):
+    def _initialize_security(self) -> Any:
         """Initialize security components"""
         try:
             self._load_master_key()
@@ -109,30 +107,25 @@ class EnhancedSecurityService:
             logger.error(f"Failed to initialize security service: {e}")
             raise
 
-    def _load_master_key(self):
+    def _load_master_key(self) -> Any:
         """Load or generate master encryption key"""
         try:
-            # In production, load from secure key management service (AWS KMS, Azure Key Vault, etc.)
             key_material = settings.secret_key.encode()
-
-            # Use PBKDF2 with high iteration count for key derivation
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=b"optionix_master_salt_2024_v2",
-                iterations=200000,  # High iteration count for security
+                iterations=200000,
             )
             derived_key = kdf.derive(key_material)
             self._master_key = base64.urlsafe_b64encode(derived_key)
-
         except Exception as e:
             logger.error(f"Failed to load master key: {e}")
             raise
 
-    def _initialize_encryption_keys(self):
+    def _initialize_encryption_keys(self) -> Any:
         """Initialize encryption keys for different purposes"""
         try:
-            # Generate keys for different data types and compliance requirements
             self._encryption_keys = {
                 "pii_data": self._generate_encryption_key(
                     EncryptionStandard.AES_256_GCM
@@ -148,7 +141,6 @@ class EnhancedSecurityService:
                     EncryptionStandard.AES_256_GCM
                 ),
             }
-
         except Exception as e:
             logger.error(f"Failed to initialize encryption keys: {e}")
             raise
@@ -156,11 +148,11 @@ class EnhancedSecurityService:
     def _generate_encryption_key(self, standard: EncryptionStandard) -> bytes:
         """Generate encryption key based on standard"""
         if standard == EncryptionStandard.AES_256_GCM:
-            return secrets.token_bytes(32)  # 256-bit key
+            return secrets.token_bytes(32)
         elif standard == EncryptionStandard.FERNET:
             return Fernet.generate_key()
         elif standard == EncryptionStandard.CHACHA20_POLY1305:
-            return secrets.token_bytes(32)  # 256-bit key
+            return secrets.token_bytes(32)
         else:
             raise ValueError(f"Unsupported encryption standard: {standard}")
 
@@ -168,7 +160,6 @@ class EnhancedSecurityService:
         """Encrypt a field using Fernet encryption"""
         if not data:
             return data
-
         key = self._encryption_keys["pii_data"]
         fernet = Fernet(key)
         return fernet.encrypt(data.encode()).decode()
@@ -177,7 +168,6 @@ class EnhancedSecurityService:
         """Decrypt a field using Fernet encryption"""
         if not encrypted_data:
             return encrypted_data
-
         key = self._encryption_keys["pii_data"]
         fernet = Fernet(key)
         return fernet.decrypt(encrypted_data.encode()).decode()
@@ -185,36 +175,25 @@ class EnhancedSecurityService:
     def validate_password_strength(self, password: str) -> Dict[str, Any]:
         """Validate password strength according to financial industry standards"""
         issues = []
-
-        # Minimum length check
         if len(password) < 12:
             issues.append("Password must be at least 12 characters long")
-
-        # Character variety checks
-        if not re.search(r"[a-z]", password):
+        if not re.search("[a-z]", password):
             issues.append("Password must contain lowercase letters")
-
-        if not re.search(r"[A-Z]", password):
+        if not re.search("[A-Z]", password):
             issues.append("Password must contain uppercase letters")
-
-        if not re.search(r"\d", password):
+        if not re.search("\\d", password):
             issues.append("Password must contain numbers")
-
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        if not re.search('[!@#$%^&*(),.?":{}|<>]', password):
             issues.append("Password must contain special characters")
-
-        # Common password patterns
         common_patterns = [
-            r"(.)\1{2,}",  # Repeated characters
-            r"(012|123|234|345|456|567|678|789|890)",  # Sequential numbers
-            r"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)",  # Sequential letters
+            "(.)\\1{2,}",
+            "(012|123|234|345|456|567|678|789|890)",
+            "(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)",
         ]
-
         for pattern in common_patterns:
             if re.search(pattern, password.lower()):
                 issues.append("Password contains common patterns")
                 break
-
         return {
             "valid": len(issues) == 0,
             "issues": issues,
@@ -224,17 +203,13 @@ class EnhancedSecurityService:
     def sanitize_input(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Sanitize input data to prevent injection attacks"""
         sanitized = {}
-
         for key, value in data.items():
             if isinstance(value, str):
-                # Remove potentially dangerous characters
-                sanitized_value = re.sub(r'[<>"\']', "", value)
-                # Limit length
+                sanitized_value = re.sub("[<>\"\\']", "", value)
                 sanitized_value = sanitized_value[:1000]
                 sanitized[key] = sanitized_value
             else:
                 sanitized[key] = value
-
         return sanitized
 
     def generate_secure_token(self, length: int = 32) -> str:
@@ -243,7 +218,6 @@ class EnhancedSecurityService:
 
     def hash_password(self, password: str) -> str:
         """Hash password using bcrypt with high cost factor"""
-        # Use cost factor of 12 for strong security
         salt = bcrypt.gensalt(rounds=12)
         return bcrypt.hashpw(password.encode(), salt).decode()
 
@@ -256,5 +230,4 @@ class EnhancedSecurityService:
             return False
 
 
-# Initialize security service
 security_service = EnhancedSecurityService()

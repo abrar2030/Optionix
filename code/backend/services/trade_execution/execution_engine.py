@@ -11,10 +11,8 @@ import time
 import uuid
 from datetime import datetime
 from enum import Enum
-
 import numpy as np
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -76,18 +74,18 @@ class Order:
 
     def __init__(
         self,
-        instrument,
-        quantity,
-        side,
-        order_type=OrderType.MARKET,
-        price=None,
-        stop_price=None,
-        time_in_force=TimeInForce.GTC,
-        expiry_time=None,
-        account_id=None,
-        algorithm=ExecutionAlgorithm.MARKET,
-        algorithm_params=None,
-    ):
+        instrument: Any,
+        quantity: Any,
+        side: Any,
+        order_type: Any = OrderType.MARKET,
+        price: Any = None,
+        stop_price: Any = None,
+        time_in_force: Any = TimeInForce.GTC,
+        expiry_time: Any = None,
+        account_id: Any = None,
+        algorithm: Any = ExecutionAlgorithm.MARKET,
+        algorithm_params: Any = None,
+    ) -> Any:
         """
         Initialize a new order.
 
@@ -126,8 +124,6 @@ class Order:
             else ExecutionAlgorithm(algorithm)
         )
         self.algorithm_params = algorithm_params or {}
-
-        # Order state
         self.status = OrderStatus.CREATED
         self.creation_time = datetime.now()
         self.last_updated = self.creation_time
@@ -138,7 +134,7 @@ class Order:
         self.parent_order_id = None
         self.child_order_ids = []
 
-    def validate(self):
+    def validate(self) -> Any:
         """
         Validate the order.
 
@@ -146,34 +142,25 @@ class Order:
             bool: True if valid, False otherwise
             str: Rejection reason if invalid
         """
-        # Check required fields
         if not self.instrument:
-            return False, "Missing instrument"
-
+            return (False, "Missing instrument")
         if not self.quantity or self.quantity <= 0:
-            return False, "Invalid quantity"
-
-        # Check price for limit orders
+            return (False, "Invalid quantity")
         if self.order_type == OrderType.LIMIT and (
             self.price is None or self.price <= 0
         ):
-            return False, "Missing or invalid price for limit order"
-
-        # Check stop price for stop orders
+            return (False, "Missing or invalid price for limit order")
         if self.order_type in [OrderType.STOP, OrderType.STOP_LIMIT] and (
             self.stop_price is None or self.stop_price <= 0
         ):
-            return False, "Missing or invalid stop price for stop order"
-
-        # Check expiry time for GTD orders
+            return (False, "Missing or invalid stop price for stop order")
         if self.time_in_force == TimeInForce.GTD and (
             self.expiry_time is None or self.expiry_time <= datetime.now()
         ):
-            return False, "Missing or invalid expiry time for GTD order"
+            return (False, "Missing or invalid expiry time for GTD order")
+        return (True, None)
 
-        return True, None
-
-    def update_status(self, status, reason=None):
+    def update_status(self, status: Any, reason: Any = None) -> Any:
         """
         Update order status.
 
@@ -183,16 +170,14 @@ class Order:
         """
         self.status = status if isinstance(status, OrderStatus) else OrderStatus(status)
         self.last_updated = datetime.now()
-
         if status == OrderStatus.REJECTED:
             self.rejection_reason = reason
-
         logger.info(
             f"Order {self.order_id} status updated to {status.value}"
             + (f" - Reason: {reason}" if reason else "")
         )
 
-    def add_fill(self, quantity, price, timestamp=None):
+    def add_fill(self, quantity: Any, price: Any, timestamp: Any = None) -> Any:
         """
         Add a fill to the order.
 
@@ -202,8 +187,6 @@ class Order:
             timestamp (datetime, optional): Fill timestamp
         """
         timestamp = timestamp or datetime.now()
-
-        # Create fill record
         fill = {
             "fill_id": str(uuid.uuid4()),
             "order_id": self.order_id,
@@ -211,27 +194,19 @@ class Order:
             "price": price,
             "timestamp": timestamp,
         }
-
-        # Add to fills list
         self.fills.append(fill)
-
-        # Update executed quantity and average price
         self.executed_quantity += quantity
-
-        # Calculate new average price
         self.average_price = (
-            sum(f["quantity"] * f["price"] for f in self.fills) / self.executed_quantity
+            sum((f["quantity"] * f["price"] for f in self.fills))
+            / self.executed_quantity
         )
-
-        # Update status
         if self.executed_quantity >= self.quantity:
             self.update_status(OrderStatus.FILLED)
         elif self.executed_quantity > 0:
             self.update_status(OrderStatus.PARTIALLY_FILLED)
-
         logger.info(f"Order {self.order_id} filled: {quantity} @ {price}")
 
-    def cancel(self, reason=None):
+    def cancel(self, reason: Any = None) -> Any:
         """
         Cancel the order.
 
@@ -248,11 +223,10 @@ class Order:
             OrderStatus.EXPIRED,
         ]:
             return False
-
         self.update_status(OrderStatus.CANCELLED, reason)
         return True
 
-    def to_dict(self):
+    def to_dict(self) -> Any:
         """
         Convert order to dictionary.
 
@@ -289,13 +263,13 @@ class OrderManager:
     System for managing order lifecycle.
     """
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize order manager."""
         self.orders = {}
         self.order_history = {}
         self._lock = threading.RLock()
 
-    def create_order(self, order_params):
+    def create_order(self, order_params: Any) -> Any:
         """
         Create a new order.
 
@@ -306,28 +280,21 @@ class OrderManager:
             Order: Created order
         """
         with self._lock:
-            # Create order object if parameters provided
             if isinstance(order_params, dict):
                 order = Order(**order_params)
             else:
                 order = order_params
-
-            # Validate order
             is_valid, reason = order.validate()
-
             if is_valid:
                 order.update_status(OrderStatus.VALIDATED)
             else:
                 order.update_status(OrderStatus.REJECTED, reason)
                 logger.warning(f"Order validation failed: {reason}")
-
-            # Store order
             self.orders[order.order_id] = order
             self.order_history[order.order_id] = [order.to_dict()]
-
             return order
 
-    def get_order(self, order_id):
+    def get_order(self, order_id: Any) -> Any:
         """
         Get order by ID.
 
@@ -339,7 +306,7 @@ class OrderManager:
         """
         return self.orders.get(order_id)
 
-    def update_order(self, order_id, updates):
+    def update_order(self, order_id: Any, updates: Any) -> Any:
         """
         Update an existing order.
 
@@ -352,12 +319,9 @@ class OrderManager:
         """
         with self._lock:
             order = self.get_order(order_id)
-
             if not order:
                 logger.warning(f"Order {order_id} not found for update")
                 return None
-
-            # Check if order can be updated
             if order.status in [
                 OrderStatus.FILLED,
                 OrderStatus.CANCELLED,
@@ -368,27 +332,19 @@ class OrderManager:
                     f"Cannot update order {order_id} with status {order.status.value}"
                 )
                 return order
-
-            # Apply updates
             for key, value in updates.items():
                 if hasattr(order, key):
                     setattr(order, key, value)
-
-            # Revalidate order
             is_valid, reason = order.validate()
-
             if is_valid:
                 order.update_status(OrderStatus.VALIDATED)
             else:
                 order.update_status(OrderStatus.REJECTED, reason)
                 logger.warning(f"Order update validation failed: {reason}")
-
-            # Update history
             self.order_history[order_id].append(order.to_dict())
-
             return order
 
-    def cancel_order(self, order_id, reason=None):
+    def cancel_order(self, order_id: Any, reason: Any = None) -> Any:
         """
         Cancel an order.
 
@@ -401,20 +357,17 @@ class OrderManager:
         """
         with self._lock:
             order = self.get_order(order_id)
-
             if not order:
                 logger.warning(f"Order {order_id} not found for cancellation")
                 return False
-
             result = order.cancel(reason)
-
             if result:
-                # Update history
                 self.order_history[order_id].append(order.to_dict())
-
             return result
 
-    def add_fill(self, order_id, quantity, price, timestamp=None):
+    def add_fill(
+        self, order_id: Any, quantity: Any, price: Any, timestamp: Any = None
+    ) -> Any:
         """
         Add a fill to an order.
 
@@ -429,12 +382,9 @@ class OrderManager:
         """
         with self._lock:
             order = self.get_order(order_id)
-
             if not order:
                 logger.warning(f"Order {order_id} not found for fill")
                 return False
-
-            # Check if order can be filled
             if order.status in [
                 OrderStatus.CANCELLED,
                 OrderStatus.REJECTED,
@@ -444,16 +394,11 @@ class OrderManager:
                     f"Cannot fill order {order_id} with status {order.status.value}"
                 )
                 return False
-
-            # Add fill
             order.add_fill(quantity, price, timestamp)
-
-            # Update history
             self.order_history[order_id].append(order.to_dict())
-
             return True
 
-    def get_order_history(self, order_id):
+    def get_order_history(self, order_id: Any) -> Any:
         """
         Get order history.
 
@@ -465,7 +410,7 @@ class OrderManager:
         """
         return self.order_history.get(order_id, [])
 
-    def get_orders_by_status(self, status):
+    def get_orders_by_status(self, status: Any) -> Any:
         """
         Get orders by status.
 
@@ -478,7 +423,7 @@ class OrderManager:
         status = status if isinstance(status, OrderStatus) else OrderStatus(status)
         return [order for order in self.orders.values() if order.status == status]
 
-    def get_orders_by_account(self, account_id):
+    def get_orders_by_account(self, account_id: Any) -> Any:
         """
         Get orders by account.
 
@@ -492,7 +437,7 @@ class OrderManager:
             order for order in self.orders.values() if order.account_id == account_id
         ]
 
-    def get_orders_by_instrument(self, instrument):
+    def get_orders_by_instrument(self, instrument: Any) -> Any:
         """
         Get orders by instrument.
 
@@ -506,7 +451,7 @@ class OrderManager:
             order for order in self.orders.values() if order.instrument == instrument
         ]
 
-    def create_child_orders(self, parent_order_id, child_orders):
+    def create_child_orders(self, parent_order_id: Any, child_orders: Any) -> Any:
         """
         Create child orders for a parent order.
 
@@ -519,26 +464,16 @@ class OrderManager:
         """
         with self._lock:
             parent_order = self.get_order(parent_order_id)
-
             if not parent_order:
                 logger.warning(f"Parent order {parent_order_id} not found")
                 return []
-
             created_orders = []
-
             for params in child_orders:
-                # Create child order
                 child_order = self.create_order(params)
-
-                # Link to parent
                 child_order.parent_order_id = parent_order_id
                 parent_order.child_order_ids.append(child_order.order_id)
-
                 created_orders.append(child_order)
-
-            # Update parent order history
             self.order_history[parent_order_id].append(parent_order.to_dict())
-
             return created_orders
 
 
@@ -547,7 +482,7 @@ class ExecutionEngine:
     Core engine for processing and executing trades.
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any = None) -> Any:
         """
         Initialize execution engine.
 
@@ -560,7 +495,7 @@ class ExecutionEngine:
         self.execution_threads = {}
         self._lock = threading.RLock()
 
-    def submit_order(self, order_params):
+    def submit_order(self, order_params: Any) -> Any:
         """
         Submit an order for execution.
 
@@ -570,53 +505,36 @@ class ExecutionEngine:
         Returns:
             dict: Order submission result
         """
-        # Create order
         order = self.order_manager.create_order(order_params)
-
-        # Check if order was rejected during validation
         if order.status == OrderStatus.REJECTED:
             return {
                 "status": "rejected",
                 "order_id": order.order_id,
                 "reason": order.rejection_reason,
             }
-
-        # Update status to pending
         order.update_status(OrderStatus.PENDING)
-
-        # Execute order based on algorithm
         if order.algorithm == ExecutionAlgorithm.MARKET:
-            # Execute immediately
             self._execute_market_order(order)
         else:
-            # Start execution thread for algorithmic execution
             self._start_execution_thread(order)
-
         return {"status": "accepted", "order_id": order.order_id}
 
-    def _execute_market_order(self, order):
+    def _execute_market_order(self, order: Any) -> Any:
         """
         Execute a market order immediately.
 
         Args:
             order (Order): Order to execute
         """
-        # Simulate market execution
-        # In a real system, this would interact with exchange/broker APIs
-
-        # Get current market price
         market_price = self._get_market_price(order.instrument)
-
         if market_price is None:
             order.update_status(
                 OrderStatus.REJECTED, "Unable to determine market price"
             )
             return
-
-        # Add fill
         self.order_manager.add_fill(order.order_id, order.quantity, market_price)
 
-    def _start_execution_thread(self, order):
+    def _start_execution_thread(self, order: Any) -> Any:
         """
         Start execution thread for algorithmic execution.
 
@@ -624,21 +542,16 @@ class ExecutionEngine:
             order (Order): Order to execute
         """
         with self._lock:
-            # Create execution thread
             thread = threading.Thread(
                 target=self._run_execution_algorithm, args=(order,), daemon=True
             )
-
-            # Store thread
             self.execution_threads[order.order_id] = {
                 "thread": thread,
                 "stop_flag": threading.Event(),
             }
-
-            # Start thread
             thread.start()
 
-    def _run_execution_algorithm(self, order):
+    def _run_execution_algorithm(self, order: Any) -> Any:
         """
         Run execution algorithm for an order.
 
@@ -646,10 +559,7 @@ class ExecutionEngine:
             order (Order): Order to execute
         """
         try:
-            # Get stop flag
             stop_flag = self.execution_threads[order.order_id]["stop_flag"]
-
-            # Select algorithm
             if order.algorithm == ExecutionAlgorithm.TWAP:
                 self._execute_twap(order, stop_flag)
             elif order.algorithm == ExecutionAlgorithm.VWAP:
@@ -659,20 +569,16 @@ class ExecutionEngine:
             elif order.algorithm == ExecutionAlgorithm.PERCENTAGE_OF_VOLUME:
                 self._execute_percentage_of_volume(order, stop_flag)
             else:
-                # Fallback to market execution
                 self._execute_market_order(order)
-
         except Exception as e:
             logger.error(f"Error executing order {order.order_id}: {str(e)}")
             order.update_status(OrderStatus.REJECTED, f"Execution error: {str(e)}")
-
         finally:
-            # Clean up thread reference
             with self._lock:
                 if order.order_id in self.execution_threads:
                     del self.execution_threads[order.order_id]
 
-    def _execute_twap(self, order, stop_flag):
+    def _execute_twap(self, order: Any, stop_flag: Any) -> Any:
         """
         Execute order using TWAP (Time-Weighted Average Price) algorithm.
 
@@ -680,52 +586,34 @@ class ExecutionEngine:
             order (Order): Order to execute
             stop_flag (threading.Event): Stop flag for early termination
         """
-        # Get algorithm parameters
         duration_minutes = order.algorithm_params.get("duration_minutes", 60)
         num_slices = order.algorithm_params.get("num_slices", 10)
-
-        # Calculate slice size and interval
         slice_size = order.quantity / num_slices
-        interval_seconds = (duration_minutes * 60) / num_slices
-
-        # Execute slices
+        interval_seconds = duration_minutes * 60 / num_slices
         remaining_quantity = order.quantity
-
         for i in range(num_slices):
-            # Check if execution should stop
             if stop_flag.is_set() or order.status in [
                 OrderStatus.CANCELLED,
                 OrderStatus.REJECTED,
                 OrderStatus.EXPIRED,
             ]:
                 break
-
-            # Calculate slice quantity (last slice may be different due to rounding)
             if i == num_slices - 1:
                 slice_quantity = remaining_quantity
             else:
                 slice_quantity = slice_size
-
-            # Get current market price
             market_price = self._get_market_price(order.instrument)
-
             if market_price is None:
                 logger.warning(
                     f"Unable to determine market price for {order.instrument}"
                 )
                 continue
-
-            # Add fill
             self.order_manager.add_fill(order.order_id, slice_quantity, market_price)
-
-            # Update remaining quantity
             remaining_quantity -= slice_quantity
-
-            # Wait for next slice (unless this is the last slice)
-            if i < num_slices - 1 and not stop_flag.is_set():
+            if i < num_slices - 1 and (not stop_flag.is_set()):
                 time.sleep(interval_seconds)
 
-    def _execute_vwap(self, order, stop_flag):
+    def _execute_vwap(self, order: Any, stop_flag: Any) -> Any:
         """
         Execute order using VWAP (Volume-Weighted Average Price) algorithm.
 
@@ -733,58 +621,36 @@ class ExecutionEngine:
             order (Order): Order to execute
             stop_flag (threading.Event): Stop flag for early termination
         """
-        # Get algorithm parameters
         duration_minutes = order.algorithm_params.get("duration_minutes", 60)
         num_slices = order.algorithm_params.get("num_slices", 10)
-
-        # Get volume profile (in a real system, this would be based on historical data)
         volume_profile = self._get_volume_profile(order.instrument, num_slices)
-
-        # Calculate slice sizes based on volume profile
         total_profile = sum(volume_profile)
         slice_sizes = [order.quantity * (v / total_profile) for v in volume_profile]
-
-        # Calculate interval
-        interval_seconds = (duration_minutes * 60) / num_slices
-
-        # Execute slices
+        interval_seconds = duration_minutes * 60 / num_slices
         remaining_quantity = order.quantity
-
         for i in range(num_slices):
-            # Check if execution should stop
             if stop_flag.is_set() or order.status in [
                 OrderStatus.CANCELLED,
                 OrderStatus.REJECTED,
                 OrderStatus.EXPIRED,
             ]:
                 break
-
-            # Calculate slice quantity (last slice may be different due to rounding)
             if i == num_slices - 1:
                 slice_quantity = remaining_quantity
             else:
                 slice_quantity = slice_sizes[i]
-
-            # Get current market price
             market_price = self._get_market_price(order.instrument)
-
             if market_price is None:
                 logger.warning(
                     f"Unable to determine market price for {order.instrument}"
                 )
                 continue
-
-            # Add fill
             self.order_manager.add_fill(order.order_id, slice_quantity, market_price)
-
-            # Update remaining quantity
             remaining_quantity -= slice_quantity
-
-            # Wait for next slice (unless this is the last slice)
-            if i < num_slices - 1 and not stop_flag.is_set():
+            if i < num_slices - 1 and (not stop_flag.is_set()):
                 time.sleep(interval_seconds)
 
-    def _execute_implementation_shortfall(self, order, stop_flag):
+    def _execute_implementation_shortfall(self, order: Any, stop_flag: Any) -> Any:
         """
         Execute order using Implementation Shortfall algorithm.
 
@@ -792,87 +658,55 @@ class ExecutionEngine:
             order (Order): Order to execute
             stop_flag (threading.Event): Stop flag for early termination
         """
-        # Get algorithm parameters
         urgency = order.algorithm_params.get("urgency", "medium")
         max_participation_rate = order.algorithm_params.get(
             "max_participation_rate", 0.3
         )
-
-        # Determine execution schedule based on urgency
         if urgency == "high":
-            # Execute quickly
-            market_impact_threshold = 0.05  # 5%
-            initial_size = 0.5  # 50% of order
+            market_impact_threshold = 0.05
+            initial_size = 0.5
         elif urgency == "low":
-            # Execute slowly
-            market_impact_threshold = 0.02  # 2%
-            initial_size = 0.2  # 20% of order
-        else:  # medium
-            # Balanced approach
-            market_impact_threshold = 0.03  # 3%
-            initial_size = 0.3  # 30% of order
-
-        # Get initial market price
+            market_impact_threshold = 0.02
+            initial_size = 0.2
+        else:
+            market_impact_threshold = 0.03
+            initial_size = 0.3
         initial_price = self._get_market_price(order.instrument)
-
         if initial_price is None:
             order.update_status(
                 OrderStatus.REJECTED, "Unable to determine market price"
             )
             return
-
-        # Execute initial block
         initial_quantity = order.quantity * initial_size
         self.order_manager.add_fill(order.order_id, initial_quantity, initial_price)
-
-        # Execute remaining quantity using adaptive strategy
         remaining_quantity = order.quantity - initial_quantity
-
-        while remaining_quantity > 0 and not stop_flag.is_set():
-            # Check if order status has changed
+        while remaining_quantity > 0 and (not stop_flag.is_set()):
             if order.status in [
                 OrderStatus.CANCELLED,
                 OrderStatus.REJECTED,
                 OrderStatus.EXPIRED,
             ]:
                 break
-
-            # Get current market price and volume
             current_price = self._get_market_price(order.instrument)
             current_volume = self._get_market_volume(order.instrument)
-
             if current_price is None or current_volume is None:
-                time.sleep(5)  # Wait and retry
+                time.sleep(5)
                 continue
-
-            # Calculate price impact
             price_impact = abs(current_price - initial_price) / initial_price
-
-            # Determine execution size based on market conditions
             if price_impact > market_impact_threshold:
-                # Market is moving against us, slow down
                 execution_size = min(
                     remaining_quantity, current_volume * max_participation_rate * 0.5
                 )
             else:
-                # Normal execution
                 execution_size = min(
                     remaining_quantity, current_volume * max_participation_rate
                 )
-
-            # Ensure minimum execution size
             execution_size = max(execution_size, 1)
-
-            # Execute slice
             self.order_manager.add_fill(order.order_id, execution_size, current_price)
-
-            # Update remaining quantity
             remaining_quantity -= execution_size
-
-            # Wait before next execution
             time.sleep(10)
 
-    def _execute_percentage_of_volume(self, order, stop_flag):
+    def _execute_percentage_of_volume(self, order: Any, stop_flag: Any) -> Any:
         """
         Execute order using Percentage of Volume algorithm.
 
@@ -880,52 +714,33 @@ class ExecutionEngine:
             order (Order): Order to execute
             stop_flag (threading.Event): Stop flag for early termination
         """
-        # Get algorithm parameters
-        target_percentage = order.algorithm_params.get("target_percentage", 0.1)  # 10%
+        target_percentage = order.algorithm_params.get("target_percentage", 0.1)
         min_execution_size = order.algorithm_params.get("min_execution_size", 1)
-
-        # Execute order in slices
         remaining_quantity = order.quantity
-
-        while remaining_quantity > 0 and not stop_flag.is_set():
-            # Check if order status has changed
+        while remaining_quantity > 0 and (not stop_flag.is_set()):
             if order.status in [
                 OrderStatus.CANCELLED,
                 OrderStatus.REJECTED,
                 OrderStatus.EXPIRED,
             ]:
                 break
-
-            # Get current market volume
             market_volume = self._get_market_volume(order.instrument)
-
             if market_volume is None or market_volume == 0:
-                time.sleep(5)  # Wait and retry
+                time.sleep(5)
                 continue
-
-            # Calculate execution size
             execution_size = min(
                 remaining_quantity,
                 max(market_volume * target_percentage, min_execution_size),
             )
-
-            # Get current market price
             market_price = self._get_market_price(order.instrument)
-
             if market_price is None:
-                time.sleep(5)  # Wait and retry
+                time.sleep(5)
                 continue
-
-            # Execute slice
             self.order_manager.add_fill(order.order_id, execution_size, market_price)
-
-            # Update remaining quantity
             remaining_quantity -= execution_size
-
-            # Wait before next execution
             time.sleep(10)
 
-    def cancel_order(self, order_id, reason=None):
+    def cancel_order(self, order_id: Any, reason: Any = None) -> Any:
         """
         Cancel an order.
 
@@ -936,17 +751,13 @@ class ExecutionEngine:
         Returns:
             dict: Cancellation result
         """
-        # Cancel order
         result = self.order_manager.cancel_order(order_id, reason)
-
-        # Stop execution thread if running
         with self._lock:
             if order_id in self.execution_threads:
                 self.execution_threads[order_id]["stop_flag"].set()
-
         return {"status": "success" if result else "failed", "order_id": order_id}
 
-    def get_order_status(self, order_id):
+    def get_order_status(self, order_id: Any) -> Any:
         """
         Get order status.
 
@@ -957,10 +768,8 @@ class ExecutionEngine:
             dict: Order status
         """
         order = self.order_manager.get_order(order_id)
-
         if not order:
             return {"status": "not_found", "order_id": order_id}
-
         return {
             "status": "success",
             "order_id": order_id,
@@ -971,8 +780,12 @@ class ExecutionEngine:
         }
 
     def get_execution_metrics(
-        self, order_id=None, account_id=None, start_time=None, end_time=None
-    ):
+        self,
+        order_id: Any = None,
+        account_id: Any = None,
+        start_time: Any = None,
+        end_time: Any = None,
+    ) -> Any:
         """
         Get execution performance metrics.
 
@@ -985,7 +798,6 @@ class ExecutionEngine:
         Returns:
             dict: Execution metrics
         """
-        # Get orders based on filters
         if order_id:
             orders = [self.order_manager.get_order(order_id)]
             orders = [o for o in orders if o is not None]
@@ -993,15 +805,10 @@ class ExecutionEngine:
             orders = self.order_manager.get_orders_by_account(account_id)
         else:
             orders = list(self.order_manager.orders.values())
-
-        # Apply time filters
         if start_time:
             orders = [o for o in orders if o.creation_time >= start_time]
-
         if end_time:
             orders = [o for o in orders if o.creation_time <= end_time]
-
-        # Calculate metrics
         total_orders = len(orders)
         filled_orders = len([o for o in orders if o.status == OrderStatus.FILLED])
         partially_filled_orders = len(
@@ -1009,29 +816,21 @@ class ExecutionEngine:
         )
         cancelled_orders = len([o for o in orders if o.status == OrderStatus.CANCELLED])
         rejected_orders = len([o for o in orders if o.status == OrderStatus.REJECTED])
-
-        total_executed_quantity = sum(o.executed_quantity for o in orders)
+        total_executed_quantity = sum((o.executed_quantity for o in orders))
         total_value = sum(
-            o.executed_quantity * o.average_price for o in orders if o.average_price
+            (o.executed_quantity * o.average_price for o in orders if o.average_price)
         )
-
-        # Calculate fill rate
         fill_rate = filled_orders / total_orders if total_orders > 0 else 0
-
-        # Calculate average execution time for filled orders
         execution_times = []
-
         for order in orders:
             if order.status == OrderStatus.FILLED and order.fills:
                 start_time = order.creation_time
-                end_time = max(fill["timestamp"] for fill in order.fills)
+                end_time = max((fill["timestamp"] for fill in order.fills))
                 execution_time = (end_time - start_time).total_seconds()
                 execution_times.append(execution_time)
-
         avg_execution_time = (
             sum(execution_times) / len(execution_times) if execution_times else 0
         )
-
         return {
             "total_orders": total_orders,
             "filled_orders": filled_orders,
@@ -1044,7 +843,7 @@ class ExecutionEngine:
             "average_execution_time": avg_execution_time,
         }
 
-    def _get_market_price(self, instrument):
+    def _get_market_price(self, instrument: Any) -> Any:
         """
         Get current market price for an instrument.
 
@@ -1054,21 +853,15 @@ class ExecutionEngine:
         Returns:
             float: Market price or None if not available
         """
-        # In a real system, this would fetch real-time market data
-        # For simulation, return a random price around the last known price
-
         if (
             instrument in self.market_data
             and "last_price" in self.market_data[instrument]
         ):
             last_price = self.market_data[instrument]["last_price"]
-            # Add some random noise
             return last_price * (1 + np.random.normal(0, 0.001))
-
-        # Default price if no data available
         return 100.0
 
-    def _get_market_volume(self, instrument):
+    def _get_market_volume(self, instrument: Any) -> Any:
         """
         Get current market volume for an instrument.
 
@@ -1078,21 +871,15 @@ class ExecutionEngine:
         Returns:
             float: Market volume or None if not available
         """
-        # In a real system, this would fetch real-time market data
-        # For simulation, return a random volume
-
         if (
             instrument in self.market_data
             and "avg_volume" in self.market_data[instrument]
         ):
             avg_volume = self.market_data[instrument]["avg_volume"]
-            # Add some random noise
             return max(1, avg_volume * (1 + np.random.normal(0, 0.1)))
-
-        # Default volume if no data available
         return 1000.0
 
-    def _get_volume_profile(self, instrument, num_slices):
+    def _get_volume_profile(self, instrument: Any, num_slices: Any) -> Any:
         """
         Get volume profile for an instrument.
 
@@ -1103,24 +890,16 @@ class ExecutionEngine:
         Returns:
             list: Volume profile
         """
-        # In a real system, this would be based on historical data
-        # For simulation, use a typical U-shaped volume profile
-
-        # U-shaped profile (higher volume at open and close)
         if num_slices <= 2:
             return [1] * num_slices
-
         profile = []
         for i in range(num_slices):
-            # Calculate position in [0, 1] range
             pos = i / (num_slices - 1)
-            # U-shape function: higher at edges, lower in middle
             vol = 1 + 0.5 * (1 - 4 * (pos - 0.5) ** 2)
             profile.append(vol)
-
         return profile
 
-    def update_market_data(self, instrument, data):
+    def update_market_data(self, instrument: Any, data: Any) -> Any:
         """
         Update market data for an instrument.
 

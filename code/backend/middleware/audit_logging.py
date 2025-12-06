@@ -7,13 +7,11 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Dict, Optional
-
 import structlog
 from database import get_db_session
 from fastapi import Request
 from models import AuditLog
 
-# Configure structured logging
 structlog.configure(
     processors=[
         structlog.stdlib.filter_by_level,
@@ -31,14 +29,13 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
 )
-
 logger = structlog.get_logger(__name__)
 
 
 class AuditLogger:
     """Service for comprehensive audit logging"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize audit logger"""
         self.executor = ThreadPoolExecutor(max_workers=2)
 
@@ -55,7 +52,7 @@ class AuditLogger:
         status: str = "success",
         error_message: Optional[str] = None,
         additional_context: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> Any:
         """
         Log an audit event asynchronously
 
@@ -72,7 +69,6 @@ class AuditLogger:
             error_message (Optional[str]): Error message if applicable
             additional_context (Optional[Dict]): Additional context
         """
-        # Submit to thread pool for async processing
         self.executor.submit(
             self._write_audit_log,
             action,
@@ -101,18 +97,15 @@ class AuditLogger:
         status: str,
         error_message: Optional[str],
         additional_context: Optional[Dict[str, Any]],
-    ):
+    ) -> Any:
         """Write audit log to database and structured log"""
         try:
-            # Sanitize sensitive data
             sanitized_request = (
                 self._sanitize_data(request_data) if request_data else None
             )
             sanitized_response = (
                 self._sanitize_data(response_data) if response_data else None
             )
-
-            # Create structured log entry
             log_entry = {
                 "event_type": "audit",
                 "action": action,
@@ -125,19 +118,14 @@ class AuditLogger:
                 "error_message": error_message,
                 "timestamp": datetime.utcnow().isoformat(),
             }
-
             if additional_context:
                 log_entry.update(additional_context)
-
-            # Log to structured logger
             if status == "success":
                 logger.info("Audit event", **log_entry)
             elif status in ["failure", "error"]:
                 logger.error("Audit event", **log_entry)
             else:
                 logger.warning("Audit event", **log_entry)
-
-            # Write to database
             db = get_db_session()
             try:
                 audit_log = AuditLog(
@@ -160,9 +148,7 @@ class AuditLogger:
                 db.commit()
             finally:
                 db.close()
-
         except Exception as e:
-            # Log error but don't raise to avoid breaking main application flow
             logger.error("Failed to write audit log", error=str(e))
 
     def _sanitize_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -177,7 +163,6 @@ class AuditLogger:
         """
         if not isinstance(data, dict):
             return data
-
         sensitive_fields = {
             "password",
             "token",
@@ -189,12 +174,10 @@ class AuditLogger:
             "api_key",
             "authorization",
         }
-
         sanitized = {}
         for key, value in data.items():
             key_lower = key.lower()
-
-            if any(sensitive in key_lower for sensitive in sensitive_fields):
+            if any((sensitive in key_lower for sensitive in sensitive_fields)):
                 sanitized[key] = "[REDACTED]"
             elif isinstance(value, dict):
                 sanitized[key] = self._sanitize_data(value)
@@ -205,7 +188,6 @@ class AuditLogger:
                 ]
             else:
                 sanitized[key] = value
-
         return sanitized
 
     def log_authentication_event(
@@ -217,7 +199,7 @@ class AuditLogger:
         user_agent: str,
         status: str,
         error_message: Optional[str] = None,
-    ):
+    ) -> Any:
         """Log authentication-related events"""
         self.log_event(
             action=action,
@@ -240,7 +222,7 @@ class AuditLogger:
         ip_address: str,
         status: str,
         error_message: Optional[str] = None,
-    ):
+    ) -> Any:
         """Log trading-related events"""
         self.log_event(
             action=action,
@@ -263,7 +245,7 @@ class AuditLogger:
         ip_address: str,
         status: str,
         error_message: Optional[str] = None,
-    ):
+    ) -> Any:
         """Log position-related events"""
         self.log_event(
             action=action,
@@ -287,7 +269,7 @@ class AuditLogger:
         changes: Dict[str, Any],
         status: str,
         error_message: Optional[str] = None,
-    ):
+    ) -> Any:
         """Log administrative events"""
         self.log_event(
             action=action,
@@ -308,7 +290,7 @@ class AuditLogger:
         user_agent: str,
         details: Dict[str, Any],
         severity: str = "medium",
-    ):
+    ) -> Any:
         """Log security-related events"""
         self.log_event(
             action=action,
@@ -321,7 +303,6 @@ class AuditLogger:
         )
 
 
-# Global audit logger instance
 audit_logger = AuditLogger()
 
 
@@ -337,22 +318,15 @@ async def audit_middleware(request: Request, call_next):
         Response with audit logging
     """
     start_time = datetime.utcnow()
-
-    # Extract request information
     ip_address = request.client.host
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
         ip_address = forwarded_for.split(",")[0].strip()
-
     user_agent = request.headers.get("user-agent", "")
     method = request.method
     path = request.url.path
-
-    # Skip audit logging for health checks and docs
     if path in ["/health", "/", "/docs", "/openapi.json"]:
         return await call_next(request)
-
-    # Get user ID from token if available
     user_id = None
     try:
         auth_header = request.headers.get("authorization")
@@ -365,22 +339,14 @@ async def audit_middleware(request: Request, call_next):
                 user_id = payload.get("sub")
     except:
         pass
-
-    # Process request
     response = await call_next(request)
-
-    # Calculate processing time
     processing_time = (datetime.utcnow() - start_time).total_seconds()
-
-    # Determine status
     if response.status_code < 400:
         status = "success"
     elif response.status_code < 500:
         status = "client_error"
     else:
         status = "server_error"
-
-    # Log API access
     audit_logger.log_event(
         action=f"{method} {path}",
         user_id=int(user_id) if user_id else None,
@@ -394,5 +360,4 @@ async def audit_middleware(request: Request, call_next):
             "processing_time_seconds": processing_time,
         },
     )
-
     return response

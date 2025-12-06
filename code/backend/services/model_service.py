@@ -9,11 +9,9 @@ import logging
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-
 import joblib
 import numpy as np
 from sqlalchemy.orm import Session
-
 from ..config import settings
 from ..models import AuditLog, MarketData
 
@@ -23,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ModelService:
     """Enhanced service for handling ML model predictions with security and validation"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize model service and load the volatility prediction model"""
         self.model = None
         self.model_metadata = {}
@@ -32,25 +30,19 @@ class ModelService:
         self._load_model()
         self._load_feature_scaler()
 
-    def _load_model(self):
+    def _load_model(self) -> Any:
         """Load ML model from file with integrity verification"""
         try:
             model_path = settings.model_path
-
             if not os.path.exists(model_path):
                 logger.warning(f"Model file not found at {model_path}")
                 self.model = None
                 return
-
-            # Verify model file integrity
             if not self._verify_model_integrity(model_path):
                 logger.error("Model file integrity check failed")
                 self.model = None
                 return
-
-            # Load the model
             if model_path.endswith(".h5"):
-                # TensorFlow/Keras model
                 try:
                     import tensorflow as tf
 
@@ -60,21 +52,16 @@ class ModelService:
                     self.model = None
                     return
             else:
-                # Scikit-learn or other joblib-compatible model
                 self.model = joblib.load(model_path)
-
-            # Load model metadata
             self._load_model_metadata(model_path)
-
             logger.info(
                 f"Volatility model loaded successfully (version: {self.model_metadata.get('version', 'unknown')})"
             )
-
         except Exception as e:
             logger.error(f"Error loading volatility model: {e}")
             self.model = None
 
-    def _load_feature_scaler(self):
+    def _load_feature_scaler(self) -> Any:
         """Load feature scaler for input normalization"""
         try:
             scaler_path = os.path.join(
@@ -101,22 +88,16 @@ class ModelService:
             bool: True if integrity check passes
         """
         try:
-            # Calculate file hash
             with open(model_path, "rb") as f:
                 file_hash = hashlib.sha256(f.read()).hexdigest()
-
             self.model_hash = file_hash
-
-            # In production, compare with known good hash
-            # For now, just store the hash for logging
             logger.info(f"Model file hash: {file_hash}")
             return True
-
         except Exception as e:
             logger.error(f"Error verifying model integrity: {e}")
             return False
 
-    def _load_model_metadata(self, model_path: str):
+    def _load_model_metadata(self, model_path: str) -> Any:
         """Load model metadata from accompanying JSON file"""
         try:
             metadata_path = model_path.replace(".h5", "_metadata.json").replace(
@@ -126,7 +107,6 @@ class ModelService:
                 with open(metadata_path, "r") as f:
                     self.model_metadata = json.load(f)
             else:
-                # Default metadata
                 self.model_metadata = {
                     "version": settings.model_version,
                     "created_at": datetime.utcnow().isoformat(),
@@ -176,47 +156,35 @@ class ModelService:
         Raises:
             ValueError: If validation fails
         """
-        # Required fields
         required_fields = ["open", "high", "low", "volume"]
         for field in required_fields:
             if field not in market_data:
                 raise ValueError(f"Missing required field: {field}")
-
-        # Convert to appropriate types and validate ranges
         validated_data = {}
-
         try:
-            # Price fields must be positive
             for price_field in ["open", "high", "low"]:
                 value = float(market_data[price_field])
                 if value <= 0:
                     raise ValueError(f"{price_field} must be positive")
-                if value > 1000000:  # Sanity check for extremely high prices
+                if value > 1000000:
                     raise ValueError(f"{price_field} value seems unrealistic: {value}")
                 validated_data[price_field] = value
-
-            # Volume must be positive integer
             volume = int(market_data["volume"])
             if volume <= 0:
                 raise ValueError("Volume must be positive")
-            if volume > 1e12:  # Sanity check for extremely high volume
+            if volume > 1000000000000.0:
                 raise ValueError(f"Volume value seems unrealistic: {volume}")
             validated_data["volume"] = volume
-
-            # Validate price relationships
             if validated_data["high"] < validated_data["low"]:
                 raise ValueError("High price cannot be less than low price")
-
-            if not (
-                validated_data["low"]
+            if (
+                not validated_data["low"]
                 <= validated_data["open"]
                 <= validated_data["high"]
             ):
                 logger.warning(
                     "Open price is outside high-low range, which is unusual but allowed"
                 )
-
-            # Calculate additional features
             validated_data["price_range"] = (
                 validated_data["high"] - validated_data["low"]
             )
@@ -224,9 +192,7 @@ class ModelService:
                 abs(validated_data["high"] - validated_data["low"])
                 / validated_data["open"]
             )
-
             return validated_data
-
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid market data: {str(e)}")
 
@@ -240,34 +206,26 @@ class ModelService:
         Returns:
             np.ndarray: Preprocessed feature array
         """
-        # Extract base features
         features = [
             market_data["open"],
             market_data["high"],
             market_data["low"],
             market_data["volume"],
         ]
-
-        # Add derived features
         features.extend(
             [
                 market_data["price_range"],
                 market_data["price_change"],
-                market_data["volume"] / 1000000,  # Volume in millions
-                (market_data["high"] + market_data["low"]) / 2,  # Mid price
+                market_data["volume"] / 1000000,
+                (market_data["high"] + market_data["low"]) / 2,
             ]
         )
-
-        # Convert to numpy array
         feature_array = np.array(features).reshape(1, -1)
-
-        # Apply feature scaling if available
         if self.feature_scaler is not None:
             try:
                 feature_array = self.feature_scaler.transform(feature_array)
             except Exception as e:
                 logger.warning(f"Feature scaling failed, using raw features: {e}")
-
         return feature_array
 
     def get_volatility_prediction(
@@ -289,23 +247,13 @@ class ModelService:
         """
         if not self.is_model_available():
             raise ValueError("Volatility model not available")
-
         start_time = datetime.utcnow()
-
         try:
-            # Validate input data
             validated_data = self.validate_market_data(market_data)
-
-            # Preprocess features
             features = self.preprocess_features(validated_data)
-
-            # Make prediction
             if hasattr(self.model, "predict"):
-                # Scikit-learn style model
                 prediction = self.model.predict(features)
                 volatility = float(prediction[0])
-
-                # Get prediction confidence if available
                 confidence = None
                 if hasattr(self.model, "predict_proba"):
                     try:
@@ -313,28 +261,20 @@ class ModelService:
                         confidence = float(np.max(proba))
                     except:
                         pass
-
             elif hasattr(self.model, "__call__"):
-                # TensorFlow/Keras model
                 prediction = self.model(features)
                 volatility = float(prediction.numpy()[0][0])
                 confidence = None
             else:
                 raise ValueError("Unknown model type")
-
-            # Validate prediction output
             if volatility < 0:
                 logger.warning(
                     f"Negative volatility predicted: {volatility}, setting to 0"
                 )
                 volatility = 0.0
-            elif volatility > 5.0:  # 500% volatility seems unrealistic
+            elif volatility > 5.0:
                 logger.warning(f"Extremely high volatility predicted: {volatility}")
-
-            # Calculate prediction time
             prediction_time = (datetime.utcnow() - start_time).total_seconds()
-
-            # Prepare result
             result = {
                 "volatility": volatility,
                 "confidence": confidence,
@@ -343,22 +283,16 @@ class ModelService:
                 "features_used": list(validated_data.keys()),
                 "timestamp": datetime.utcnow().isoformat(),
             }
-
-            # Log prediction for audit trail
             if db:
                 self._log_prediction(db, validated_data, result, "success")
-
             return result
-
         except ValueError as e:
-            # Log validation errors
             if db:
                 self._log_prediction(
                     db, market_data, {"error": str(e)}, "validation_error"
                 )
             raise e
         except Exception as e:
-            # Log prediction errors
             if db:
                 self._log_prediction(
                     db, market_data, {"error": str(e)}, "prediction_error"
@@ -372,7 +306,7 @@ class ModelService:
         input_data: Dict[str, Any],
         result: Dict[str, Any],
         status: str,
-    ):
+    ) -> Any:
         """Log prediction for audit trail"""
         try:
             audit_log = AuditLog(
@@ -404,12 +338,9 @@ class ModelService:
         """
         try:
             query = db.query(MarketData).order_by(MarketData.timestamp.desc())
-
             if symbol:
                 query = query.filter(MarketData.symbol == symbol)
-
             records = query.limit(limit).all()
-
             return [
                 {
                     "symbol": record.symbol,
@@ -425,7 +356,6 @@ class ModelService:
                 }
                 for record in records
             ]
-
         except Exception as e:
             logger.error(f"Error fetching historical predictions: {e}")
             return []
@@ -441,32 +371,23 @@ class ModelService:
             bool: True if update successful
         """
         try:
-            # Backup current model info
             old_model_info = self.get_model_info()
-
-            # Load new model
             old_model = self.model
             old_metadata = self.model_metadata
-
-            # Temporarily update path and reload
             original_path = settings.model_path
             settings.model_path = new_model_path
-
             self._load_model()
-
             if self.is_model_available():
                 logger.info(
                     f"Model updated successfully from {old_model_info.get('version')} to {self.model_metadata.get('version')}"
                 )
                 return True
             else:
-                # Rollback on failure
                 self.model = old_model
                 self.model_metadata = old_metadata
                 settings.model_path = original_path
                 logger.error("Model update failed, rolled back to previous version")
                 return False
-
         except Exception as e:
             logger.error(f"Error updating model: {e}")
             return False

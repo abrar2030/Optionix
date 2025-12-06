@@ -6,7 +6,6 @@ Implements rate limiting to prevent abuse and DDoS attacks.
 import logging
 import time
 from typing import Any, Dict
-
 import redis
 from config import settings
 from fastapi import Request, status
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 class RateLimiter:
     """Rate limiting service using Redis for distributed rate limiting"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize rate limiter with Redis connection"""
         try:
             self.redis_client = redis.from_url(
@@ -29,7 +28,6 @@ class RateLimiter:
                 socket_timeout=5,
                 socket_connect_timeout=5,
             )
-            # Test connection
             self.redis_client.ping()
             logger.info("Rate limiter connected to Redis")
         except Exception as e:
@@ -54,9 +52,7 @@ class RateLimiter:
             limit = settings.rate_limit_requests
         if window is None:
             window = settings.rate_limit_window
-
         if not self.redis_client:
-            # Fallback: allow all requests if Redis is unavailable
             logger.warning("Redis unavailable, rate limiting disabled")
             return {
                 "limited": False,
@@ -66,21 +62,12 @@ class RateLimiter:
                 "reset_time": int(time.time()) + window,
                 "remaining": limit,
             }
-
         try:
             current_time = int(time.time())
             window_start = current_time - window
-
-            # Use Redis sorted set for sliding window
             key = f"rate_limit:{identifier}"
-
-            # Remove old entries
             self.redis_client.zremrangebyscore(key, 0, window_start)
-
-            # Count current requests
             current_requests = self.redis_client.zcard(key)
-
-            # Check if limit exceeded
             if current_requests >= limit:
                 return {
                     "limited": True,
@@ -90,11 +77,8 @@ class RateLimiter:
                     "reset_time": current_time + window,
                     "remaining": 0,
                 }
-
-            # Add current request
             self.redis_client.zadd(key, {str(current_time): current_time})
             self.redis_client.expire(key, window)
-
             return {
                 "limited": False,
                 "current_requests": current_requests + 1,
@@ -103,10 +87,8 @@ class RateLimiter:
                 "reset_time": current_time + window,
                 "remaining": limit - current_requests - 1,
             }
-
         except Exception as e:
             logger.error(f"Rate limiting error: {e}")
-            # Fallback: allow request on error
             return {
                 "limited": False,
                 "current_requests": 0,
@@ -127,7 +109,6 @@ class RateLimiter:
         Returns:
             str: Unique identifier
         """
-        # Try to get user ID from token
         auth_header = request.headers.get("authorization")
         if auth_header and auth_header.startswith("Bearer "):
             try:
@@ -139,22 +120,16 @@ class RateLimiter:
                     return f"user:{payload.get('sub')}"
             except:
                 pass
-
-        # Try to get API key
         api_key = request.headers.get("x-api-key")
         if api_key:
             return f"api_key:{security_service.hash_api_key(api_key)[:16]}"
-
-        # Fall back to IP address
         client_ip = request.client.host
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
             client_ip = forwarded_for.split(",")[0].strip()
-
         return f"ip:{client_ip}"
 
 
-# Global rate limiter instance
 rate_limiter = RateLimiter()
 
 
@@ -169,19 +144,12 @@ async def rate_limit_middleware(request: Request, call_next):
     Returns:
         Response with rate limit headers or 429 error
     """
-    # Skip rate limiting for health checks
     if request.url.path in ["/health", "/", "/docs", "/openapi.json"]:
         response = await call_next(request)
         return response
-
-    # Get client identifier
     identifier = rate_limiter.get_client_identifier(request)
-
-    # Check rate limit
     rate_limit_status = rate_limiter.is_rate_limited(identifier)
-
     if rate_limit_status["limited"]:
-        # Return 429 Too Many Requests
         return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             content={
@@ -200,13 +168,8 @@ async def rate_limit_middleware(request: Request, call_next):
                 "Retry-After": str(rate_limit_status["window"]),
             },
         )
-
-    # Process request
     response = await call_next(request)
-
-    # Add rate limit headers to response
     response.headers["X-RateLimit-Limit"] = str(rate_limit_status["limit"])
     response.headers["X-RateLimit-Remaining"] = str(rate_limit_status["remaining"])
     response.headers["X-RateLimit-Reset"] = str(rate_limit_status["reset_time"])
-
     return response

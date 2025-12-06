@@ -6,10 +6,8 @@ to ensure they match market prices.
 """
 
 import logging
-
 import numpy as np
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -24,12 +22,12 @@ class CalibrationEngine:
     to market data.
     """
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """
         Initialize calibration engine.
         """
 
-    def calibrate_heston(self, option_data, initial_params=None):
+    def calibrate_heston(self, option_data: Any, initial_params: Any = None) -> Any:
         """
         Calibrate Heston model parameters to market data.
 
@@ -42,25 +40,17 @@ class CalibrationEngine:
         Returns:
             dict: Calibrated parameters
         """
-        # Import here to avoid circular imports
         from quantitative.enhanced.stochastic_volatility import HestonModel
 
-        # Create Heston model
         heston = HestonModel(initial_params)
-
-        # Extract option data
         options = []
-
         if isinstance(option_data, dict):
-            # Extract from dict format
             if "calls" in option_data:
                 for call in option_data["calls"]:
                     options.append(
                         {
                             "strike": call["strike"],
-                            "expiry": call.get(
-                                "expiry", 0.5
-                            ),  # Default to 6 months if not specified
+                            "expiry": call.get("expiry", 0.5),
                             "price": (
                                 call["price"]
                                 if "price" in call
@@ -76,9 +66,7 @@ class CalibrationEngine:
                     options.append(
                         {
                             "strike": put["strike"],
-                            "expiry": put.get(
-                                "expiry", 0.5
-                            ),  # Default to 6 months if not specified
+                            "expiry": put.get("expiry", 0.5),
                             "price": (
                                 put["price"]
                                 if "price" in put
@@ -90,15 +78,11 @@ class CalibrationEngine:
                         }
                     )
         else:
-            # Assume list format
             options = option_data
-
-        # Calibrate model
         calibrated_params = heston.calibrate(options)
-
         return calibrated_params
 
-    def calibrate_sabr(self, option_data, initial_params=None):
+    def calibrate_sabr(self, option_data: Any, initial_params: Any = None) -> Any:
         """
         Calibrate SABR model parameters to market data.
 
@@ -111,28 +95,19 @@ class CalibrationEngine:
         Returns:
             dict: Calibrated parameters
         """
-        # Import here to avoid circular imports
         from quantitative.enhanced.stochastic_volatility import SabrModel
 
-        # Create SABR model
         sabr = SabrModel(initial_params)
-
-        # Extract option data
         options = []
-
         if isinstance(option_data, dict):
-            # Extract from dict format
-            spot = 450.0  # Default spot price
-
+            spot = 450.0
             if "calls" in option_data:
                 for call in option_data["calls"]:
                     options.append(
                         {
                             "strike": call["strike"],
                             "forward": call.get("forward", spot),
-                            "time_to_expiry": call.get(
-                                "expiry", 0.5
-                            ),  # Default to 6 months if not specified
+                            "time_to_expiry": call.get("expiry", 0.5),
                             "market_vol": call["iv"],
                         }
                     )
@@ -142,22 +117,18 @@ class CalibrationEngine:
                         {
                             "strike": put["strike"],
                             "forward": put.get("forward", spot),
-                            "time_to_expiry": put.get(
-                                "expiry", 0.5
-                            ),  # Default to 6 months if not specified
+                            "time_to_expiry": put.get("expiry", 0.5),
                             "market_vol": put["iv"],
                         }
                     )
         else:
-            # Assume list format
             options = option_data
-
-        # Calibrate model
         calibrated_params = sabr.calibrate(options)
-
         return calibrated_params
 
-    def calibrate_local_volatility(self, option_data, spot, rate, dividend=0):
+    def calibrate_local_volatility(
+        self, option_data: Any, spot: Any, rate: Any, dividend: Any = 0
+    ) -> Any:
         """
         Calibrate local volatility model to market data.
 
@@ -172,25 +143,17 @@ class CalibrationEngine:
         Returns:
             tuple: (local_vol_surface, strike_grid, time_grid)
         """
-        # Import here to avoid circular imports
         from quantitative.enhanced.local_volatility import DupireLocalVolModel
 
-        # Create local volatility model
         dupire = DupireLocalVolModel()
-
-        # Extract option data
         options = []
-
         if isinstance(option_data, dict):
-            # Extract from dict format
             if "calls" in option_data:
                 for call in option_data["calls"]:
                     options.append(
                         {
                             "strike": call["strike"],
-                            "expiry": call.get(
-                                "expiry", 0.5
-                            ),  # Default to 6 months if not specified
+                            "expiry": call.get("expiry", 0.5),
                             "price": (
                                 call["price"]
                                 if "price" in call
@@ -212,9 +175,7 @@ class CalibrationEngine:
                     options.append(
                         {
                             "strike": put["strike"],
-                            "expiry": put.get(
-                                "expiry", 0.5
-                            ),  # Default to 6 months if not specified
+                            "expiry": put.get("expiry", 0.5),
                             "price": (
                                 put["price"]
                                 if "price" in put
@@ -232,26 +193,22 @@ class CalibrationEngine:
                         }
                     )
         else:
-            # Assume list format
             options = option_data
-
-        # Calibrate model
         local_vol_surface, strike_grid, time_grid = dupire.calibrate(
             options, spot, rate, dividend
         )
-
-        return local_vol_surface, strike_grid, time_grid
+        return (local_vol_surface, strike_grid, time_grid)
 
     def _bs_price_from_iv(
         self,
-        iv,
-        strike,
-        time_to_expiry,
-        option_type,
-        spot=450.0,
-        rate=0.02,
-        dividend=0.01,
-    ):
+        iv: Any,
+        strike: Any,
+        time_to_expiry: Any,
+        option_type: Any,
+        spot: Any = 450.0,
+        rate: Any = 0.02,
+        dividend: Any = 0.01,
+    ) -> Any:
         """
         Calculate Black-Scholes price from implied volatility.
 
@@ -269,20 +226,16 @@ class CalibrationEngine:
         """
         from scipy import stats
 
-        # Calculate d1 and d2
         d1 = (
             np.log(spot / strike) + (rate - dividend + 0.5 * iv**2) * time_to_expiry
         ) / (iv * np.sqrt(time_to_expiry))
         d2 = d1 - iv * np.sqrt(time_to_expiry)
-
-        # Calculate price
         if option_type.lower() == "call":
             price = spot * np.exp(-dividend * time_to_expiry) * stats.norm.cdf(
                 d1
             ) - strike * np.exp(-rate * time_to_expiry) * stats.norm.cdf(d2)
-        else:  # put
+        else:
             price = strike * np.exp(-rate * time_to_expiry) * stats.norm.cdf(
                 -d2
             ) - spot * np.exp(-dividend * time_to_expiry) * stats.norm.cdf(-d1)
-
         return price

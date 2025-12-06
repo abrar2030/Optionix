@@ -3,11 +3,10 @@ import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 
 
-def train_model():
+def train_model() -> Any:
     data = pd.read_csv("../../resources/datasets/historical_volatility.csv")
     scaler = MinMaxScaler()
     scaled_data = scaler.fit_transform(data[["open", "high", "low", "volume"]])
-
     model = tf.keras.Sequential(
         [
             tf.keras.layers.LSTM(64, input_shape=(60, 4), return_sequences=True),
@@ -15,7 +14,6 @@ def train_model():
             tf.keras.layers.Dense(1, activation="linear"),
         ]
     )
-
     model.compile(optimizer="adam", loss="mse")
     model.fit(scaled_data, data["volatility"], epochs=50, batch_size=32)
     model.save("../../ai_models/volatility_model.h5")

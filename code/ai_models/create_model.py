@@ -20,17 +20,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
-
-
-# Statistical Libraries
 from scipy import stats
-
-# Machine Learning Libraries
 from sklearn.ensemble import IsolationForest, RandomForestRegressor
 from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.metrics import (
@@ -135,7 +129,7 @@ class ModelValidationResult:
 class EnhancedVolatilityModel:
     """Enhanced volatility prediction model with financial robustness"""
 
-    def __init__(self, model_id: str = "volatility_v2"):
+    def __init__(self, model_id: str = "volatility_v2") -> Any:
         self.model_id = model_id
         self.model = None
         self.scaler = None
@@ -146,36 +140,23 @@ class EnhancedVolatilityModel:
     def prepare_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """Prepare features for volatility prediction"""
         features = data.copy()
-
-        # Price-based features
         features["returns"] = features["close"].pct_change()
         features["log_returns"] = np.log(features["close"] / features["close"].shift(1))
         features["high_low_ratio"] = features["high"] / features["low"]
         features["close_open_ratio"] = features["close"] / features["open"]
-
-        # Volatility features
         features["realized_volatility"] = features["returns"].rolling(window=20).std()
-
-        # Volume features
         features["volume_ma"] = features["volume"].rolling(window=20).mean()
         features["volume_ratio"] = features["volume"] / features["volume_ma"]
-
-        # Time-based features
         features["hour"] = 0
         features["day_of_week"] = 0
         features["month"] = 1
-
-        # Lag features
         for lag in [1, 2, 3, 5, 10]:
             features[f"returns_lag_{lag}"] = features["returns"].shift(lag)
             features[f"volatility_lag_{lag}"] = features["realized_volatility"].shift(
                 lag
             )
-
-        # Remove infinite and NaN values
         features = features.replace([np.inf, -np.inf], np.nan)
         features = features.dropna()
-
         return features
 
     def train(
@@ -184,21 +165,14 @@ class EnhancedVolatilityModel:
         """Train the volatility model with comprehensive validation"""
         try:
             logger.info(f"Training volatility model {self.model_id}")
-
-            # Prepare features
             features_df = self.prepare_features(data)
-
-            # Select features (exclude target and non-predictive columns)
             feature_columns = [
                 col
                 for col in features_df.columns
                 if col not in [target_column, "open", "high", "low", "close", "volume"]
             ]
-
             X = features_df[feature_columns]
             y = features_df[target_column]
-
-            # Feature selection
             self.feature_selector = SelectKBest(
                 score_func=f_regression, k=min(20, len(feature_columns))
             )
@@ -207,17 +181,11 @@ class EnhancedVolatilityModel:
                 feature_columns[i]
                 for i in self.feature_selector.get_support(indices=True)
             ]
-
-            # Scale features
             self.scaler = RobustScaler()
             X_scaled = self.scaler.fit_transform(X_selected)
-
-            # Split data with time series considerations
             split_index = int(len(X_scaled) * 0.8)
-            X_train, X_test = X_scaled[:split_index], X_scaled[split_index:]
-            y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
-
-            # Train ensemble model
+            X_train, X_test = (X_scaled[:split_index], X_scaled[split_index:])
+            y_train, y_test = (y.iloc[:split_index], y.iloc[split_index:])
             self.model = RandomForestRegressor(
                 n_estimators=100,
                 max_depth=10,
@@ -225,18 +193,12 @@ class EnhancedVolatilityModel:
                 min_samples_leaf=2,
                 random_state=42,
             )
-
             self.model.fit(X_train, y_train)
-
-            # Evaluate on test set
             y_pred = self.model.predict(X_test)
             mse = mean_squared_error(y_test, y_pred)
             mae = mean_absolute_error(y_test, y_pred)
             r2 = r2_score(y_test, y_pred)
-
             self.is_trained = True
-
-            # Create metadata
             self.metadata = ModelMetadata(
                 model_id=self.model_id,
                 model_name="Enhanced Volatility Prediction Model",
@@ -264,8 +226,6 @@ class EnhancedVolatilityModel:
                 approved_by=None,
                 approval_date=None,
             )
-
-            # Validation result
             validation_result = ModelValidationResult(
                 model_id=self.model_id,
                 validation_type="training_validation",
@@ -275,7 +235,6 @@ class EnhancedVolatilityModel:
                 recommendations=[],
                 validation_date=datetime.utcnow(),
             )
-
             if validation_result.passed:
                 self.metadata.status = ModelStatus.VALIDATION
                 logger.info(f"Model {self.model_id} training completed successfully")
@@ -283,9 +242,7 @@ class EnhancedVolatilityModel:
                 self.metadata.status = ModelStatus.FAILED
                 validation_result.issues.append("Model performance below threshold")
                 logger.warning(f"Model {self.model_id} training failed validation")
-
             return validation_result
-
         except Exception as e:
             logger.error(f"Model training failed: {e}")
             raise
@@ -294,39 +251,24 @@ class EnhancedVolatilityModel:
         """Make volatility prediction with explainability"""
         if not self.is_trained:
             raise ValueError("Model must be trained before making predictions")
-
         try:
-            # Prepare features
             features_df = self.prepare_features(data)
-
-            # Select and scale features
             feature_columns = self.metadata.features
             X = features_df[feature_columns]
             X_selected = self.feature_selector.transform(X)
             X_scaled = self.scaler.transform(X_selected)
-
-            # Make prediction
             prediction = self.model.predict(X_scaled)
-
-            # Calculate confidence
             confidence = 1.0 / (1.0 + np.std(prediction))
-
-            # Feature importance
             if hasattr(self.model, "feature_importances_"):
                 feature_importance = dict(
                     zip(feature_columns, self.model.feature_importances_)
                 )
             else:
                 feature_importance = {}
-
-            # Generate explanation
             explanation = self._generate_explanation(
                 prediction, feature_importance, data
             )
-
-            # Create input hash for audit trail
             input_hash = hashlib.sha256(str(data.values).encode()).hexdigest()
-
             return ModelPrediction(
                 model_id=self.model_id,
                 prediction=(
@@ -338,7 +280,6 @@ class EnhancedVolatilityModel:
                 timestamp=datetime.utcnow(),
                 input_hash=input_hash,
             )
-
         except Exception as e:
             logger.error(f"Prediction failed: {e}")
             raise
@@ -351,21 +292,15 @@ class EnhancedVolatilityModel:
     ) -> str:
         """Generate human-readable explanation for prediction"""
         pred_value = prediction[0] if len(prediction) == 1 else np.mean(prediction)
-
-        # Get top contributing features
         top_features = sorted(
             feature_importance.items(), key=lambda x: abs(x[1]), reverse=True
         )[:3]
-
         explanation = f"Predicted volatility: {pred_value:.4f}. "
-
         if top_features:
             explanation += "Key factors: "
             for feature, importance in top_features:
                 explanation += f"{feature} (importance: {importance:.3f}), "
             explanation = explanation.rstrip(", ")
-
-        # Add risk assessment
         if pred_value > 0.3:
             explanation += (
                 ". HIGH VOLATILITY WARNING: Consider risk management measures."
@@ -374,14 +309,13 @@ class EnhancedVolatilityModel:
             explanation += ". Moderate volatility expected."
         else:
             explanation += ". Low volatility environment."
-
         return explanation
 
 
 class EnhancedFraudDetectionModel:
     """Enhanced fraud detection model for financial transactions"""
 
-    def __init__(self, model_id: str = "fraud_detection_v2"):
+    def __init__(self, model_id: str = "fraud_detection_v2") -> Any:
         self.model_id = model_id
         self.model = None
         self.scaler = None
@@ -391,20 +325,14 @@ class EnhancedFraudDetectionModel:
     def prepare_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """Prepare features for fraud detection"""
         features = data.copy()
-
-        # Transaction amount features
         features["amount_log"] = np.log1p(features["amount"])
         features["amount_zscore"] = stats.zscore(features["amount"])
-
-        # Time-based features
         features["hour"] = pd.to_datetime(features["timestamp"]).dt.hour
         features["day_of_week"] = pd.to_datetime(features["timestamp"]).dt.dayofweek
         features["is_weekend"] = features["day_of_week"].isin([5, 6]).astype(int)
         features["is_night"] = (
             (features["hour"] >= 22) | (features["hour"] <= 6)
         ).astype(int)
-
-        # User behavior features
         user_stats = (
             features.groupby("user_id")["amount"]
             .agg(["mean", "std", "count"])
@@ -417,16 +345,12 @@ class EnhancedFraudDetectionModel:
             "user_transaction_count",
         ]
         features = features.merge(user_stats, on="user_id", how="left")
-
         features["amount_deviation"] = abs(
             features["amount"] - features["user_avg_amount"]
-        ) / (features["user_std_amount"] + 1e-6)
-
-        # Velocity features
+        ) / (features["user_std_amount"] + 1e-06)
         features["transactions_last_hour"] = features.groupby("user_id")[
             "timestamp"
         ].transform(lambda x: x.rolling("1H").count())
-
         return features
 
     def train(
@@ -435,53 +359,31 @@ class EnhancedFraudDetectionModel:
         """Train the fraud detection model"""
         try:
             logger.info(f"Training fraud detection model {self.model_id}")
-
-            # Prepare features
             features_df = self.prepare_features(data)
-
-            # Select features
             feature_columns = [
                 col
                 for col in features_df.columns
                 if col not in [target_column, "user_id", "timestamp", "transaction_id"]
             ]
-
             X = features_df[feature_columns]
             y = features_df[target_column]
-
-            # Handle missing values
             X = X.fillna(0)
-
-            # Scale features
             self.scaler = StandardScaler()
             X_scaled = self.scaler.fit_transform(X)
-
-            # Split data
             X_train, X_test, y_train, y_test = train_test_split(
                 X_scaled, y, test_size=0.2, random_state=42, stratify=y
             )
-
-            # Train model (using Isolation Forest for anomaly detection)
             self.model = IsolationForest(
-                contamination=0.1,  # Assume 10% fraud rate
-                random_state=42,
-                n_estimators=100,
+                contamination=0.1, random_state=42, n_estimators=100
             )
-
             self.model.fit(X_train)
-
-            # Evaluate
             y_pred = self.model.predict(X_test)
-            y_pred_binary = (y_pred == -1).astype(int)  # -1 indicates anomaly/fraud
-
+            y_pred_binary = (y_pred == -1).astype(int)
             accuracy = accuracy_score(y_test, y_pred_binary)
             precision = precision_score(y_test, y_pred_binary)
             recall = recall_score(y_test, y_pred_binary)
             f1 = f1_score(y_test, y_pred_binary)
-
             self.is_trained = True
-
-            # Create metadata
             self.metadata = ModelMetadata(
                 model_id=self.model_id,
                 model_name="Enhanced Fraud Detection Model",
@@ -514,8 +416,6 @@ class EnhancedFraudDetectionModel:
                 approved_by=None,
                 approval_date=None,
             )
-
-            # Validation result
             validation_result = ModelValidationResult(
                 model_id=self.model_id,
                 validation_type="training_validation",
@@ -525,7 +425,6 @@ class EnhancedFraudDetectionModel:
                 recommendations=[],
                 validation_date=datetime.utcnow(),
             )
-
             if validation_result.passed:
                 self.metadata.status = ModelStatus.VALIDATION
                 logger.info(f"Model {self.model_id} training completed successfully")
@@ -533,9 +432,7 @@ class EnhancedFraudDetectionModel:
                 self.metadata.status = ModelStatus.FAILED
                 validation_result.issues.append("Model performance below threshold")
                 logger.warning(f"Model {self.model_id} training failed validation")
-
             return validation_result
-
         except Exception as e:
             logger.error(f"Model training failed: {e}")
             raise
@@ -544,7 +441,7 @@ class EnhancedFraudDetectionModel:
 class EnhancedModelService:
     """Enhanced model service for managing AI models"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         self.models = {}
         self.model_registry = {}
 
@@ -557,17 +454,14 @@ class EnhancedModelService:
                 model = EnhancedFraudDetectionModel(model_id)
             else:
                 raise ValueError(f"Unsupported model type: {model_type}")
-
             self.models[model_id] = model
             self.model_registry[model_id] = {
                 "model_type": model_type,
                 "created_at": datetime.utcnow(),
                 "status": "registered",
             }
-
             logger.info(f"Model {model_id} registered successfully")
             return True
-
         except Exception as e:
             logger.error(f"Model registration failed: {e}")
             return False
@@ -578,7 +472,6 @@ class EnhancedModelService:
         """Train a registered model"""
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
-
         model = self.models[model_id]
         return model.train(data, **kwargs)
 
@@ -586,7 +479,6 @@ class EnhancedModelService:
         """Make prediction using a trained model"""
         if model_id not in self.models:
             raise ValueError(f"Model {model_id} not found")
-
         model = self.models[model_id]
         return model.predict(data)
 
@@ -594,7 +486,6 @@ class EnhancedModelService:
         """Get model metadata"""
         if model_id not in self.models:
             return None
-
         model = self.models[model_id]
         return model.metadata
 
@@ -603,5 +494,4 @@ class EnhancedModelService:
         return self.model_registry
 
 
-# Initialize the enhanced model service
 enhanced_model_service = EnhancedModelService()

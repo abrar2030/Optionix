@@ -7,21 +7,18 @@ import logging
 import math
 from decimal import ROUND_HALF_UP, Decimal, getcontext
 from typing import Any, Dict, Optional
-
 from ..config import settings
 
-# Set decimal precision for financial calculations
 getcontext().prec = 28
-
 logger = logging.getLogger(__name__)
 
 
 class FinancialCalculationService:
     """Service for accurate financial calculations and risk management"""
 
-    def __init__(self):
+    def __init__(self) -> Any:
         """Initialize financial calculation service"""
-        self.risk_free_rate = Decimal("0.02")  # 2% annual risk-free rate
+        self.risk_free_rate = Decimal("0.02")
         self.trading_days_per_year = 252
 
     def calculate_liquidation_price(
@@ -46,28 +43,16 @@ class FinancialCalculationService:
             Decimal: Liquidation price
         """
         try:
-            # Calculate position value
             position_value = entry_price * position_size
-
-            # Calculate maintenance margin requirement
             maintenance_margin = position_value * maintenance_margin_ratio
-
-            # Calculate maximum loss before liquidation
             max_loss = initial_margin - maintenance_margin
-
             if is_long:
-                # For long positions: liquidation when price drops
-                liquidation_price = entry_price - (max_loss / position_size)
+                liquidation_price = entry_price - max_loss / position_size
             else:
-                # For short positions: liquidation when price rises
-                liquidation_price = entry_price + (max_loss / position_size)
-
-            # Ensure liquidation price is positive
+                liquidation_price = entry_price + max_loss / position_size
             if liquidation_price <= 0:
-                liquidation_price = Decimal("0.01")  # Minimum price
-
+                liquidation_price = Decimal("0.01")
             return liquidation_price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating liquidation price: {e}")
             raise ValueError(f"Liquidation price calculation failed: {str(e)}")
@@ -94,9 +79,7 @@ class FinancialCalculationService:
                 margin_requirement = position_value * margin_rate
             else:
                 margin_requirement = position_value / leverage
-
             return margin_requirement.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating margin requirement: {e}")
             raise ValueError(f"Margin calculation failed: {str(e)}")
@@ -122,14 +105,10 @@ class FinancialCalculationService:
         """
         try:
             price_diff = current_price - entry_price
-
             if not is_long:
                 price_diff = -price_diff
-
             unrealized_pnl = price_diff * position_size
-
             return unrealized_pnl.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating unrealized PnL: {e}")
             raise ValueError(f"PnL calculation failed: {str(e)}")
@@ -153,14 +132,10 @@ class FinancialCalculationService:
         """
         try:
             equity = account_balance + unrealized_pnl
-
             if margin_requirement <= 0:
-                return Decimal("999.99")  # Effectively infinite health
-
+                return Decimal("999.99")
             health_ratio = equity / margin_requirement
-
             return health_ratio.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating health ratio: {e}")
             raise ValueError(f"Health ratio calculation failed: {str(e)}")
@@ -168,7 +143,7 @@ class FinancialCalculationService:
     def calculate_trading_fees(
         self,
         trade_value: Decimal,
-        fee_rate: Decimal = Decimal("0.001"),  # 0.1% default fee
+        fee_rate: Decimal = Decimal("0.001"),
         is_maker: bool = False,
     ) -> Decimal:
         """
@@ -184,15 +159,11 @@ class FinancialCalculationService:
         """
         try:
             if is_maker:
-                # Maker orders typically have lower fees
                 effective_fee_rate = fee_rate * Decimal("0.5")
             else:
                 effective_fee_rate = fee_rate
-
             fee = trade_value * effective_fee_rate
-
             return fee.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating trading fees: {e}")
             raise ValueError(f"Fee calculation failed: {str(e)}")
@@ -201,7 +172,7 @@ class FinancialCalculationService:
         self,
         spot_price: Decimal,
         strike_price: Decimal,
-        time_to_expiry: Decimal,  # in years
+        time_to_expiry: Decimal,
         volatility: Decimal,
         risk_free_rate: Optional[Decimal] = None,
         is_call: bool = True,
@@ -223,52 +194,36 @@ class FinancialCalculationService:
         try:
             if risk_free_rate is None:
                 risk_free_rate = self.risk_free_rate
-
-            # Convert to float for mathematical operations
             S = float(spot_price)
             K = float(strike_price)
             T = float(time_to_expiry)
             sigma = float(volatility)
             r = float(risk_free_rate)
-
-            # Calculate d1 and d2
             d1 = (math.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
             d2 = d1 - sigma * math.sqrt(T)
-
-            # Standard normal CDF and PDF
             from scipy.stats import norm
 
             N_d1 = norm.cdf(d1)
             N_d2 = norm.cdf(d2)
             n_d1 = norm.pdf(d1)
-
             if is_call:
-                # Call option Greeks
                 delta = N_d1
                 theta = (
                     -S * n_d1 * sigma / (2 * math.sqrt(T))
                     - r * K * math.exp(-r * T) * N_d2
                 ) / 365
             else:
-                # Put option Greeks
                 delta = N_d1 - 1
                 theta = (
                     -S * n_d1 * sigma / (2 * math.sqrt(T))
                     + r * K * math.exp(-r * T) * (1 - N_d2)
                 ) / 365
-
-            # Gamma and Vega are same for calls and puts
             gamma = n_d1 / (S * sigma * math.sqrt(T))
-            vega = S * n_d1 * math.sqrt(T) / 100  # Per 1% change in volatility
-
-            # Rho
+            vega = S * n_d1 * math.sqrt(T) / 100
             if is_call:
-                rho = (
-                    K * T * math.exp(-r * T) * N_d2 / 100
-                )  # Per 1% change in interest rate
+                rho = K * T * math.exp(-r * T) * N_d2 / 100
             else:
                 rho = -K * T * math.exp(-r * T) * (1 - N_d2) / 100
-
             return {
                 "delta": Decimal(str(delta)).quantize(Decimal("0.0001")),
                 "gamma": Decimal(str(gamma)).quantize(Decimal("0.0001")),
@@ -276,7 +231,6 @@ class FinancialCalculationService:
                 "vega": Decimal(str(vega)).quantize(Decimal("0.01")),
                 "rho": Decimal(str(rho)).quantize(Decimal("0.01")),
             }
-
         except Exception as e:
             logger.error(f"Error calculating option Greeks: {e}")
             raise ValueError(f"Greeks calculation failed: {str(e)}")
@@ -307,33 +261,22 @@ class FinancialCalculationService:
         try:
             if risk_free_rate is None:
                 risk_free_rate = self.risk_free_rate
-
-            # Convert to float for mathematical operations
             S = float(spot_price)
             K = float(strike_price)
             T = float(time_to_expiry)
             sigma = float(volatility)
             r = float(risk_free_rate)
-
-            # Calculate d1 and d2
             d1 = (math.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
             d2 = d1 - sigma * math.sqrt(T)
-
-            # Standard normal CDF
             from scipy.stats import norm
 
             N_d1 = norm.cdf(d1)
             N_d2 = norm.cdf(d2)
-
             if is_call:
-                # Call option price
                 price = S * N_d1 - K * math.exp(-r * T) * N_d2
             else:
-                # Put option price
                 price = K * math.exp(-r * T) * (1 - N_d2) - S * (1 - N_d1)
-
             return Decimal(str(price)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating Black-Scholes price: {e}")
             raise ValueError(f"Option pricing failed: {str(e)}")
@@ -343,7 +286,7 @@ class FinancialCalculationService:
         portfolio_value: Decimal,
         volatility: Decimal,
         confidence_level: Decimal = Decimal("0.95"),
-        time_horizon: int = 1,  # days
+        time_horizon: int = 1,
     ) -> Decimal:
         """
         Calculate Value at Risk (VaR)
@@ -360,25 +303,16 @@ class FinancialCalculationService:
         try:
             from scipy.stats import norm
 
-            # Convert annual volatility to daily
             daily_volatility = volatility / Decimal(
                 str(math.sqrt(self.trading_days_per_year))
             )
-
-            # Scale for time horizon
             horizon_volatility = daily_volatility * Decimal(
                 str(math.sqrt(time_horizon))
             )
-
-            # Calculate z-score for confidence level
             alpha = 1 - confidence_level
             z_score = Decimal(str(norm.ppf(float(alpha))))
-
-            # Calculate VaR
             var = portfolio_value * horizon_volatility * abs(z_score)
-
             return var.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
         except Exception as e:
             logger.error(f"Error calculating VaR: {e}")
             raise ValueError(f"VaR calculation failed: {str(e)}")
@@ -399,28 +333,19 @@ class FinancialCalculationService:
         """
         try:
             violations = []
-
-            # Check maximum position size
             if position_value > Decimal(str(settings.max_position_size)):
                 violations.append(
                     f"Position value {position_value} exceeds maximum {settings.max_position_size}"
                 )
-
-            # Check minimum position size
             if position_value < Decimal(str(settings.min_position_size)):
                 violations.append(
                     f"Position value {position_value} below minimum {settings.min_position_size}"
                 )
-
-            # Check position size relative to account balance
-            if position_value > account_balance * Decimal("10"):  # Max 10x leverage
+            if position_value > account_balance * Decimal("10"):
                 violations.append(f"Position value exceeds 10x account balance")
-
-            # Check if account has sufficient balance for margin
             required_margin = self.calculate_margin_requirement(position_value)
             if required_margin > account_balance:
                 violations.append(f"Insufficient balance for margin requirement")
-
             return {
                 "valid": len(violations) == 0,
                 "violations": violations,
@@ -430,7 +355,6 @@ class FinancialCalculationService:
                     account_balance * Decimal("10"),
                 ),
             }
-
         except Exception as e:
             logger.error(f"Error validating position limits: {e}")
             return {

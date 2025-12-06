@@ -7,11 +7,9 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
-# Enums
 class UserRole(str, Enum):
     ADMIN = "admin"
     TRADER = "trader"
@@ -42,7 +40,6 @@ class ComplianceStatus(str, Enum):
     PENDING = "pending"
 
 
-# Base schemas
 class BaseResponse(BaseModel):
     """Base response schema with common fields"""
 
@@ -67,7 +64,6 @@ class HealthCheckResponse(BaseResponse):
     security_features: Optional[Dict[str, bool]] = None
 
 
-# User schemas
 class UserCreate(BaseModel):
     """User creation schema with enhanced validation"""
 
@@ -79,7 +75,7 @@ class UserCreate(BaseModel):
     data_processing_consent: bool = True
 
     @validator("full_name")
-    def validate_full_name(cls, v):
+    def validate_full_name(cls: Any, v: Any) -> Any:
         if (
             not v.replace(" ", "")
             .replace("-", "")
@@ -93,7 +89,7 @@ class UserCreate(BaseModel):
         return v.strip()
 
     @validator("password")
-    def validate_password(cls, v):
+    def validate_password(cls: Any, v: Any) -> Any:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
         return v
@@ -137,7 +133,6 @@ class TokenResponse(BaseResponse):
     session_id: Optional[str] = None
 
 
-# MFA schemas
 class MFASetupResponse(BaseResponse):
     """MFA setup response schema"""
 
@@ -152,7 +147,6 @@ class MFAVerifyRequest(BaseModel):
     token: str = Field(..., min_length=6, max_length=6)
 
 
-# KYC schemas
 class AddressData(BaseModel):
     """Address data schema"""
 
@@ -167,16 +161,16 @@ class KYCDataRequest(BaseModel):
     """KYC data submission schema"""
 
     full_name: str = Field(..., min_length=2, max_length=255)
-    date_of_birth: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    date_of_birth: str = Field(..., pattern="^\\d{4}-\\d{2}-\\d{2}$")
     nationality: str = Field(..., min_length=2, max_length=3)
     address: AddressData
-    document_type: str = Field(..., pattern=r"^(passport|national_id|drivers_license)$")
+    document_type: str = Field(..., pattern="^(passport|national_id|drivers_license)$")
     document_number: str = Field(..., min_length=5, max_length=50)
     document_country: str = Field(..., min_length=2, max_length=3)
-    document_expiry: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")
+    document_expiry: str = Field(..., pattern="^\\d{4}-\\d{2}-\\d{2}$")
 
     @validator("date_of_birth")
-    def validate_date_of_birth(cls, v):
+    def validate_date_of_birth(cls: Any, v: Any) -> Any:
         try:
             birth_date = datetime.strptime(v, "%Y-%m-%d")
             age = (datetime.now() - birth_date).days / 365.25
@@ -191,13 +185,12 @@ class KYCDataRequest(BaseModel):
         return v
 
 
-# Account schemas
 class AccountCreate(BaseModel):
     """Account creation schema"""
 
-    ethereum_address: str = Field(..., pattern=r"^0x[a-fA-F0-9]{40}$")
+    ethereum_address: str = Field(..., pattern="^0x[a-fA-F0-9]{40}$")
     account_type: str = Field(
-        default="standard", pattern=r"^(standard|premium|institutional|demo)$"
+        default="standard", pattern="^(standard|premium|institutional|demo)$"
     )
     initial_deposit: Optional[Decimal] = Field(None, ge=0, le=1000000)
 
@@ -219,14 +212,13 @@ class AccountResponse(BaseModel):
         from_attributes = True
 
 
-# Trading schemas
 class TradeRequest(BaseModel):
     """Trade request schema with enhanced validation"""
 
     account_id: int
     symbol: str = Field(..., min_length=3, max_length=20)
-    trade_type: str = Field(..., pattern=r"^(buy|sell)$")
-    order_type: str = Field(..., pattern=r"^(market|limit|stop|stop_limit)$")
+    trade_type: str = Field(..., pattern="^(buy|sell)$")
+    order_type: str = Field(..., pattern="^(market|limit|stop|stop_limit)$")
     quantity: Decimal = Field(..., gt=0, le=1000000)
     price: Optional[Decimal] = Field(None, gt=0, le=1000000)
     stop_loss: Optional[Decimal] = Field(None, gt=0)
@@ -234,7 +226,7 @@ class TradeRequest(BaseModel):
     client_order_id: Optional[str] = Field(None, max_length=100)
 
     @validator("price")
-    def validate_price_for_limit_orders(cls, v, values):
+    def validate_price_for_limit_orders(cls: Any, v: Any, values: Any) -> Any:
         order_type = values.get("order_type")
         if order_type in ["limit", "stop_limit"] and v is None:
             raise ValueError("Price is required for limit and stop-limit orders")
@@ -263,7 +255,6 @@ class TradeResponse(BaseModel):
         from_attributes = True
 
 
-# Position schemas
 class PositionResponse(BaseModel):
     """Position response schema"""
 
@@ -278,8 +269,6 @@ class PositionResponse(BaseModel):
     margin_requirement: Decimal
     status: str
     created_at: datetime
-
-    # Greeks for options
     delta: Optional[Decimal] = None
     gamma: Optional[Decimal] = None
     theta: Optional[Decimal] = None
@@ -297,12 +286,11 @@ class PositionHealthResponse(BaseModel):
     health_score: Decimal
     margin_ratio: Decimal
     liquidation_risk: RiskLevel
-    time_to_liquidation: Optional[int]  # minutes
+    time_to_liquidation: Optional[int]
     recommended_actions: List[str]
     risk_metrics: Dict[str, Decimal]
 
 
-# Market data schemas
 class MarketDataRequest(BaseModel):
     """Market data request schema"""
 
@@ -311,7 +299,7 @@ class MarketDataRequest(BaseModel):
     high: Decimal = Field(..., gt=0)
     low: Decimal = Field(..., gt=0)
     volume: Decimal = Field(..., ge=0)
-    timeframe: str = Field(default="1h", pattern=r"^(1m|5m|15m|1h|4h|1d)$")
+    timeframe: str = Field(default="1h", pattern="^(1m|5m|15m|1h|4h|1d)$")
     limit: int = Field(default=100, ge=1, le=1000)
 
 
@@ -320,15 +308,12 @@ class VolatilityResponse(BaseModel):
 
     symbol: str
     volatility: Decimal
-
     confidence: Optional[Decimal]
     model_version: Optional[str]
-
     prediction_horizon: str
     timestamp: datetime
 
 
-# Compliance schemas
 class ComplianceCheckResponse(BaseResponse):
     """Compliance check response schema"""
 
@@ -373,7 +358,6 @@ class SanctionsCheckResponse(BaseModel):
     checked_at: datetime
 
 
-# API Key schemas
 class APIKeyCreate(BaseModel):
     """API key creation schema"""
 
@@ -402,10 +386,9 @@ class APIKeyResponse(BaseModel):
 class APIKeyCreateResponse(APIKeyResponse):
     """API key creation response with secret"""
 
-    api_key: str  # Only returned once during creation
+    api_key: str
 
 
-# Audit schemas
 class AuditLogResponse(BaseModel):
     """Audit log response schema"""
 
@@ -434,13 +417,12 @@ class AuditLogQuery(BaseModel):
     offset: int = Field(default=0, ge=0)
 
 
-# Financial reporting schemas
 class FinancialReportRequest(BaseModel):
     """Financial report request schema"""
 
-    report_type: str = Field(..., pattern=r"^(daily|weekly|monthly|quarterly|annual)$")
+    report_type: str = Field(..., pattern="^(daily|weekly|monthly|quarterly|annual)$")
     regulation_type: str = Field(
-        ..., pattern=r"^(sox|mifid_ii|dodd_frank|basel_iii|cftc)$"
+        ..., pattern="^(sox|mifid_ii|dodd_frank|basel_iii|cftc)$"
     )
     period_start: datetime
     period_end: datetime
@@ -460,17 +442,14 @@ class FinancialReportResponse(BaseResponse):
     data_summary: Dict[str, Any]
 
 
-# Data protection schemas
 class DataSubjectRequest(BaseModel):
     """GDPR data subject request schema"""
 
     request_type: str = Field(
-        ..., pattern=r"^(access|rectification|erasure|portability|restriction)$"
+        ..., pattern="^(access|rectification|erasure|portability|restriction)$"
     )
     description: Optional[str] = Field(None, max_length=1000)
-    verification_method: Optional[str] = Field(
-        None, pattern=r"^(email|phone|document)$"
-    )
+    verification_method: Optional[str] = Field(None, pattern="^(email|phone|document)$")
 
 
 class DataSubjectRequestResponse(BaseResponse):
@@ -492,11 +471,10 @@ class DataExportResponse(BaseResponse):
     expires_at: datetime
 
 
-# Reconciliation schemas
 class ReconciliationRequest(BaseModel):
     """Reconciliation request schema"""
 
-    reconciliation_type: str = Field(..., pattern=r"^(daily|monthly|trade|position)$")
+    reconciliation_type: str = Field(..., pattern="^(daily|monthly|trade|position)$")
     business_date: datetime
     tolerance_threshold: Optional[Decimal] = Field(Decimal("0.01"), ge=0)
 
@@ -514,7 +492,6 @@ class ReconciliationResponse(BaseResponse):
     business_date: datetime
 
 
-# Pagination schemas
 class PaginatedResponse(BaseModel):
     """Paginated response schema"""
 
@@ -527,7 +504,6 @@ class PaginatedResponse(BaseModel):
     has_prev: bool
 
 
-# Bulk operation schemas
 class BulkOperationRequest(BaseModel):
     """Bulk operation request schema"""
 
@@ -547,7 +523,6 @@ class BulkOperationResponse(BaseResponse):
     errors: List[Dict[str, Any]]
 
 
-# Notification schemas
 class NotificationPreferences(BaseModel):
     """Notification preferences schema"""
 
@@ -572,7 +547,6 @@ class NotificationResponse(BaseModel):
     created_at: datetime
 
 
-# System configuration schemas
 class SystemConfigResponse(BaseModel):
     """System configuration response schema"""
 
