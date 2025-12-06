@@ -18,6 +18,10 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 sys.path.append("/home/ubuntu/Optionix/code/backend")
 sys.path.append("/home/ubuntu/Optionix/code/quantitative")
 sys.path.append("/home/ubuntu/Optionix/code/ai_models")
@@ -40,7 +44,7 @@ try:
     )
     from security_enhanced import EnhancedSecurityService
 except ImportError as e:
-    print(f"Import error: {e}")
+    logger.info(f"Import error: {e}")
 
     # Create mock classes for testing
     class MockClass:
@@ -655,7 +659,7 @@ class TestIntegration(unittest.TestCase):
 
         except Exception as e:
             # If modules not available, just pass
-            print(f"Integration test skipped due to: {e}")
+            logger.info(f"Integration test skipped due to: {e}")
 
     def test_compliance_workflow(self):
         """Test compliance workflow"""
@@ -689,7 +693,7 @@ class TestIntegration(unittest.TestCase):
             # alert = await monitoring_service.monitor_transaction(transaction_data)
 
         except Exception as e:
-            print(f"Compliance test skipped due to: {e}")
+            logger.info(f"Compliance test skipped due to: {e}")
 
 
 class TestPerformance(unittest.TestCase):
@@ -722,7 +726,7 @@ class TestPerformance(unittest.TestCase):
             )  # Should complete in less than 1 second
 
         except Exception as e:
-            print(f"Performance test skipped due to: {e}")
+            logger.info(f"Performance test skipped due to: {e}")
 
     def test_monte_carlo_performance(self):
         """Test Monte Carlo performance"""
@@ -751,7 +755,7 @@ class TestPerformance(unittest.TestCase):
             )  # Should complete in less than 5 seconds
 
         except Exception as e:
-            print(f"Monte Carlo performance test skipped due to: {e}")
+            logger.info(f"Monte Carlo performance test skipped due to: {e}")
 
 
 def run_all_tests():
@@ -782,25 +786,22 @@ def run_all_tests():
 
 if __name__ == "__main__":
     # Run all tests
-    print("Running Enhanced Optionix Platform Test Suite...")
-    print("=" * 60)
-
+    logger.info("Running Enhanced Optionix Platform Test Suite...")
+    logger.info("=" * 60)
     result = run_all_tests()
 
-    print("\n" + "=" * 60)
-    print(f"Tests run: {result.testsRun}")
-    print(f"Failures: {len(result.failures)}")
-    print(f"Errors: {len(result.errors)}")
-    print(
+    logger.info("\n" + "=" * 60)
+    logger.info(f"Tests run: {result.testsRun}")
+    logger.info(f"Failures: {len(result.failures)}")
+    logger.info(f"Errors: {len(result.errors)}")
+    logger.info(
         f"Success rate: {((result.testsRun - len(result.failures) - len(result.errors)) / result.testsRun * 100):.1f}%"
     )
-
     if result.failures:
-        print("\nFailures:")
+        logger.info("\nFailures:")
         for test, traceback in result.failures:
-            print(f"- {test}: {traceback}")
-
+            logger.info(f"- {test}: {traceback}")
     if result.errors:
-        print("\nErrors:")
+        logger.info("\nErrors:")
         for test, traceback in result.errors:
-            print(f"- {test}: {traceback}")
+            logger.info(f"- {test}: {traceback}")

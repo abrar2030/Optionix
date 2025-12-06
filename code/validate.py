@@ -12,6 +12,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -544,13 +548,13 @@ class EnhancedValidator:
 def main():
     """Main validation function"""
     if len(sys.argv) != 2:
-        print("Usage: python validate_enhanced.py <code_directory>")
+        logger.info("Usage: python validate_enhanced.py <code_directory>")
         sys.exit(1)
 
     code_directory = sys.argv[1]
 
     if not os.path.exists(code_directory):
-        print(f"Error: Directory {code_directory} does not exist")
+        logger.info(f"Error: Directory {code_directory} does not exist")
         sys.exit(1)
 
     # Run validation
@@ -558,43 +562,41 @@ def main():
     report = validator.validate_all()
 
     # Print report
-    print("\n" + "=" * 80)
-    print("OPTIONIX PLATFORM VALIDATION REPORT")
-    print("=" * 80)
-    print(f"Validation Time: {report['validation_timestamp']}")
-    print(f"Overall Status: {report['overall_status']}")
-    print(f"Success Rate: {report['summary']['success_rate']}%")
-    print(
+    logger.info("\n" + "=" * 80)
+    logger.info("OPTIONIX PLATFORM VALIDATION REPORT")
+    logger.info("=" * 80)
+    logger.info(f"Validation Time: {report['validation_timestamp']}")
+    logger.info(f"Overall Status: {report['overall_status']}")
+    logger.info(f"Success Rate: {report['summary']['success_rate']}%")
+    logger.info(
         f"Tests: {report['summary']['passed']}/{report['summary']['total_tests']} passed"
     )
-
-    print("\nCATEGORY BREAKDOWN:")
-    print("-" * 40)
+    logger.info("\nCATEGORY BREAKDOWN:")
+    logger.info("-" * 40)
     for category, data in report["categories"].items():
         success_rate = (
             (data["passed"] / data["total"] * 100) if data["total"] > 0 else 0
         )
-        print(f"{category}: {data['passed']}/{data['total']} ({success_rate:.1f}%)")
-
+        logger.info(
+            f"{category}: {data['passed']}/{data['total']} ({success_rate:.1f}%)"
+        )
     if report["recommendations"]:
-        print("\nRECOMMENDATIONS:")
-        print("-" * 40)
+        logger.info("\nRECOMMENDATIONS:")
+        logger.info("-" * 40)
         for i, rec in enumerate(report["recommendations"], 1):
-            print(f"{i}. {rec}")
-
+            logger.info(f"{i}. {rec}")
     # Save detailed report
     report_file = Path(code_directory) / "validation_report.json"
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
-    print(f"\nDetailed report saved to: {report_file}")
-
+    logger.info(f"\nDetailed report saved to: {report_file}")
     # Exit with appropriate code
     if report["summary"]["success_rate"] >= 80:
-        print("\n✅ Validation PASSED - Platform meets enhanced standards")
+        logger.info("\n✅ Validation PASSED - Platform meets enhanced standards")
         sys.exit(0)
     else:
-        print("\n❌ Validation FAILED - Platform needs improvements")
+        logger.info("\n❌ Validation FAILED - Platform needs improvements")
         sys.exit(1)
 
 
