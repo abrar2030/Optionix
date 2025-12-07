@@ -2,7 +2,11 @@
 
 # Linting and Fixing Script for Optionix Project (Python, JavaScript, Solidity, YAML)
 
-set -e  # Exit immediately if a command exits with a non-zero status
+# Set up robust error handling
+# -e: Exit immediately if a command exits with a non-zero status.
+# -u: Treat unset variables as an error.
+# -o pipefail: Causes a pipeline to return the exit status of the last command in the pipe that returned a non-zero exit code.
+set -euo pipefail
 
 echo "----------------------------------------"
 echo "Starting linting and fixing process for Optionix..."
@@ -66,37 +70,28 @@ else
 fi
 
 # Install required Python linting tools if not already installed
+# Using --user to install to the user's home directory to avoid permission issues
 echo "----------------------------------------"
-echo "Installing/Updating Python linting tools..."
-pip3 install --upgrade black isort flake8 pylint
+echo "Installing/Updating Python linting tools (user-level install)..."
+pip3 install --user --upgrade black isort flake8 pylint pyyaml
 
 # Install global npm packages for JavaScript/TypeScript and Solidity linting
+# Note: Global install is used here for simplicity, but project-local installs are generally preferred.
 echo "----------------------------------------"
-echo "Installing/Updating JavaScript and Solidity linting tools..."
+echo "Installing/Updating JavaScript and Solidity linting tools (global install)..."
 npm install -g eslint prettier solhint
 
-# Define directories to process
+# Define directories to process relative to the project root (one level up from the script)
+PROJECT_ROOT="$(dirname "$0")/.."
+
 PYTHON_DIRECTORIES=(
   "code/backend"
-  "code/backend/middleware"
-  "code/backend/services"
-  "code/backend/tests"
   "code/quantitative"
 )
 
 JS_DIRECTORIES=(
-  "code/frontend/src"
-  "code/frontend/src/components"
-  "code/frontend/src/components/analytics"
-  "code/frontend/src/components/common"
-  "code/frontend/src/components/dashboard"
-  "code/frontend/src/components/portfolio"
-  "code/frontend/src/components/trading"
-  "code/frontend/src/pages"
-  "code/frontend/src/services"
-  "code/frontend/src/utils"
-  "code/blockchain/migrations"
-  "code/blockchain/tests"
+  "code/frontend"
+  "code/blockchain"
 )
 
 SOLIDITY_DIRECTORIES=(
@@ -109,6 +104,9 @@ YAML_DIRECTORIES=(
   ".github/workflows"
 )
 
+# Change to project root for relative path operations
+cd "$PROJECT_ROOT"
+
 # 1. Python Linting
 echo "----------------------------------------"
 echo "Running Python linting tools..."
@@ -118,9 +116,8 @@ echo "Running Black code formatter..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Formatting Python files in $dir..."
-    python3 -m black "$dir" || {
-      echo "Black encountered issues in $dir. Please review the above errors."
-    }
+    # Use python3 -m to ensure the correct package is used
+    python3 -m black "$dir" || echo "Black encountered issues in $dir. Please review the above errors."
   else
     echo "Directory $dir not found. Skipping Black formatting for this directory."
   fi
@@ -132,9 +129,7 @@ echo "Running isort to sort imports..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Sorting imports in Python files in $dir..."
-    python3 -m isort "$dir" || {
-      echo "isort encountered issues in $dir. Please review the above errors."
-    }
+    python3 -m isort "$dir" || echo "isort encountered issues in $dir. Please review the above errors."
   else
     echo "Directory $dir not found. Skipping isort for this directory."
   fi
@@ -146,9 +141,7 @@ echo "Running flake8 linter..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting Python files in $dir with flake8..."
-    python3 -m flake8 "$dir" || {
-      echo "Flake8 found issues in $dir. Please review the above warnings/errors."
-    }
+    python3 -m flake8 "$dir" || echo "Flake8 found issues in $dir. Please review the above warnings/errors."
   else
     echo "Directory $dir not found. Skipping flake8 for this directory."
   fi
@@ -160,9 +153,8 @@ echo "Running pylint for more comprehensive linting..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting Python files in $dir with pylint..."
-    find "$dir" -type f -name "*.py" | xargs python3 -m pylint --disable=C0111,C0103,C0303,W0621,C0301,W0612,W0611,R0913,R0914,R0915 || {
-      echo "Pylint found issues in $dir. Please review the above warnings/errors."
-    }
+    # Simplified pylint command, relying on a potential .pylintrc or project configuration
+    find "$dir" -type f -name "*.py" | xargs python3 -m pylint || echo "Pylint found issues in $dir. Please review the above warnings/errors."
   else
     echo "Directory $dir not found. Skipping pylint for this directory."
   fi
@@ -173,79 +165,25 @@ echo "Pylint linting completed."
 echo "----------------------------------------"
 echo "Running JavaScript/TypeScript linting tools..."
 
-# 2.1 Create ESLint config if it doesn't exist
-if [ ! -f ".eslintrc.js" ]; then
-  echo "Creating ESLint configuration..."
-  cat > .eslintrc.js << 'EOF'
-module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    node: true,
-    mocha: true,
-  },
-  extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
-  ],
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  plugins: [
-    'react',
-  ],
-  rules: {
-    'no-unused-vars': 'warn',
-    'react/prop-types': 'off',
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
-  },
-};
-EOF
-fi
-
-# 2.2 Create Prettier config if it doesn't exist
-if [ ! -f ".prettierrc.json" ]; then
-  echo "Creating Prettier configuration..."
-  cat > .prettierrc.json << 'EOF'
-{
-  "semi": true,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "es5"
-}
-EOF
-fi
-
-# 2.3 Run ESLint
+# 2.1 Run ESLint
 echo "Running ESLint for JavaScript/TypeScript files..."
 for dir in "${JS_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting JavaScript/TypeScript files in $dir with ESLint..."
-    npx eslint "$dir" --ext .js,.jsx,.ts,.tsx --fix || {
-      echo "ESLint found issues in $dir. Please review the above warnings/errors."
-    }
+    # Using npx to execute locally installed or globally available eslint
+    npx eslint "$dir" --ext .js,.jsx,.ts,.tsx --fix || echo "ESLint found issues in $dir. Please review the above warnings/errors."
   else
     echo "Directory $dir not found. Skipping ESLint for this directory."
   fi
 done
 echo "ESLint linting completed."
 
-# 2.4 Run Prettier
+# 2.2 Run Prettier
 echo "Running Prettier for JavaScript/TypeScript files..."
 for dir in "${JS_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Formatting JavaScript/TypeScript files in $dir with Prettier..."
-    npx prettier --write "$dir/**/*.{js,jsx,ts,tsx}" || {
-      echo "Prettier encountered issues in $dir. Please review the above errors."
-    }
+    npx prettier --write "$dir/**/*.{js,jsx,ts,tsx}" || echo "Prettier encountered issues in $dir. Please review the above errors."
   else
     echo "Directory $dir not found. Skipping Prettier for this directory."
   fi
@@ -256,42 +194,24 @@ echo "Prettier formatting completed."
 echo "----------------------------------------"
 echo "Running Solidity linting tools..."
 
-# 3.1 Create solhint config if it doesn't exist
-if [ ! -f ".solhint.json" ]; then
-  echo "Creating solhint configuration..."
-  cat > .solhint.json << 'EOF'
-{
-  "extends": "solhint:recommended",
-  "rules": {
-    "compiler-version": ["error", "^0.8.0"],
-    "func-visibility": ["warn", {"ignoreConstructors": true}]
-  }
-}
-EOF
-fi
-
-# 3.2 Run solhint
+# 3.1 Run solhint
 echo "Running solhint for Solidity files..."
 for dir in "${SOLIDITY_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting Solidity files in $dir with solhint..."
-    npx solhint "$dir/**/*.sol" || {
-      echo "solhint found issues in $dir. Please review the above warnings/errors."
-    }
+    npx solhint "$dir/**/*.sol" || echo "solhint found issues in $dir. Please review the above warnings/errors."
   else
     echo "Directory $dir not found. Skipping solhint for this directory."
   fi
 done
 echo "solhint linting completed."
 
-# 3.3 Run Prettier on Solidity files
+# 3.2 Run Prettier on Solidity files
 echo "Running Prettier for Solidity files..."
 for dir in "${SOLIDITY_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Formatting Solidity files in $dir with Prettier..."
-    npx prettier --write "$dir/**/*.sol" || {
-      echo "Prettier encountered issues in $dir. Please review the above errors."
-    }
+    npx prettier --write "$dir/**/*.sol" || echo "Prettier encountered issues in $dir. Please review the above errors."
   else
     echo "Directory $dir not found. Skipping Prettier for this directory."
   fi
@@ -308,27 +228,20 @@ if [ "$YAMLLINT_AVAILABLE" = true ]; then
   for dir in "${YAML_DIRECTORIES[@]}"; do
     if [ -d "$dir" ]; then
       echo "Linting YAML files in $dir with yamllint..."
-      yamllint "$dir" || {
-        echo "yamllint found issues in $dir. Please review the above warnings/errors."
-      }
+      yamllint "$dir" || echo "yamllint found issues in $dir. Please review the above warnings/errors."
     else
       echo "Directory $dir not found. Skipping yamllint for this directory."
     fi
   done
   echo "yamllint completed."
 else
-  echo "Skipping yamllint (not installed)."
-
   # 4.2 Basic YAML validation using Python
   echo "Performing basic YAML validation using Python..."
-  pip3 install --upgrade pyyaml
-
   for dir in "${YAML_DIRECTORIES[@]}"; do
     if [ -d "$dir" ]; then
       echo "Validating YAML files in $dir..."
-      find "$dir" -type f \( -name "*.yaml" -o -name "*.yml" \) -exec python3 -c "import yaml; yaml.safe_load(open('{}', 'r'))" \; || {
-        echo "YAML validation found issues in $dir. Please review the above errors."
-      }
+      # Use python3 -c with the installed pyyaml
+      find "$dir" -type f \( -name "*.yaml" -o -name "*.yml" \) -exec python3 -c "import yaml, sys; [yaml.safe_load(open(f, 'r')) for f in sys.argv[1:]]" {} + || echo "YAML validation found issues in $dir. Please review the above errors."
     else
       echo "Directory $dir not found. Skipping YAML validation for this directory."
     fi
@@ -342,12 +255,17 @@ echo "Applying common fixes to all file types..."
 
 # 5.1 Fix trailing whitespace
 echo "Fixing trailing whitespace..."
-find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.sol" -o -name "*.yaml" -o -name "*.yml" \) -not -path "*/node_modules/*" -not -path "*/venv/*" -not -path "*/dist/*" -exec sed -i 's/[ \t]*$//' {} \;
+# Use a more robust find command to exclude common build/dependency directories
+find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.sol" -o -name "*.yaml" -o -name "*.yml" \) \
+  -not -path "./node_modules/*" -not -path "./venv/*" -not -path "./dist/*" -not -path "./build/*" \
+  -exec sed -i 's/[ \t]*$//' {} +
 echo "Fixed trailing whitespace."
 
 # 5.2 Ensure newline at end of file
 echo "Ensuring newline at end of files..."
-find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.sol" -o -name "*.yaml" -o -name "*.yml" \) -not -path "*/node_modules/*" -not -path "*/venv/*" -not -path "*/dist/*" -exec sh -c '[ -n "$(tail -c1 "$1")" ] && echo "" >> "$1"' sh {} \;
+find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.sol" -o -name "*.yaml" -o -name "*.yml" \) \
+  -not -path "./node_modules/*" -not -path "./venv/*" -not -path "./dist/*" -not -path "./build/*" \
+  -exec sh -c '[ -n "$(tail -c1 "$1")" ] && echo "" >> "$1"' sh {} +
 echo "Ensured newline at end of files."
 
 echo "----------------------------------------"
