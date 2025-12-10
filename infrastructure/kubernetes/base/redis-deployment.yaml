@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.appName }}-redis
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.appName }}-redis
+    tier: cache
 spec:
   replicas: {{ .Values.redis.replicas }}
   selector:
@@ -13,6 +15,7 @@ spec:
     metadata:
       labels:
         app: {{ .Values.appName }}-redis
+        tier: cache
     spec:
       containers:
       - name: {{ .Values.appName }}-redis
@@ -20,6 +23,7 @@ spec:
         imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.redis.containerPort }}
+          name: redis
         resources:
           limits:
             cpu: {{ .Values.redis.resources.limits.cpu }}

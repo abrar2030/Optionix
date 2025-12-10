@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.appName }}-database-config
+  namespace: {{ .Values.namespace }}
+data:
+  my.cnf: |
+    [mysqld]
+    # Basic settings
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_unicode_ci
+    skip-name-resolve
+    max_connections=500
+    max_user_connections=500
+    # InnoDB settings
+    innodb_buffer_pool_size=128M
+    innodb_log_file_size=48M
+    innodb_flush_log_at_trx_commit=1
+    innodb_file_per_table=1
+    # Replication settings (for StatefulSet)
+    log-bin=mysql-bin
+    expire_logs_days=10
+    max_binlog_size=100M
+    binlog-format=ROW

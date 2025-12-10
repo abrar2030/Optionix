@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.appName }}-frontend
+  namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.appName }}-frontend
+    tier: frontend
 spec:
   replicas: {{ .Values.frontend.replicas }}
   selector:
@@ -13,6 +15,7 @@ spec:
     metadata:
       labels:
         app: {{ .Values.appName }}-frontend
+        tier: frontend
     spec:
       containers:
       - name: {{ .Values.appName }}-frontend
@@ -20,6 +23,7 @@ spec:
         imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.frontend.containerPort }}
+          name: http
         resources:
           limits:
             cpu: {{ .Values.frontend.resources.limits.cpu }}
@@ -29,7 +33,10 @@ spec:
             memory: {{ .Values.frontend.resources.requests.memory }}
         env:
         - name: REACT_APP_API_URL
-          value: {{ .Values.frontend.apiUrl }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.appName }}-config
+              key: API_URL
         - name: REACT_APP_ENV
           value: {{ .Values.environment }}
         livenessProbe:
