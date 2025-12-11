@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.appName }}-database-backup-pvc
-  namespace: {{ .Values.namespace }}
+    name: '{{ .Values.appName }}-database-backup-pvc'
+    namespace: '{{ .Values.namespace }}'
 spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: {{ .Values.database.backupStorageClass }}
-  resources:
-    requests:
-      storage: {{ .Values.database.backupStorage }}
+    accessModes:
+        - ReadWriteOnce
+    storageClassName: '{{ .Values.database.backupStorageClass }}'
+    resources:
+        requests:
+            storage: '{{ .Values.database.backupStorage }}'
