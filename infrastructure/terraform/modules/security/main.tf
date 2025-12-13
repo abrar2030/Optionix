@@ -132,8 +132,8 @@ resource "aws_security_group" "redis" {
 resource "aws_wafv2_web_acl" "optionix_waf" {
   count = var.enable_waf ? 1 : 0
 
-  name  = "${var.environment}-optionix-waf"
-  scope = "REGIONAL"
+  name        = "${var.environment}-optionix-waf"
+  scope       = "REGIONAL"
   description = "WAF for Optionix financial application"
 
   default_action {
@@ -255,7 +255,7 @@ resource "aws_wafv2_web_acl" "optionix_waf" {
 resource "aws_guardduty_detector" "optionix_guardduty" {
   count = var.enable_guardduty ? 1 : 0
 
-  enable = true
+  enable                       = true
   finding_publishing_frequency = "FIFTEEN_MINUTES"
 
   datasources {
@@ -591,7 +591,7 @@ resource "aws_iam_role_policy_attachment" "rds_monitoring_role_policy" {
 resource "aws_secretsmanager_secret" "database_credentials" {
   name                    = "optionix/${var.environment}/database"
   description             = "Database credentials for Optionix ${var.environment}"
-  kms_key_id             = var.kms_key_id
+  kms_key_id              = var.kms_key_id
   recovery_window_in_days = var.environment == "prod" ? 30 : 0
 
   tags = merge(var.tags, {
@@ -610,6 +610,6 @@ resource "aws_secretsmanager_secret_version" "database_credentials" {
 
 # Random IDs for unique naming
 resource "random_id" "config_suffix" {
-  count = var.enable_config ? 1 : 0
+  count       = var.enable_config ? 1 : 0
   byte_length = 4
 }

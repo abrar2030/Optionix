@@ -1,0 +1,41 @@
+# Ansible Group Variables Example
+# Copy to group_vars/all.yml and update with actual values
+# For secrets, use ansible-vault encrypt group_vars/vault.yml
+
+---
+# Common settings
+ntp_servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+
+# SSH hardening
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+
+# Firewall settings
+firewall_allowed_tcp_ports:
+  - 22
+  - 80
+  - 443
+
+# Security settings
+security_autoupdate_enabled: true
+security_fail2ban_enabled: true
+
+# Database settings (non-sensitive)
+mysql_databases:
+  - name: optionix
+    encoding: utf8mb4
+    collation: utf8mb4_unicode_ci
+
+mysql_users:
+  - name: optionix_app
+    host: "%"
+    priv: "optionix.*:ALL"
+    # Password should come from vault: "{{ vault_optionix_db_password }}"
+
+# Application settings
+app_name: optionix
+app_environment: production
+log_level: INFO

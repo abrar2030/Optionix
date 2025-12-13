@@ -1,0 +1,35 @@
+# Ansible Inventory Example
+# Copy this to hosts.yml and update with actual server IPs and credentials
+# For sensitive values, use Ansible Vault: ansible-vault encrypt_string 'secret' --name 'variable_name'
+
+all:
+    children:
+        webservers:
+            hosts:
+                web1:
+                    ansible_host: 10.0.1.10
+                    ansible_user: ubuntu
+                    ansible_ssh_private_key_file: ~/.ssh/id_rsa
+                web2:
+                    ansible_host: 10.0.1.11
+                    ansible_user: ubuntu
+                    ansible_ssh_private_key_file: ~/.ssh/id_rsa
+            vars:
+                http_port: 80
+                https_port: 443
+                
+        databases:
+            hosts:
+                db1:
+                    ansible_host: 10.0.2.10
+                    ansible_user: ubuntu
+                    ansible_ssh_private_key_file: ~/.ssh/id_rsa
+                db2:
+                    ansible_host: 10.0.2.11
+                    ansible_user: ubuntu
+                    ansible_ssh_private_key_file: ~/.ssh/id_rsa
+            vars:
+                mysql_port: 3306
+                # Use Ansible Vault for sensitive vars
+                # mysql_root_password: "{{ vault_mysql_root_password }}"
+                # optionix_db_password: "{{ vault_optionix_db_password }}"
