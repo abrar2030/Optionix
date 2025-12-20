@@ -15,7 +15,15 @@ from starlette.types import ASGIApp
 from ..config import settings
 
 logger = logging.getLogger(__name__)
-redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+try:
+    redis_client = redis.from_url(
+        settings.redis_url, decode_responses=True, socket_timeout=1
+    )
+except Exception:
+    redis_client = None  # Redis not available, rate limiting will be disabled
+    logger.warning("Redis not available for rate limiting")
+
+# Original line: redis_client = redis.from_url(settings.redis_url, decode_responses=True)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -49,8 +57,8 @@ class AdvancedRateLimitMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: ASGIApp) -> Any:
         super().__init__(app)
-        self.default_limit = settings.rate_limit_requests
-        self.default_window = settings.rate_limit_window
+        self.default_limit = settings.rate_limit_requests_per_minute
+        self.default_window = settings.rate_limit_window_minutes
         self.endpoint_limits = {
             "/auth/login": {"requests": 5, "window": 300},
             "/auth/register": {"requests": 3, "window": 3600},
@@ -113,6 +121,16 @@ class AdvancedRateLimitMiddleware(BaseHTTPMiddleware):
         self, client_ip: str, user_id: Optional[str], endpoint: str
     ) -> Dict[str, Any]:
         """Check various rate limits"""
+        # If Redis is not available, allow all requests
+        if redis_client is None:
+            return {
+                "exceeded": False,
+                "limit": 999999,
+                "remaining": 999999,
+                "retry_after": 0,
+                "reset_time": int(time.time()) + 60,
+            }
+
         current_time = int(time.time())
         if endpoint in self.endpoint_limits:
             limit_config = self.endpoint_limits[endpoint]

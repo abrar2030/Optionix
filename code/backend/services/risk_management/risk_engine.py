@@ -1,3 +1,5 @@
+from typing import Any
+
 """
 Risk Management and Stress Testing Tools for Optionix platform.
 

@@ -8,9 +8,9 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Dict, Optional
 import structlog
-from database import get_db_session
+from ..database import get_db_session
 from fastapi import Request
-from models import AuditLog
+from ..models import AuditLog
 
 structlog.configure(
     processors=[

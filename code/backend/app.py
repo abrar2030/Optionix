@@ -6,6 +6,7 @@ Integrates comprehensive security, compliance, and financial standards.
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
+from decimal import Decimal
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request, status

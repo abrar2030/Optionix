@@ -1,3 +1,5 @@
+from typing import Any
+
 """
 Circuit Breaker implementation for Optionix platform.
 

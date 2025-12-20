@@ -7,10 +7,10 @@ import logging
 import time
 from typing import Any, Dict
 import redis
-from config import settings
+from ..config import settings
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from security import security_service
+from ..security import security_service
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,14 @@ class RateLimiter:
     """Rate limiting service using Redis for distributed rate limiting"""
 
     def __init__(self) -> Any:
+        """Initialize rate limiter - gracefully handle Redis unavailability"""
+        self.redis_client = None
+        self._initialize_redis()
+
+    def _initialize_redis(self) -> None:
         """Initialize rate limiter with Redis connection"""
         try:
-            self.redis_client = redis.from_url(
+            temp_client = redis.from_url(
                 settings.redis_url,
                 password=settings.redis_password,
                 decode_responses=True,
@@ -49,9 +54,9 @@ class RateLimiter:
             Dict[str, Any]: Rate limit status
         """
         if limit is None:
-            limit = settings.rate_limit_requests
+            limit = settings.rate_limit_requests_per_minute
         if window is None:
-            window = settings.rate_limit_window
+            window = settings.rate_limit_window_minutes
         if not self.redis_client:
             logger.warning("Redis unavailable, rate limiting disabled")
             return {

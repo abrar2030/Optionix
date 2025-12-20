@@ -21,9 +21,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from io import BytesIO
-from typing import List, Optional
+from typing import Any, List, Optional
 import bcrypt
-import jwt
+from jose import jwt
 import pyotp
 import qrcode
 from cryptography.hazmat.primitives import serialization
@@ -386,3 +386,58 @@ def log_auth_event(
     logger.info(
         f"Auth event: {event_type} for user {user_id} from {ip_address} - {status}"
     )
+
+
+class AuthService:
+    """Authentication service"""
+
+    def __init__(self):
+        self._failed_attempts = {}
+
+    def get_password_hash(self, password: str) -> str:
+        """Hash a password using bcrypt"""
+        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        """Verify a password against its hash"""
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+        )
+
+    def check_failed_attempts(self, identifier: str) -> dict:
+        """Check failed login attempts"""
+        attempts = self._failed_attempts.get(identifier, 0)
+        locked = attempts >= 5
+        return {"attempts": attempts, "locked": locked}
+
+    def record_failed_attempt(self, identifier: str):
+        """Record a failed login attempt"""
+        self._failed_attempts[identifier] = self._failed_attempts.get(identifier, 0) + 1
+
+    def clear_failed_attempts(self, identifier: str):
+        """Clear failed login attempts"""
+        if identifier in self._failed_attempts:
+            del self._failed_attempts[identifier]
+
+
+auth_service = AuthService()
+
+
+def log_auth_event(db, user_id, event_type, ip_address, user_agent, status):
+    """Log an authentication event"""
+    from .models import AuditLog
+
+    try:
+        audit_log = AuditLog(
+            user_id=user_id,
+            action=event_type,
+            action_category="authentication",
+            status=status,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        db.add(audit_log)
+        db.commit()
+    except Exception as e:
+        logger.error(f"Failed to log auth event: {e}")
+        db.rollback()

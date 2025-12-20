@@ -4,7 +4,7 @@ Includes security, compliance, and financial standards settings.
 """
 
 from decimal import Decimal
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import validator
 from pydantic_settings import BaseSettings
 
@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     redis_session_db: int = 1
     redis_cache_db: int = 2
     redis_rate_limit_db: int = 3
+    redis_password: Optional[str] = None
     secret_key: str = "your-super-secret-key-change-in-production"
     encryption_key: str = "A_32_CHAR_DEFAULT_ENCRYPTION_KEY"
     algorithm: str = "HS256"
@@ -74,6 +75,7 @@ class Settings(BaseSettings):
     dodd_frank_compliance_enabled: bool = True
     model_path: str = "models/volatility_model.pkl"
     scaler_path: str = "models/feature_scaler.pkl"
+    model_version: str = "1.0.0"
     default_leverage_limit: Decimal = Decimal("10.0")
     max_leverage_limit: Decimal = Decimal("100.0")
     default_risk_limit: Decimal = Decimal("100000.0")
@@ -84,6 +86,8 @@ class Settings(BaseSettings):
     trading_hours_end: str = "23:59"
     trading_timezone: str = "UTC"
     max_order_size: Decimal = Decimal("1000000.0")
+    max_position_size: Decimal = Decimal("1000000.0")
+    min_position_size: Decimal = Decimal("0.001")
     min_order_size: Decimal = Decimal("0.001")
     trading_fee_percentage: Decimal = Decimal("0.001")
     withdrawal_fee_flat: Decimal = Decimal("5.0")
@@ -93,6 +97,10 @@ class Settings(BaseSettings):
     ethereum_chain_id: int = 1
     gas_price_gwei: int = 20
     gas_limit: int = 21000
+    futures_contract_address: str = "0x0000000000000000000000000000000000000000"
+    equity_symbols: List[str] = ["AAPL", "GOOGL", "MSFT", "AMZN"]
+    bond_symbols: List[str] = ["US10Y", "US30Y"]
+    derivative_symbols: List[str] = ["SPX", "VIX"]
     data_retention_default_years: int = 7
     data_anonymization_enabled: bool = True
     data_export_enabled: bool = True
