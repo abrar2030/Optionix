@@ -1,5 +1,5 @@
 """
-Enhanced Black-Scholes Option Pricing Model for Optionix Platform
+Black-Scholes Option Pricing Model for Optionix Platform
 Implements comprehensive option pricing with:
 - Multiple option types (European, American, Asian, Barrier)
 - Greeks calculation (Delta, Gamma, Theta, Vega, Rho)
@@ -84,11 +84,11 @@ class OptionResult:
     timestamp: datetime = None
 
 
-class EnhancedBlackScholesModel:
-    """Enhanced Black-Scholes model with comprehensive features"""
+class BlackScholesModel:
+    """Black-Scholes model with comprehensive features"""
 
-    def __init__(self) -> Any:
-        """Initialize the enhanced Black-Scholes model"""
+    def __init__(self) -> None:
+        """Initialize the Black-Scholes model"""
         self.min_volatility = 0.001
         self.max_volatility = 5.0
         self.min_time = 1 / 365
@@ -236,24 +236,99 @@ class EnhancedBlackScholesModel:
             logger.error(f"Implied volatility calculation failed: {e}")
             return 0.2
 
+    def _phi(self, S, T, gamma, H, r, q, sigma):
+        """Helper function for Bjerksund-Stensland model"""
+        (-r + q + gamma * 0.5 * sigma**2) / (sigma * np.sqrt(T))
+        d1 = (np.log(S / H) + (r - q + (gamma + 0.5) * sigma**2) * T) / (
+            sigma * np.sqrt(T)
+        )
+        d2 = (np.log(S / H) + (r - q + (gamma - 0.5) * sigma**2) * T) / (
+            sigma * np.sqrt(T)
+        )
+        return np.exp(-q * T) * S * norm.cdf(d1) - np.exp(-r * T) * H * norm.cdf(d2)
+
     def _bjerksund_stensland_price(self, params: OptionParameters) -> float:
         """
         Calculate American option price using the Bjerksund-Stensland approximation.
-        This is a placeholder for a more complex numerical method, but provides a good approximation.
         """
         S = params.spot_price
         K = params.strike_price
         T = params.time_to_expiry
         r = params.risk_free_rate
-        params.volatility
+        sigma = params.volatility
         q = params.dividend_yield
-        european_price = self.black_scholes_price(params)
+
         if params.option_type == OptionType.CALL:
             if q == 0.0 and S > K:
-                return european_price
-            return european_price + 0.1 * (S - K) * (1 - np.exp(-r * T))
-        else:
-            return european_price + 0.1 * (K - S) * (1 - np.exp(-r * T))
+                return self.black_scholes_price(params)
+
+            beta = (0.5 - q / sigma**2) + np.sqrt(
+                (q / sigma**2 - 0.5) ** 2 + 2 * r / sigma**2
+            )
+            B0 = K
+            B_inf = K / (1 - 1 / beta)
+            2 * (r - q) / sigma**2
+            2 * r / sigma**2
+            h1 = -(
+                (q * T)
+                + 2
+                * sigma
+                * np.sqrt(T)
+                * (
+                    (r - q) / (2 * sigma**2)
+                    + np.sqrt((r - q) ** 2 / (4 * sigma**4) + 2 * r / sigma**2)
+                )
+            )
+            h2 = (q * T) + 2 * sigma * np.sqrt(T) * (
+                (r - q) / (2 * sigma**2)
+                - np.sqrt((r - q) ** 2 / (4 * sigma**4) + 2 * r / sigma**2)
+            )
+            I = B_inf + (B0 - B_inf) * (1 - np.exp(h1))
+            S_star = I + (B_inf - I) * (1 - np.exp(h2))
+
+            if S >= S_star:
+                return S - K
+
+            S_star / beta
+            a1 = self._phi(S_star, T, 1, K, r, q, sigma)
+
+            return self.black_scholes_price(params) + a1 * (S / S_star) ** beta
+
+        else:  # PUT
+            if q == 0.0 and S < K:
+                return self.black_scholes_price(params)
+
+            beta = (0.5 - q / sigma**2) - np.sqrt(
+                (q / sigma**2 - 0.5) ** 2 + 2 * r / sigma**2
+            )
+            B0 = K
+            B_inf = K / (1 - 1 / beta)
+            2 * (r - q) / sigma**2
+            2 * r / sigma**2
+            h1 = -(
+                (q * T)
+                + 2
+                * sigma
+                * np.sqrt(T)
+                * (
+                    (r - q) / (2 * sigma**2)
+                    + np.sqrt((r - q) ** 2 / (4 * sigma**4) + 2 * r / sigma**2)
+                )
+            )
+            h2 = (q * T) + 2 * sigma * np.sqrt(T) * (
+                (r - q) / (2 * sigma**2)
+                - np.sqrt((r - q) ** 2 / (4 * sigma**4) + 2 * r / sigma**2)
+            )
+            I = B_inf + (B0 - B_inf) * (1 - np.exp(h1))
+            S_star = I + (B_inf - I) * (1 - np.exp(h2))
+
+            if S <= S_star:
+                return K - S
+
+            -S_star / beta
+            a1 = self._phi(S_star, T, -1, K, r, q, sigma)
+
+            return self.black_scholes_price(params) + a1 * (S / S_star) ** beta
 
     def _barrier_option_price(self, params: OptionParameters) -> float:
         """
@@ -272,6 +347,9 @@ class EnhancedBlackScholesModel:
             raise ValueError(
                 "Barrier level and type must be specified for Barrier options"
             )
+
+        mu = (r - q - sigma**2 / 2) / sigma**2
+
         if (
             barrier_type == BarrierType.DOWN_AND_OUT
             and params.option_type == OptionType.CALL
@@ -279,19 +357,9 @@ class EnhancedBlackScholesModel:
             if S <= H:
                 return 0.0
             bs_price = self.black_scholes_price(params)
-            mu = (r - q - sigma**2 / 2) / sigma**2
-            mu + 1
-            x1 = (np.log(S / K) + (r - q + sigma**2 / 2) * T) / (sigma * np.sqrt(T))
-            x2 = (np.log(S / H) + (r - q + sigma**2 / 2) * T) / (sigma * np.sqrt(T))
-            (np.log(H**2 / (S * K)) + (r - q + sigma**2 / 2) * T) / (sigma * np.sqrt(T))
-            (np.log(H / S) + (r - q + sigma**2 / 2) * T) / (sigma * np.sqrt(T))
             S_star = H**2 / S
             params_star = OptionParameters(S_star, K, T, r, sigma, q, OptionType.CALL)
             european_call_star = self.black_scholes_price(params_star)
-            S * np.exp(-q * T) * norm.cdf(x1) - K * np.exp(-r * T) * norm.cdf(
-                x1 - sigma * np.sqrt(T)
-            )
-            S * norm.cdf(x2) - K * np.exp(-r * T) * norm.cdf(x2 - sigma * np.sqrt(T))
             doc_price = bs_price - (S / H) ** (2 * mu) * european_call_star
             return max(0.0, doc_price)
         elif (
@@ -301,8 +369,6 @@ class EnhancedBlackScholesModel:
             if S >= H:
                 return 0.0
             bs_price = self.black_scholes_price(params)
-            mu = (r - q - sigma**2 / 2) / sigma**2
-            mu + 1
             S_star = H**2 / S
             params_star = OptionParameters(
                 spot_price=S_star,
@@ -314,42 +380,61 @@ class EnhancedBlackScholesModel:
                 option_type=OptionType.PUT,
             )
             european_put_star = self.black_scholes_price(params_star)
-            uop_price = bs_price - (S / H) ** (2 * mu) * european_put_star
-            return max(0.0, uop_price)
+            doc_price = bs_price - (S / H) ** (2 * mu) * european_put_star
+            return max(0.0, doc_price)
         else:
+            # Placeholder for other barrier types (e.g., in, up-and-out put, down-and-out call)
             logger.warning(
-                f"Unsupported Barrier type/option combination: {barrier_type.value} {params.option_type.value}. Falling back to European price."
+                f"Unsupported barrier type: {barrier_type} {params.option_type}"
             )
-            return self.black_scholes_price(params)
+            return 0.0
 
-    def calculate_comprehensive_option_metrics(
-        self, params: OptionParameters
-    ) -> OptionResult:
-        """Calculate comprehensive option metrics"""
+    def comprehensive_option_price(self, params: OptionParameters) -> OptionResult:
+        """
+        Calculate option price and Greeks based on option style.
+        """
+        self.validate_inputs(params)
         try:
             if params.option_style == OptionStyle.EUROPEAN:
                 price = self.black_scholes_price(params)
+                greeks = self.calculate_greeks(params)
             elif params.option_style == OptionStyle.AMERICAN:
                 price = self._bjerksund_stensland_price(params)
+                # Greeks for American options are complex, using European as approximation for now
+                greeks = self.calculate_greeks(params)
             elif params.option_style == OptionStyle.BARRIER:
                 price = self._barrier_option_price(params)
-            elif (
-                params.option_style == OptionStyle.ASIAN
-                or params.option_style == OptionStyle.LOOKBACK
-            ):
+                # Greeks for Barrier options are complex, using European as approximation for now
+                greeks = self.calculate_greeks(params)
+            elif params.option_style in [OptionStyle.ASIAN, OptionStyle.LOOKBACK]:
+                # These require Monte Carlo or other specialized methods,
+                # which are implemented in monte_carlo.py.
+                # For Black-Scholes module, we return a warning and 0.0
                 logger.warning(
-                    f"Pricing for {params.option_style.value} options requires Monte Carlo simulation. Returning European price as approximation."
+                    f"Option style {params.option_style} not supported in BlackScholesModel. Use MCSimulator."
                 )
-                price = self.black_scholes_price(params)
+                price = 0.0
+                greeks = {
+                    "delta": 0.0,
+                    "gamma": 0.0,
+                    "theta": 0.0,
+                    "vega": 0.0,
+                    "rho": 0.0,
+                }
             else:
-                price = self.black_scholes_price(params)
-            greeks = self.calculate_greeks(params)
-            if params.option_type == OptionType.CALL:
-                intrinsic_value = max(params.spot_price - params.strike_price, 0)
-            else:
-                intrinsic_value = max(params.strike_price - params.spot_price, 0)
-            time_value = price - intrinsic_value
+                raise ValueError(f"Unsupported option style: {params.option_style}")
+
+            intrinsic_value = max(
+                (
+                    params.spot_price - params.strike_price
+                    if params.option_type == OptionType.CALL
+                    else params.strike_price - params.spot_price
+                ),
+                0.0,
+            )
+            time_value = max(price - intrinsic_value, 0.0)
             moneyness = params.spot_price / params.strike_price
+
             return OptionResult(
                 price=price,
                 delta=greeks["delta"],
@@ -360,7 +445,6 @@ class EnhancedBlackScholesModel:
                 intrinsic_value=intrinsic_value,
                 time_value=time_value,
                 moneyness=moneyness,
-                calculation_method=params.option_style.value,
                 timestamp=datetime.utcnow(),
             )
         except Exception as e:
@@ -368,4 +452,4 @@ class EnhancedBlackScholesModel:
             raise
 
 
-enhanced_bs_model = EnhancedBlackScholesModel()
+black_scholes_model = BlackScholesModel()

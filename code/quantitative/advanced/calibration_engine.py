@@ -22,7 +22,7 @@ class CalibrationEngine:
     to market data.
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """
         Initialize calibration engine.
         """
@@ -40,7 +40,7 @@ class CalibrationEngine:
         Returns:
             dict: Calibrated parameters
         """
-        from quantitative.enhanced.stochastic_volatility import HestonModel
+        from quantitative.advanced.stochastic_volatility import HestonModel
 
         heston = HestonModel(initial_params)
         options = []
@@ -95,7 +95,7 @@ class CalibrationEngine:
         Returns:
             dict: Calibrated parameters
         """
-        from quantitative.enhanced.stochastic_volatility import SabrModel
+        from quantitative.advanced.stochastic_volatility import SabrModel
 
         sabr = SabrModel(initial_params)
         options = []
@@ -143,7 +143,7 @@ class CalibrationEngine:
         Returns:
             tuple: (local_vol_surface, strike_grid, time_grid)
         """
-        from quantitative.enhanced.local_volatility import DupireLocalVolModel
+        from quantitative.advanced.local_volatility import DupireLocalVolModel
 
         dupire = DupireLocalVolModel()
         options = []

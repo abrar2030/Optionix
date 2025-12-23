@@ -26,7 +26,7 @@ class HestonModel:
     and volatility changes.
     """
 
-    def __init__(self, params: Any = None) -> Any:
+    def __init__(self, params: Any = None) -> None:
         """
         Initialize Heston model with parameters.
 
@@ -330,7 +330,7 @@ class SabrModel:
     and is particularly popular for interest rate derivatives.
     """
 
-    def __init__(self, params: Any = None) -> Any:
+    def __init__(self, params: Any = None) -> None:
         """
         Initialize SABR model with parameters.
 

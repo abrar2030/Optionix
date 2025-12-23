@@ -13,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 from scipy import stats
 from scipy.stats.qmc import Sobol
@@ -98,7 +98,7 @@ class SimulationResult:
 class MCSimulator:
     """Monte Carlo simulator with advanced features"""
 
-    def __init__(self, params: SimulationParameters) -> Any:
+    def __init__(self, params: SimulationParameters) -> None:
         """Initialize Monte Carlo simulator"""
         self.params = params
         self.dt = params.time_horizon / params.time_steps
@@ -106,7 +106,7 @@ class MCSimulator:
         if params.random_seed is not None:
             np.random.seed(params.random_seed)
 
-    def validate_parameters(self) -> Any:
+    def validate_parameters(self) -> None:
         """Validate simulation parameters and financial constraints"""
         if self.params.initial_price <= 0:
             raise ValueError("Initial price must be positive")
@@ -218,22 +218,37 @@ class MCSimulator:
         elif self.params.process_type == ProcessType.MEAN_REVERTING:
             paths = self.mean_reverting_process(n_simulations)
         elif self.params.process_type == ProcessType.HESTON:
-            paths, _ = self.heston_model(n_simulations)
+            price_paths, _ = self.heston_model(n_simulations)
+            paths = price_paths
         else:
             paths = self.geometric_brownian_motion(n_simulations)
         return paths
 
     def generate_paths(self) -> np.ndarray:
         """Generate price paths based on specified process"""
-        if self.params.process_type == ProcessType.GEOMETRIC_BROWNIAN_MOTION:
-            return self.geometric_brownian_motion()
-        elif self.params.process_type == ProcessType.MEAN_REVERTING:
-            return self.mean_reverting_process()
-        elif self.params.process_type == ProcessType.HESTON:
-            price_paths, _ = self.heston_model()
-            return price_paths
+        if self.params.parallel:
+            num_cores = mp.cpu_count()
+            sims_per_core = self.params.num_simulations // num_cores
+            remainder = self.params.num_simulations % num_cores
+            sims_list = [sims_per_core] * num_cores
+            for i in range(remainder):
+                sims_list[i] += 1
+            with ProcessPoolExecutor(max_workers=num_cores) as executor:
+                paths_chunks = list(executor.map(self._generate_paths_chunk, sims_list))
+            paths = np.concatenate(paths_chunks, axis=1)
+            return paths
         else:
-            raise ValueError(f"Unsupported process type: {self.params.process_type}")
+            if self.params.process_type == ProcessType.GEOMETRIC_BROWNIAN_MOTION:
+                return self.geometric_brownian_motion()
+            elif self.params.process_type == ProcessType.MEAN_REVERTING:
+                return self.mean_reverting_process()
+            elif self.params.process_type == ProcessType.HESTON:
+                price_paths, _ = self.heston_model()
+                return price_paths
+            else:
+                raise ValueError(
+                    f"Unsupported process type: {self.params.process_type}"
+                )
 
     def calculate_payoff(
         self, paths: np.ndarray, payoff_spec: OptionPayoff
@@ -242,8 +257,10 @@ class MCSimulator:
         option_style = payoff_spec.option_style.lower()
         option_type = payoff_spec.option_type.lower()
         strike = payoff_spec.strike_price
+
         if option_type not in ["call", "put"]:
             raise ValueError(f"Unsupported option type: {option_type}")
+
         if option_style == "european":
             final_prices = paths[-1]
             payoffs = np.maximum(
@@ -252,22 +269,19 @@ class MCSimulator:
                     if option_type == "call"
                     else strike - final_prices
                 ),
-                0,
+                0.0,
             )
         elif option_style == "asian":
-            start_step = payoff_spec.averaging_start_step
-            average_prices = np.mean(paths[start_step:], axis=0)
+            # Asian option: payoff depends on the average price over a period
+            avg_prices = np.mean(paths[payoff_spec.averaging_start_step :, :], axis=0)
             payoffs = np.maximum(
-                (
-                    average_prices - strike
-                    if option_type == "call"
-                    else strike - average_prices
-                ),
-                0,
+                (avg_prices - strike if option_type == "call" else strike - avg_prices),
+                0.0,
             )
         elif option_style == "barrier":
+            # Barrier option: Knock-out (Down-and-Out Call and Up-and-Out Put)
             barrier = payoff_spec.barrier_level
-            barrier_type = payoff_spec.barrier_type
+            barrier_type = payoff_spec.barrier_type.lower()
             final_prices = paths[-1]
             payoffs = np.maximum(
                 (
@@ -275,332 +289,237 @@ class MCSimulator:
                     if option_type == "call"
                     else strike - final_prices
                 ),
-                0,
+                0.0,
             )
-            paths_to_check = paths[1:]
             if barrier_type == "down_and_out":
-                hit_barrier = np.any(paths_to_check < barrier, axis=0)
+                # Check if the price ever hit or went below the barrier
+                hit_barrier = np.any(paths <= barrier, axis=0)
                 payoffs[hit_barrier] = 0.0
             elif barrier_type == "up_and_out":
-                hit_barrier = np.any(paths_to_check > barrier, axis=0)
+                # Check if the price ever hit or went above the barrier
+                hit_barrier = np.any(paths >= barrier, axis=0)
                 payoffs[hit_barrier] = 0.0
+            else:
+                logger.warning(f"Unsupported barrier type for MC: {barrier_type}")
+                payoffs = np.zeros_like(payoffs)
         elif option_style == "lookback":
-            start_step = payoff_spec.lookback_start_step
-            paths_to_check = paths[start_step:]
+            # Lookback option: payoff depends on the maximum or minimum price over a period
             if option_type == "call":
-                max_prices = np.max(paths_to_check, axis=0)
-                payoffs = np.maximum(max_prices - strike, 0)
-            elif option_type == "put":
-                min_prices = np.min(paths_to_check, axis=0)
-                payoffs = np.maximum(strike - min_prices, 0)
-        elif option_style == "american":
-            raise NotImplementedError(
-                "American option pricing requires LSM or similar method (LSM not implemented)"
-            )
+                # Floating strike lookback call: max(S_T - min(S_t))
+                min_prices = np.min(paths[payoff_spec.lookback_start_step :, :], axis=0)
+                payoffs = np.maximum(paths[-1] - min_prices, 0.0)
+            else:
+                # Floating strike lookback put: max(max(S_t) - S_T)
+                max_prices = np.max(paths[payoff_spec.lookback_start_step :, :], axis=0)
+                payoffs = np.maximum(max_prices - paths[-1], 0.0)
         else:
             raise ValueError(f"Unsupported option style: {option_style}")
+
         return payoffs
 
     def price_option(
-        self, payoff_spec: OptionPayoff, risk_free_rate: Optional[float] = None
+        self, payoff_spec: OptionPayoff, paths: Optional[np.ndarray] = None
     ) -> SimulationResult:
-        """Price option using Monte Carlo simulation"""
+        """
+        Price an option using Monte Carlo simulation.
+        """
         start_time = datetime.now()
-        r = risk_free_rate if risk_free_rate is not None else self.params.risk_free_rate
-        try:
-            if self.params.parallel and self.params.num_simulations > 10000:
-                paths = self._parallel_path_generation()
-            else:
-                paths = self.generate_paths()
-            payoffs_undiscounted = self.calculate_payoff(paths, payoff_spec)
-            discount_factor = np.exp(-r * self.params.time_horizon)
-            payoffs = payoffs_undiscounted * discount_factor
-            option_price = np.mean(payoffs)
-            standard_error = np.std(payoffs) / np.sqrt(len(payoffs))
-            confidence_level = 1.96
-            ci_lower = option_price - confidence_level * standard_error
-            ci_upper = option_price + confidence_level * standard_error
-            greeks = self._calculate_greeks(payoff_spec, r, option_price)
-            convergence_data = self._analyze_convergence(payoffs)
-            computation_time = (datetime.now() - start_time).total_seconds()
-            return SimulationResult(
-                option_price=option_price,
-                standard_error=standard_error,
-                confidence_interval=(ci_lower, ci_upper),
-                paths=(
-                    paths
-                    if self.params.num_simulations <= 1000
-                    and self.params.parallel is False
-                    else None
-                ),
-                payoffs=payoffs_undiscounted,
-                greeks=greeks,
-                convergence_data=convergence_data,
-                computation_time=computation_time,
-                method_used=f"MC ({self.params.process_type.value})",
-            )
-        except NotImplementedError:
-            raise
-        except Exception as e:
-            logger.error(f"Option pricing failed: {e}")
-            raise
-
-    def _parallel_path_generation(self) -> np.ndarray:
-        """Generate paths using parallel processing"""
-        num_cores = min(mp.cpu_count(), 8)
-        sims_per_core = self.params.num_simulations // num_cores
-        with ProcessPoolExecutor(max_workers=num_cores) as executor:
-            futures = []
-            for i in range(num_cores):
-                n_sims = (
-                    sims_per_core
-                    if i < num_cores - 1
-                    else self.params.num_simulations - i * sims_per_core
-                )
-                future = executor.submit(self._generate_paths_chunk, n_sims)
-                futures.append(future)
-            path_chunks = [future.result() for future in futures]
-        return np.concatenate(path_chunks, axis=1)
-
-    def _calculate_greeks(
-        self, payoff_spec: OptionPayoff, risk_free_rate: float, base_price: float
-    ) -> Dict[str, float]:
-        """
-        Calculate option Greeks using finite difference.
-        Uses central difference for Delta/Gamma for accuracy.
-        """
-        try:
-            bump_size_spot = 0.001 * self.params.initial_price
-            vol_bump = 0.001
-            rate_bump = 0.0001
-            greeks_n_sims = min(self.params.num_simulations, 10000)
-
-            def _get_bumped_price(
-                s0_factor: float,
-                vol_factor: float,
-                time_factor: float,
-                rate_factor: float,
-            ) -> float:
-                p_bump = SimulationParameters(
-                    initial_price=self.params.initial_price
-                    + s0_factor * bump_size_spot,
-                    risk_free_rate=self.params.risk_free_rate + rate_factor * rate_bump,
-                    volatility=self.params.volatility + vol_factor * vol_bump,
-                    time_horizon=self.params.time_horizon + time_factor * self.dt,
-                    time_steps=self.params.time_steps,
-                    num_simulations=greeks_n_sims,
-                    process_type=self.params.process_type,
-                    random_seed=self.params.random_seed,
-                    mean_reversion_speed=self.params.mean_reversion_speed,
-                    long_term_mean=self.params.long_term_mean,
-                )
-                simulator_bump = MCSimulator(p_bump)
-                paths_bump = simulator_bump.generate_paths()
-                payoffs_undiscounted = simulator_bump.calculate_payoff(
-                    paths_bump, payoff_spec
-                )
-                discount_factor = np.exp(-p_bump.risk_free_rate * p_bump.time_horizon)
-                return np.mean(payoffs_undiscounted * discount_factor)
-
-            price_up = _get_bumped_price(
-                s0_factor=1, vol_factor=0, time_factor=0, rate_factor=0
-            )
-            price_down = _get_bumped_price(
-                s0_factor=-1, vol_factor=0, time_factor=0, rate_factor=0
-            )
-            delta = (price_up - price_down) / (2 * bump_size_spot)
-            gamma = (price_up - 2 * base_price + price_down) / bump_size_spot**2
-            price_vol_up = _get_bumped_price(
-                s0_factor=0, vol_factor=1, time_factor=0, rate_factor=0
-            )
-            vega = (price_vol_up - base_price) / vol_bump
-            price_rate_up = _get_bumped_price(
-                s0_factor=0, vol_factor=0, time_factor=0, rate_factor=1
-            )
-            rho = (price_rate_up - base_price) / rate_bump
-            price_time_down = _get_bumped_price(
-                s0_factor=0, vol_factor=0, time_factor=-1, rate_factor=0
-            )
-            theta = (base_price - price_time_down) / self.dt
-            return {
-                "delta": delta,
-                "gamma": gamma,
-                "vega": vega,
-                "rho": rho,
-                "theta": theta,
-            }
-        except Exception as e:
-            logger.warning(f"Greeks calculation failed: {e}. Returning zeros.")
-            return {"delta": 0.0, "vega": 0.0, "gamma": 0.0, "theta": 0.0, "rho": 0.0}
-
-    def _analyze_convergence(self, payoffs: np.ndarray) -> Dict[str, List[float]]:
-        """Analyze convergence of Monte Carlo simulation"""
-        try:
-            sample_sizes = np.logspace(2, np.log10(len(payoffs)), 20, dtype=int)
-            sample_sizes = np.unique(sample_sizes)
-            sample_sizes = sample_sizes[sample_sizes <= len(payoffs)]
-            running_means = []
-            running_stds = []
-            for n in sample_sizes:
-                running_means.append(np.mean(payoffs[:n]))
-                running_stds.append(np.std(payoffs[:n]) / np.sqrt(n))
-            return {
-                "sample_sizes": sample_sizes.tolist(),
-                "running_means": running_means,
-                "running_standard_errors": running_stds,
-            }
-        except Exception as e:
-            logger.warning(f"Convergence analysis failed: {e}")
-            return {}
-
-    def calculate_var(
-        self, confidence_level: float = 0.05, portfolio_value: float = 1000000
-    ) -> Dict[str, float]:
-        """Calculate Value at Risk (VaR) and Expected Shortfall (CVaR)"""
-        try:
+        if paths is None:
             paths = self.generate_paths()
-            initial_value = paths[0, 0]
-            final_values = paths[-1]
-            returns = (final_values - initial_value) / initial_value
-            portfolio_losses = -returns * portfolio_value
-            var_percentile = (1 - confidence_level) * 100
-            var = np.percentile(portfolio_losses, var_percentile)
-            cvar = np.mean(portfolio_losses[portfolio_losses >= var])
-            return {
-                "var": var,
-                "cvar": cvar,
-                "confidence_level": confidence_level,
-                "portfolio_value": portfolio_value,
-                "worst_loss": np.max(portfolio_losses),
-                "best_gain": -np.min(portfolio_losses),
-            }
-        except Exception as e:
-            logger.error(f"VaR calculation failed: {e}")
-            raise
 
-    def stress_test(self, stress_scenarios: List[Dict[str, float]]) -> Dict[str, Any]:
-        """Perform stress testing with different market scenarios"""
-        try:
-            results = {}
-            for i, scenario in enumerate(stress_scenarios):
-                scenario_name = scenario.get("name", f"Scenario_{i + 1}")
-                stressed_params = SimulationParameters(
-                    initial_price=self.params.initial_price,
-                    risk_free_rate=scenario.get("drift", self.params.risk_free_rate),
-                    volatility=scenario.get("volatility", self.params.volatility),
-                    time_horizon=self.params.time_horizon,
-                    time_steps=self.params.time_steps,
-                    num_simulations=self.params.num_simulations,
-                    process_type=self.params.process_type,
-                    random_seed=self.params.random_seed,
-                    mean_reversion_speed=scenario.get(
-                        "kappa", self.params.mean_reversion_speed
-                    ),
-                    long_term_mean=scenario.get("theta", self.params.long_term_mean),
-                )
-                stressed_simulator = MCSimulator(stressed_params)
-                paths = stressed_simulator.generate_paths()
-                final_prices = paths[-1]
-                results[scenario_name] = {
-                    "mean_final_price": np.mean(final_prices),
-                    "std_final_price": np.std(final_prices),
-                    "min_price": np.min(final_prices),
-                    "max_price": np.max(final_prices),
-                    "percentile_5": np.percentile(final_prices, 5),
-                    "percentile_95": np.percentile(final_prices, 95),
-                    "scenario_parameters": scenario,
-                }
-            return results
-        except Exception as e:
-            logger.error(f"Stress testing failed: {e}")
-            raise
-
-
-class MonteCarloSimulator:
-    """A compatibility class for a simple GBM Monte Carlo simulator"""
-
-    def __init__(
-        self, S0: float, mu: float, sigma: float, T: float = 1, steps: int = 252
-    ) -> Any:
-        self.S0 = S0
-        self.mu = mu
-        self.sigma = sigma
-        self.T = T
-        self.steps = steps
-        self.params = SimulationParameters(
-            initial_price=S0,
-            risk_free_rate=mu,
-            volatility=sigma,
-            time_horizon=T,
-            time_steps=steps,
-            num_simulations=10000,
-            process_type=ProcessType.GEOMETRIC_BROWNIAN_MOTION,
+        payoffs = self.calculate_payoff(paths, payoff_spec)
+        discounted_payoffs = payoffs * np.exp(
+            -self.params.risk_free_rate * self.params.time_horizon
         )
-        self.simulator = MCSimulator(self.params)
+        option_price = np.mean(discounted_payoffs)
+        std_dev = np.std(discounted_payoffs)
+        standard_error = std_dev / np.sqrt(self.params.num_simulations)
 
-    def geometric_brownian_motion(self, n_simulations: int = 10000) -> np.ndarray:
-        """Generate GBM paths (compatibility method)"""
-        self.params.num_simulations = n_simulations
-        self.simulator = MCSimulator(self.params)
-        return self.simulator.geometric_brownian_motion()
-
-    def asian_option_price(
-        self, K: float, r: float, simulations: int = 100000
-    ) -> float:
-        """Calculate Asian option price (compatibility method)"""
-        self.params.num_simulations = simulations
-        self.params.risk_free_rate = r
-        self.simulator = MCSimulator(self.params)
-        payoff_spec = OptionPayoff(
-            option_style="asian", option_type="call", strike_price=K
+        # 95% confidence interval (Z-score for 95% is approx 1.96)
+        z_score = stats.norm.ppf(0.975)
+        conf_interval = (
+            option_price - z_score * standard_error,
+            option_price + z_score * standard_error,
         )
-        result = self.simulator.price_option(payoff_spec, r)
-        return result.option_price
+
+        # Greeks calculation (using finite difference for simplicity)
+        greeks = self._calculate_greeks_finite_difference(payoff_spec)
+
+        computation_time = (datetime.now() - start_time).total_seconds()
+
+        return SimulationResult(
+            option_price=option_price,
+            standard_error=standard_error,
+            confidence_interval=conf_interval,
+            paths=paths,
+            payoffs=payoffs,
+            greeks=greeks,
+            computation_time=computation_time,
+            method_used=f"MC-{self.params.process_type.value}",
+        )
+
+    def _calculate_greeks_finite_difference(
+        self, payoff_spec: OptionPayoff
+    ) -> Dict[str, float]:
+        """
+        Calculate option Greeks using finite difference method.
+        """
+        greeks = {}
+        h = 0.01  # Small change for finite difference
+
+        # Delta
+        params_up = self.params
+        params_up.initial_price += h
+        price_up = MCSimulator(params_up).price_option(payoff_spec).option_price
+        params_down = self.params
+        params_down.initial_price -= h
+        price_down = MCSimulator(params_down).price_option(payoff_spec).option_price
+        greeks["delta"] = (price_up - price_down) / (2 * h)
+        params_up.initial_price -= h  # Reset
+        params_down.initial_price += h  # Reset
+
+        # Gamma
+        price_center = self.price_option(payoff_spec).option_price
+        greeks["gamma"] = (price_up - 2 * price_center + price_down) / (h**2)
+
+        # Vega
+        h_vol = 0.001
+        params_up = self.params
+        params_up.volatility += h_vol
+        price_up = MCSimulator(params_up).price_option(payoff_spec).option_price
+        params_down = self.params
+        params_down.volatility -= h_vol
+        price_down = MCSimulator(params_down).price_option(payoff_spec).option_price
+        greeks["vega"] = (price_up - price_down) / (2 * h_vol)
+        params_up.volatility -= h_vol  # Reset
+        params_down.volatility += h_vol  # Reset
+
+        # Theta (approximated by changing time to expiry)
+        h_time = 1 / 365  # One day
+        params_up = self.params
+        params_up.time_horizon += h_time
+        price_up = MCSimulator(params_up).price_option(payoff_spec).option_price
+        params_down = self.params
+        params_down.time_horizon -= h_time
+        price_down = MCSimulator(params_down).price_option(payoff_spec).option_price
+        greeks["theta"] = -(price_up - price_down) / (2 * h_time)
+        params_up.time_horizon -= h_time  # Reset
+        params_down.time_horizon += h_time  # Reset
+
+        # Rho
+        h_rate = 0.0001
+        params_up = self.params
+        params_up.risk_free_rate += h_rate
+        price_up = MCSimulator(params_up).price_option(payoff_spec).option_price
+        params_down = self.params
+        params_down.risk_free_rate -= h_rate
+        price_down = MCSimulator(params_down).price_option(payoff_spec).option_price
+        greeks["rho"] = (price_up - price_down) / (2 * h_rate)
+        params_up.risk_free_rate -= h_rate  # Reset
+        params_down.risk_free_rate += h_rate  # Reset
+
+        return greeks
+
+    def calculate_risk_metrics(
+        self, paths: np.ndarray, confidence_level: float = 0.95
+    ) -> Dict[str, float]:
+        """
+        Calculate Value at Risk (VaR) and Conditional Value at Risk (CVaR).
+        """
+        # Assuming paths represent the portfolio value at the end of the horizon
+        # We are interested in the loss, so we look at the negative returns
+        returns = paths[-1] / paths[0] - 1
+        losses = -returns
+        losses = np.sort(losses)
+        alpha = 1 - confidence_level
+        var_index = int(np.floor(alpha * self.params.num_simulations))
+        var = losses[var_index]
+        cvar = np.mean(losses[var_index:])
+        return {"VaR": var, "CVaR": cvar}
+
+    def run_stress_test(
+        self,
+        payoff_spec: OptionPayoff,
+        stress_scenarios: Dict[str, Dict[str, float]],
+    ) -> Dict[str, float]:
+        """
+        Run stress tests by modifying simulation parameters.
+        """
+        results = {}
+        original_params = self.params
+        for scenario_name, changes in stress_scenarios.items():
+            # Create a copy of parameters and apply changes
+            stressed_params = SimulationParameters(**original_params.__dict__)
+            for param, value in changes.items():
+                setattr(stressed_params, param, value)
+
+            # Run simulation with stressed parameters
+            stressed_simulator = MCSimulator(stressed_params)
+            stressed_price = stressed_simulator.price_option(payoff_spec).option_price
+            results[scenario_name] = stressed_price
+
+        # Restore original parameters
+        self.params = original_params
+        return results
+
+    def plot_paths(self, paths: np.ndarray, num_paths_to_plot: int = 10) -> None:
+        """
+        Plot a subset of the simulated price paths.
+        """
+        time_grid = np.linspace(0, self.params.time_horizon, self.params.time_steps + 1)
+        plt.figure(figsize=(10, 6))
+        for i in range(min(num_paths_to_plot, paths.shape[1])):
+            plt.plot(time_grid, paths[:, i])
+        plt.title(f"Monte Carlo Simulation Paths ({self.params.process_type.value})")
+        plt.xlabel("Time (Years)")
+        plt.ylabel("Asset Price")
+        plt.grid(True)
+        plt.show()
+
+    def plot_convergence(self, payoff_spec: OptionPayoff) -> Dict[str, List[float]]:
+        """
+        Plot the convergence of the option price as the number of simulations increases.
+        """
+        num_sims_list = np.logspace(
+            1, np.log10(self.params.num_simulations), 20, dtype=int
+        )
+        prices = []
+        std_errors = []
+        for num_sims in num_sims_list:
+            temp_params = SimulationParameters(**self.params.__dict__)
+            temp_params.num_simulations = num_sims
+            temp_simulator = MCSimulator(temp_params)
+            result = temp_simulator.price_option(payoff_spec)
+            prices.append(result.option_price)
+            std_errors.append(result.standard_error)
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(num_sims_list, prices, label="Option Price")
+        plt.fill_between(
+            num_sims_list,
+            np.array(prices) - 1.96 * np.array(std_errors),
+            np.array(prices) + 1.96 * np.array(std_errors),
+            alpha=0.2,
+            label="95% Confidence Interval",
+        )
+        plt.xscale("log")
+        plt.title("Monte Carlo Convergence")
+        plt.xlabel("Number of Simulations (log scale)")
+        plt.ylabel("Option Price")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+        return {"num_simulations": num_sims_list.tolist(), "prices": prices}
 
 
-def monte_carlo_option_price(
-    S0: float,
-    K: float,
-    T: float,
-    r: float,
-    sigma: float,
-    option_type: str = "call",
-    simulations: int = 100000,
-) -> float:
-    """Calculate European option price using Monte Carlo (convenience function)"""
-    params = SimulationParameters(
-        initial_price=S0,
-        risk_free_rate=r,
-        volatility=sigma,
-        time_horizon=T,
-        time_steps=int(T * 252),
-        num_simulations=simulations,
-        process_type=ProcessType.GEOMETRIC_BROWNIAN_MOTION,
+mc_simulator = MCSimulator(
+    SimulationParameters(
+        initial_price=100.0,
+        risk_free_rate=0.05,
+        volatility=0.2,
+        time_horizon=1.0,
+        time_steps=252,
+        num_simulations=10000,
     )
-    simulator = MCSimulator(params)
-    payoff_spec = OptionPayoff(
-        option_style="european", option_type=option_type, strike_price=K
-    )
-    result = simulator.price_option(payoff_spec, r)
-    return result.option_price
-
-
-def calculate_portfolio_var(
-    returns_data: np.ndarray,
-    confidence_level: float = 0.05,
-    portfolio_value: float = 1000000,
-) -> Dict[str, float]:
-    """
-    Calculate portfolio VaR and CVaR from historical returns
-    (Independent from simulation class)
-    """
-    portfolio_losses = -returns_data * portfolio_value
-    var_percentile = (1 - confidence_level) * 100
-    var = np.percentile(portfolio_losses, var_percentile)
-    cvar = np.mean(portfolio_losses[portfolio_losses >= var])
-    return {
-        "var": var,
-        "cvar": cvar,
-        "confidence_level": confidence_level,
-        "portfolio_value": portfolio_value,
-    }
+)

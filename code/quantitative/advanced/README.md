@@ -1,6 +1,6 @@
-# Enhanced Quantitative Models
+# Quantitative Models
 
-This directory contains enhanced quantitative models for the Optionix platform, providing advanced volatility calculations and market calibration capabilities.
+This directory contains quantitative models for the Optionix platform, providing advanced volatility calculations and market calibration capabilities.
 
 ## Contents
 

@@ -26,7 +26,7 @@ class DupireLocalVolModel:
     allowing for accurate pricing of exotic options consistent with vanilla option prices.
     """
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize Dupire local volatility model.
 

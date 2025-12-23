@@ -1,5 +1,5 @@
 """
-Enhanced Volatility Surface Construction and Interpolation for Optionix Platform
+Volatility Surface Construction and Interpolation for Optionix Platform
 Implements comprehensive volatility surface modeling with:
 - Multiple interpolation methods (spline, SVI, SABR)
 - Arbitrage-free surface construction
@@ -90,12 +90,12 @@ class ArbitrageCheck:
     severity_score: float
 
 
-class EnhancedVolatilitySurface:
+class VolatilitySurface:
     """
-    Enhanced volatility surface implementation with comprehensive features
+    Volatility surface implementation with comprehensive features
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> Any:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize enhanced volatility surface
 
@@ -671,51 +671,6 @@ class EnhancedVolatilitySurface:
             logger.info(f"Surface loaded from {filepath}")
         except Exception as e:
             logger.error(f"Surface loading failed: {e}")
-            raise
-
-
-class VolatilitySurface(EnhancedVolatilitySurface):
-    """Backward compatible volatility surface class"""
-
-    def __init__(self, config: Any = None) -> Any:
-        super().__init__(config)
-
-    def fit_surface(self, option_data: Any) -> Any:
-        """Backward compatible fit_surface method"""
-        if isinstance(option_data, dict):
-            all_options = []
-            for option_type in ["calls", "puts"]:
-                if option_type in option_data:
-                    for opt in option_data[option_type]:
-                        all_options.append(
-                            OptionData(
-                                strike=opt.get("strike", opt.get("K")),
-                                expiry=opt.get("expiry", opt.get("T")),
-                                implied_volatility=opt.get(
-                                    "iv", opt.get("implied_volatility")
-                                ),
-                                option_type=option_type[:-1],
-                            )
-                        )
-        else:
-            all_options = []
-            for opt in option_data:
-                all_options.append(
-                    OptionData(
-                        strike=opt.get("strike", opt.get("K")),
-                        expiry=opt.get("expiry", opt.get("T")),
-                        implied_volatility=opt.get("iv", opt.get("implied_volatility")),
-                        option_type=opt.get("option_type", "call"),
-                    )
-                )
-        underlying_price = 100.0
-        if (
-            all_options
-            and hasattr(all_options[0], "underlying_price")
-            and all_options[0].underlying_price
-        ):
-            underlying_price = all_options[0].underlying_price
-        return super().fit_surface(all_options, underlying_price)
 
 
 volatility_surface = VolatilitySurface()
