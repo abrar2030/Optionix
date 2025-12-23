@@ -19,9 +19,11 @@ try:
     redis_client = redis.from_url(
         settings.redis_url, decode_responses=True, socket_timeout=1
     )
-except Exception:
+    # Test connection
+    redis_client.ping()
+except Exception as e:
     redis_client = None  # Redis not available, rate limiting will be disabled
-    logger.warning("Redis not available for rate limiting")
+    logger.warning(f"Redis not available for rate limiting: {e}")
 
 # Original line: redis_client = redis.from_url(settings.redis_url, decode_responses=True)
 

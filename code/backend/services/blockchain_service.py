@@ -8,7 +8,7 @@ import logging
 import os
 import time
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 from web3 import Web3
 from web3.exceptions import ContractLogicError, Web3Exception
 from ..config import settings
@@ -19,16 +19,16 @@ logger = logging.getLogger(__name__)
 class BlockchainService:
     """Enhanced service for interacting with blockchain contracts and wallets"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """Initialize blockchain service with Web3 provider"""
-        self.w3 = None
-        self.futures_contract = None
-        self.futures_abi = []
+        self.w3: Optional[Web3] = None
+        self.futures_contract: Optional[Any] = None
+        self.futures_abi: List[Dict[str, Any]] = []
         self._initialize_connection()
         self._load_contract_abi()
         self._initialize_contract()
 
-    def _initialize_connection(self) -> Any:
+    def _initialize_connection(self) -> None:
         """Initialize Web3 connection with retry logic"""
         max_retries = 3
         retry_delay = 1
@@ -45,7 +45,7 @@ class BlockchainService:
                         settings.ethereum_provider_url, request_kwargs={"timeout": 30}
                     )
                 )
-                if self.w3.is_connected():
+                if self.w3 and self.w3.is_connected():
                     logger.info(
                         f"Connected to Ethereum network (Chain ID: {self.w3.eth.chain_id})"
                     )
@@ -64,7 +64,7 @@ class BlockchainService:
                     self.w3 = None
                     return
 
-    def _load_contract_abi(self) -> Any:
+    def _load_contract_abi(self) -> None:
         """Load contract ABI from file with enhanced error handling"""
         try:
             abi_path = os.path.join(
@@ -82,19 +82,19 @@ class BlockchainService:
             logger.error(f"Error loading contract ABI: {e}")
             self.futures_abi = []
 
-    def _initialize_contract(self) -> Any:
+    def _initialize_contract(self) -> None:
         """Initialize the futures contract instance"""
         if not self.w3 or not self.futures_abi:
             self.futures_contract = None
             return
         contract_address = settings.futures_contract_address
-        if not self.w3.is_address(contract_address):
+        if not self.w3.is_address(contract_address):  # type: ignore
             logger.warning(f"Invalid contract address: {contract_address}")
             self.futures_contract = None
             return
         try:
-            self.futures_contract = self.w3.eth.contract(
-                address=self.w3.to_checksum_address(contract_address),
+            self.futures_contract = self.w3.eth.contract(  # type: ignore
+                address=self.w3.to_checksum_address(contract_address),  # type: ignore
                 abi=self.futures_abi,
             )
             logger.info("Futures contract initialized")
@@ -142,8 +142,8 @@ class BlockchainService:
         if not self.is_connected():
             raise Exception("Blockchain connection not available")
         try:
-            balance_wei = self.w3.eth.get_balance(address)
-            balance_eth = self.w3.from_wei(balance_wei, "ether")
+            balance_wei = self.w3.eth.get_balance(address)  # type: ignore
+            balance_eth = self.w3.from_wei(balance_wei, "ether")  # type: ignore
             return Decimal(str(balance_eth))
         except Exception as e:
             logger.error(f"Error fetching balance for {address}: {e}")
@@ -308,21 +308,21 @@ class BlockchainService:
         if amount <= 0:
             raise ValueError("Deposit amount must be positive.")
         try:
-            amount_wei = self.w3.to_wei(amount, "ether")
+            amount_wei = self.w3.to_wei(amount, "ether")  # type: ignore
             tx = self.futures_contract.functions.depositMargin(
                 user_address, amount_wei
             ).build_transaction(
                 {
                     "from": user_address,
                     "value": amount_wei,
-                    "nonce": self.w3.eth.get_transaction_count(user_address),
-                    "gasPrice": self.w3.eth.gas_price,
+                    "nonce": self.w3.eth.get_transaction_count(user_address),  # type: ignore
+                    "gasPrice": self.w3.eth.gas_price,  # type: ignore
                 }
             )
-            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)  # type: ignore
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)  # type: ignore
             logger.info(f"Deposit transaction sent. Hash: {tx_hash.hex()}")
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)  # type: ignore
             if receipt.status == 1:
                 logger.info("Deposit successful.")
                 return {
@@ -363,20 +363,20 @@ class BlockchainService:
         if amount <= 0:
             raise ValueError("Withdrawal amount must be positive.")
         try:
-            amount_wei = self.w3.to_wei(amount, "ether")
+            amount_wei = self.w3.to_wei(amount, "ether")  # type: ignore
             tx = self.futures_contract.functions.withdrawMargin(
                 user_address, amount_wei
             ).build_transaction(
                 {
                     "from": user_address,
-                    "nonce": self.w3.eth.get_transaction_count(user_address),
-                    "gasPrice": self.w3.eth.gas_price,
+                    "nonce": self.w3.eth.get_transaction_count(user_address),  # type: ignore
+                    "gasPrice": self.w3.eth.gas_price,  # type: ignore
                 }
             )
-            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            signed_tx = self.w3.eth.account.sign_transaction(tx, private_key)  # type: ignore
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)  # type: ignore
             logger.info(f"Withdrawal transaction sent. Hash: {tx_hash.hex()}")
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)  # type: ignore
             if receipt.status == 1:
                 logger.info("Withdrawal successful.")
                 return {
@@ -410,10 +410,10 @@ class BlockchainService:
                 "error": "Blockchain connection not available",
             }
         try:
-            receipt = self.w3.eth.get_transaction_receipt(tx_hash)
+            receipt = self.w3.eth.get_transaction_receipt(tx_hash)  # type: ignore
             if receipt is None:
                 return {"hash": tx_hash, "status": "pending"}
-            transaction = self.w3.eth.get_transaction(tx_hash)
+            transaction = self.w3.eth.get_transaction(tx_hash)  # type: ignore
             status = "success" if receipt.status == 1 else "failed"
             return {
                 "hash": tx_hash,
@@ -421,7 +421,7 @@ class BlockchainService:
                 "block_number": receipt.blockNumber,
                 "gas_used": receipt.gasUsed,
                 "gas_price": transaction.gasPrice,
-                "confirmations": self.w3.eth.block_number - receipt.blockNumber,
+                "confirmations": self.w3.eth.block_number - receipt.blockNumber,  # type: ignore
             }
         except Exception as e:
             logger.error(f"Error fetching transaction status for {tx_hash}: {e}")

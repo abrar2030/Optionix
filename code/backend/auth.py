@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from io import BytesIO
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 import bcrypt
 from jose import jwt
 import pyotp
@@ -111,16 +111,16 @@ class AuthenticationResult:
 class EnhancedAuthService:
     """Enhanced authentication and authorization service"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """Initialize enhanced auth service"""
-        self._jwt_private_key = None
-        self._jwt_public_key = None
-        self._role_permissions = {}
-        self._failed_attempts = {}
-        self._device_fingerprints = {}
+        self._jwt_private_key: Optional[bytes] = None
+        self._jwt_public_key: Optional[bytes] = None
+        self._role_permissions: Dict[UserRole, List[str]] = {}
+        self._failed_attempts: Dict[str, Dict[str, Any]] = {}
+        self._device_fingerprints: Dict[str, Dict[str, Any]] = {}
         self._initialize_auth_service()
 
-    def _initialize_auth_service(self) -> Any:
+    def _initialize_auth_service(self) -> None:
         """Initialize authentication service"""
         try:
             self._generate_jwt_keys()
@@ -130,7 +130,7 @@ class EnhancedAuthService:
             logger.error(f"Failed to initialize auth service: {e}")
             raise
 
-    def _generate_jwt_keys(self) -> Any:
+    def _generate_jwt_keys(self) -> None:
         """Generate RSA key pair for JWT signing"""
         try:
             private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -148,7 +148,7 @@ class EnhancedAuthService:
             logger.error(f"Failed to generate JWT keys: {e}")
             raise
 
-    def _initialize_role_permissions(self) -> Any:
+    def _initialize_role_permissions(self) -> None:
         """Initialize role-permission mappings"""
         self._role_permissions = {
             UserRole.SUPER_ADMIN: [p.value for p in Permission],

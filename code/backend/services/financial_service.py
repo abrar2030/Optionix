@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class FinancialCalculationService:
     """Service for accurate financial calculations and risk management"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """Initialize financial calculation service"""
         self.risk_free_rate = Decimal("0.02")
         self.trading_days_per_year = 252

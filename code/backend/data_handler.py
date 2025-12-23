@@ -21,7 +21,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import redis
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, ValidationError, validator
@@ -224,7 +224,7 @@ class DataQualityMetrics(Base):
 class EnhancedDataHandler:
     """Enhanced data validation and handling service"""
 
-    def __init__(self, config: Dict[str, Any]) -> Any:
+    def __init__(self, config: Dict[str, Any]) -> None:
         """Initialize data handler"""
         self.config = config
         self.db_engine = create_engine(
@@ -581,7 +581,7 @@ class EnhancedDataHandler:
         user_id: str,
         data_hash: str,
         classification: DataClassification,
-        metadata: Dict[str, Any] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Log data access for audit trail"""
         try:
@@ -747,7 +747,7 @@ class EnhancedDataHandler:
 data_handler = None
 
 
-def get_data_handler(config: Dict[str, Any] = None) -> EnhancedDataHandler:
+def get_data_handler(config: Optional[Dict[str, Any]] = None) -> EnhancedDataHandler:
     """Get global data handler instance"""
     global data_handler
     if data_handler is None:

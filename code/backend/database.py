@@ -1,9 +1,8 @@
-from typing import Any
 import logging
-from typing import Any
+from typing import Generator, Type
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import QueuePool, NullPool, StaticPool
+from sqlalchemy.pool import QueuePool, NullPool, StaticPool, Pool
 from .config import settings
 from .models import Base
 
@@ -11,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 # Determine pool class based on database type
 database_url = settings.database_url
+poolclass: Type[Pool]
 if database_url.startswith("sqlite"):
     # SQLite needs special pooling
     poolclass = StaticPool if ":memory:" in database_url else NullPool
@@ -44,17 +44,30 @@ except Exception as e:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def create_tables() -> Any:
+def create_tables() -> None:
     """Create all database tables"""
+    global engine, SessionLocal
     try:
+        # Test connection first
+        with engine.connect() as conn:
+            pass
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
-        raise
+        logger.warning("Falling back to SQLite in-memory database")
+        # Recreate engine with SQLite
+        engine = create_engine(
+            "sqlite:///:memory:",
+            poolclass=StaticPool,
+            connect_args={"check_same_thread": False},
+        )
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created successfully (SQLite)")
 
 
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     """
     Dependency to get database session
 

@@ -156,7 +156,7 @@ class UserComplianceProfile(Base):
 class EnhancedMonitoringService:
     """Enhanced monitoring and compliance service"""
 
-    def __init__(self, config: Dict[str, Any]) -> Any:
+    def __init__(self, config: Dict[str, Any]) -> None:
         """Initialize monitoring service"""
         self.config = config
         self.db_engine = create_engine(

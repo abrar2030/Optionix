@@ -19,7 +19,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import bcrypt
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -88,16 +88,16 @@ class EncryptionResult:
 class EnhancedSecurityService:
     """Enhanced security service implementing financial industry standards"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """Initialize enhanced security service"""
-        self._master_key = None
-        self._encryption_keys = {}
-        self._session_store = {}
-        self._failed_attempts = {}
-        self._rate_limits = {}
+        self._master_key: Optional[bytes] = None
+        self._encryption_keys: Dict[str, bytes] = {}
+        self._session_store: Dict[str, Dict[str, Any]] = {}
+        self._failed_attempts: Dict[str, Dict[str, Any]] = {}
+        self._rate_limits: Dict[str, Dict[str, Any]] = {}
         self._initialize_security()
 
-    def _initialize_security(self) -> Any:
+    def _initialize_security(self) -> None:
         """Initialize security components"""
         try:
             self._load_master_key()
@@ -107,7 +107,7 @@ class EnhancedSecurityService:
             logger.error(f"Failed to initialize security service: {e}")
             raise
 
-    def _load_master_key(self) -> Any:
+    def _load_master_key(self) -> None:
         """Load or generate master encryption key"""
         try:
             key_material = settings.secret_key.encode()
@@ -123,7 +123,7 @@ class EnhancedSecurityService:
             logger.error(f"Failed to load master key: {e}")
             raise
 
-    def _initialize_encryption_keys(self) -> Any:
+    def _initialize_encryption_keys(self) -> None:
         """Initialize encryption keys for different purposes"""
         try:
             self._encryption_keys = {
