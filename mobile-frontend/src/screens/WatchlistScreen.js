@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, ScrollView, View, FlatList, Alert, RefreshControl } from 'react-native';
 import {
     ActivityIndicator,
     Card,
@@ -11,43 +11,104 @@ import {
     useTheme,
     Button,
     TextInput,
+    IconButton,
 } from 'react-native-paper';
+import { watchlistService } from '../services/api';
 
 const WatchlistScreen = () => {
-    const [watchlist, setWatchlist] = useState([
+    const [watchlist, setWatchlist] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState(null);
+    const [newSymbol, setNewSymbol] = useState('');
+    const [addingSymbol, setAddingSymbol] = useState(false);
+    const theme = useTheme();
+
+    const getInitialWatchlist = () => [
         { symbol: 'MSFT', price: 420.55, change: '+1.1%' },
         { symbol: 'NVDA', price: 950.02, change: '-0.5%' },
         { symbol: 'AMZN', price: 180.3, change: '+0.8%' },
-    ]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [newSymbol, setNewSymbol] = useState('');
-    const theme = useTheme();
+    ];
 
-    // Placeholder function to add symbol
-    const addSymbolToWatchlist = () => {
-        if (newSymbol.trim() === '') return;
-        // In a real app, you'd fetch data for the new symbol
-        // For now, add with placeholder price/change
-        const newEntry = {
-            symbol: newSymbol.toUpperCase(),
-            price: (Math.random() * 1000).toFixed(2),
-            change: `${(Math.random() * 2 - 1).toFixed(1)}%`,
-        };
-        setWatchlist([...watchlist, newEntry]);
-        setNewSymbol(''); // Clear input
+    const fetchWatchlist = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const data = await watchlistService.getWatchlist();
+            if (data && data.symbols) {
+                setWatchlist(data.symbols);
+            } else {
+                setWatchlist(getInitialWatchlist());
+                setError('Using demo watchlist. Connect to backend to save your list.');
+            }
+        } catch (err) {
+            console.error('Error fetching watchlist:', err);
+            setWatchlist(getInitialWatchlist());
+            setError('Using demo watchlist. Connect to backend to save your list.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Placeholder function to remove symbol
-    const removeSymbol = (symbolToRemove) => {
-        setWatchlist(watchlist.filter((item) => item.symbol !== symbolToRemove));
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchWatchlist();
+        setRefreshing(false);
+    }, []);
+
+    useEffect(() => {
+        fetchWatchlist();
+    }, []);
+
+    const addSymbolToWatchlist = async () => {
+        if (newSymbol.trim() === '') return;
+
+        setAddingSymbol(true);
+        try {
+            await watchlistService.addToWatchlist(newSymbol.toUpperCase());
+            await fetchWatchlist();
+            setNewSymbol('');
+        } catch (err) {
+            console.log('API add failed, adding locally:', err);
+            const newEntry = {
+                symbol: newSymbol.toUpperCase(),
+                price: parseFloat((Math.random() * 1000).toFixed(2)),
+                change: `${(Math.random() * 2 - 1).toFixed(1)}%`,
+            };
+            setWatchlist([...watchlist, newEntry]);
+            setNewSymbol('');
+        } finally {
+            setAddingSymbol(false);
+        }
+    };
+
+    const removeSymbol = async (symbolToRemove) => {
+        Alert.alert('Remove Symbol', `Remove ${symbolToRemove} from watchlist?`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Remove',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await watchlistService.removeFromWatchlist(symbolToRemove);
+                        setWatchlist(watchlist.filter((item) => item.symbol !== symbolToRemove));
+                    } catch (err) {
+                        console.log('API remove failed, removing locally:', err);
+                        setWatchlist(watchlist.filter((item) => item.symbol !== symbolToRemove));
+                    }
+                },
+            },
+        ]);
     };
 
     const renderChange = (change) => {
-        const isPositive = change.startsWith('+');
+        const changeStr =
+            typeof change === 'string' ? change : `${change > 0 ? '+' : ''}${change}%`;
+        const isPositive = changeStr.startsWith('+');
         return (
             <PaperText style={isPositive ? styles.positiveChange : styles.negativeChange}>
-                {change}
+                {changeStr}
             </PaperText>
         );
     };
@@ -55,22 +116,30 @@ const WatchlistScreen = () => {
     const renderWatchlistItem = ({ item }) => (
         <List.Item
             title={`${item.symbol}: $${item.price}`}
-            right={() => renderChange(item.change)}
-            titleStyle={styles.listItemTitle}
-            // Add a button or swipe action to remove
-            left={() => (
-                <Button icon="delete" onPress={() => removeSymbol(item.symbol)} compact>
-                    Remove
-                </Button>
+            right={() => (
+                <View style={styles.itemRight}>
+                    {renderChange(item.change)}
+                    <IconButton icon="delete" size={20} onPress={() => removeSymbol(item.symbol)} />
+                </View>
             )}
+            titleStyle={styles.listItemTitle}
         />
     );
 
     return (
-        <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ScrollView
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <Title style={styles.title}>My Watchlist</Title>
 
-            {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
+            {error && (
+                <Card style={[styles.card, styles.warningCard]}>
+                    <Card.Content>
+                        <Paragraph style={styles.warningText}>{error}</Paragraph>
+                    </Card.Content>
+                </Card>
+            )}
 
             <Card style={styles.card}>
                 <Card.Title title="Add Symbol" />
@@ -82,8 +151,15 @@ const WatchlistScreen = () => {
                         autoCapitalize="characters"
                         style={styles.input}
                         mode="outlined"
+                        disabled={addingSymbol}
                     />
-                    <Button mode="contained" onPress={addSymbolToWatchlist} style={styles.button}>
+                    <Button
+                        mode="contained"
+                        onPress={addSymbolToWatchlist}
+                        style={styles.button}
+                        loading={addingSymbol}
+                        disabled={addingSymbol || !newSymbol.trim()}
+                    >
                         Add to Watchlist
                     </Button>
                 </Card.Content>
@@ -92,7 +168,7 @@ const WatchlistScreen = () => {
             <Card style={styles.card}>
                 <Card.Title title="Tracked Symbols" />
                 <Card.Content>
-                    {loading ? (
+                    {loading && !watchlist.length ? (
                         <ActivityIndicator
                             animating={true}
                             size="large"
@@ -109,6 +185,7 @@ const WatchlistScreen = () => {
                                     Your watchlist is empty. Add symbols above.
                                 </Paragraph>
                             }
+                            scrollEnabled={false}
                         />
                     )}
                 </Card.Content>
@@ -132,6 +209,14 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         elevation: 4,
     },
+    warningCard: {
+        backgroundColor: '#FFF3CD',
+        borderLeftWidth: 4,
+        borderLeftColor: '#FFA500',
+    },
+    warningText: {
+        color: '#856404',
+    },
     input: {
         marginBottom: 10,
     },
@@ -144,24 +229,21 @@ const styles = StyleSheet.create({
     listItemTitle: {
         fontSize: 16,
     },
+    itemRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     positiveChange: {
         color: '#34C759',
         fontWeight: 'bold',
         fontSize: 16,
-        alignSelf: 'center',
+        marginRight: 8,
     },
     negativeChange: {
         color: '#FF3B30',
         fontWeight: 'bold',
         fontSize: 16,
-        alignSelf: 'center',
-    },
-    errorText: {
-        color: '#FF3B30',
-        textAlign: 'center',
-        marginVertical: 10,
-        fontSize: 16,
-        padding: 10,
+        marginRight: 8,
     },
     emptyListText: {
         textAlign: 'center',

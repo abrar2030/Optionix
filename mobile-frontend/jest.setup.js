@@ -1,35 +1,30 @@
-// Mock the AsyncStorage
-jest.mock('@react-native-async-storage/async-storage', () =>
-    require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
-);
-
-// Mock the navigation
-jest.mock('@react-navigation/native', () => {
-    const actualNav = jest.requireActual('@react-navigation/native');
-    return {
-        ...actualNav,
-        useNavigation: () => ({
-            navigate: jest.fn(),
-            goBack: jest.fn(),
-        }),
-    };
-});
-
-// Mock the Expo modules
-jest.mock('expo', () => ({
-    ...jest.requireActual('expo'),
-    Linking: {
-        makeUrl: jest.fn(),
-        parse: jest.fn(),
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+    default: {
+        getItem: jest.fn(() => Promise.resolve(null)),
+        setItem: jest.fn(() => Promise.resolve()),
+        removeItem: jest.fn(() => Promise.resolve()),
+        clear: jest.fn(() => Promise.resolve()),
     },
 }));
 
-// Silence the warning: Animated: `useNativeDriver` is not supported
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+// Mock navigation
+jest.mock('@react-navigation/native');
+jest.mock('@react-navigation/stack');
+jest.mock('@react-navigation/bottom-tabs');
 
-// Mock the StatusBar
-jest.mock('expo-status-bar', () => ({
-    StatusBar: {
-        setBarStyle: jest.fn(),
+// Mock expo modules
+jest.mock('expo-status-bar');
+jest.mock('expo-constants', () => ({
+    default: {
+        expoConfig: { extra: {} },
     },
+}));
+
+// Mock react-native modules
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
+jest.mock('react-native-paper');
+jest.mock('react-native-gesture-handler');
+jest.mock('react-native-safe-area-context', () => ({
+    SafeAreaProvider: ({ children }) => children,
 }));

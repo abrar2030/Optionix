@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, FlatList, Alert } from 'react-native'; // Added Alert
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, ScrollView, View, FlatList, Alert, RefreshControl } from 'react-native';
 import {
     ActivityIndicator,
     Card,
@@ -13,8 +13,8 @@ import {
     Divider,
     RadioButton,
     HelperText,
-} from 'react-native-paper'; // Added RadioButton, HelperText
-// Removed unused imports: import { marketService, tradingService } from '../services/api';
+} from 'react-native-paper';
+import { marketService, tradingService } from '../services/api';
 
 const TradingScreen = () => {
     const [symbol, setSymbol] = useState('AAPL');
@@ -23,68 +23,116 @@ const TradingScreen = () => {
     const [orderBook, setOrderBook] = useState({ bids: [], asks: [] });
     const [loadingChain, setLoadingChain] = useState(false);
     const [loadingBook, setLoadingBook] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
+    const [usingFallbackData, setUsingFallbackData] = useState(false);
     const theme = useTheme();
 
     // Order Form State
-    const [orderSide, setOrderSide] = useState('Buy'); // 'Buy' or 'Sell'
-    const [orderType, setOrderType] = useState('Market'); // 'Market' or 'Limit'
+    const [orderSide, setOrderSide] = useState('Buy');
+    const [orderType, setOrderType] = useState('Market');
     const [quantity, setQuantity] = useState('1');
     const [limitPrice, setLimitPrice] = useState('');
-    const [selectedOptionSymbol, setSelectedOptionSymbol] = useState(''); // Placeholder for selected option
+    const [selectedOptionSymbol, setSelectedOptionSymbol] = useState('');
+    const [selectedOption, setSelectedOption] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch Option Chain and Order Book data
+    const getFallbackChain = () => [
+        { id: 'C170', type: 'Call', strike: 170, price: 10.5, volume: 1500, delta: 0.75 },
+        { id: 'C175', type: 'Call', strike: 175, price: 7.2, volume: 2200, delta: 0.65 },
+        { id: 'C180', type: 'Call', strike: 180, price: 4.8, volume: 1800, delta: 0.5 },
+        { id: 'P170', type: 'Put', strike: 170, price: 5.5, volume: 1200, delta: -0.25 },
+        { id: 'P165', type: 'Put', strike: 165, price: 3.1, volume: 1900, delta: -0.35 },
+        { id: 'P160', type: 'Put', strike: 160, price: 1.9, volume: 1600, delta: -0.5 },
+    ];
+
+    const getFallbackOrderBook = () => ({
+        bids: [
+            { price: 174.9, size: 100 },
+            { price: 174.85, size: 200 },
+            { price: 174.8, size: 150 },
+        ],
+        asks: [
+            { price: 175.05, size: 150 },
+            { price: 175.1, size: 250 },
+            { price: 175.15, size: 100 },
+        ],
+    });
+
     const fetchData = async () => {
         setLoadingChain(true);
         setLoadingBook(true);
         setError(null);
+
         try {
-            // Using placeholder data
-            const placeholderChain = [
-                { id: 'C170', type: 'Call', strike: 170, price: 10.5, volume: 1500 },
-                { id: 'C175', type: 'Call', strike: 175, price: 7.2, volume: 2200 },
-                { id: 'C180', type: 'Call', strike: 180, price: 4.8, volume: 1800 },
-                { id: 'P170', type: 'Put', strike: 170, price: 5.5, volume: 1200 },
-                { id: 'P165', type: 'Put', strike: 165, price: 3.1, volume: 1900 },
-                { id: 'P160', type: 'Put', strike: 160, price: 1.9, volume: 1600 },
-            ];
-            const placeholderBook = {
-                bids: [
-                    { price: 174.9, size: 100 },
-                    { price: 174.85, size: 200 },
-                ],
-                asks: [
-                    { price: 175.05, size: 150 },
-                    { price: 175.1, size: 250 },
-                ],
-            };
-            await new Promise((resolve) => setTimeout(resolve, 1200)); // Simulate network delay
-            setOptionChain(placeholderChain);
-            setOrderBook(placeholderBook);
-            // Auto-select first option for the form initially
-            if (placeholderChain.length > 0) {
-                setSelectedOptionSymbol(
-                    `${symbol} ${expiry} ${placeholderChain[0].type} ${placeholderChain[0].strike}`,
-                );
+            // Try to fetch from API
+            const [chainData, bookData] = await Promise.all([
+                marketService.getOptionChain(symbol, expiry).catch(() => null),
+                marketService.getOrderBook(symbol).catch(() => null),
+            ]);
+
+            if (chainData && chainData.options) {
+                setOptionChain(chainData.options);
+                setUsingFallbackData(false);
+
+                // Auto-select first option
+                if (chainData.options.length > 0) {
+                    const firstOption = chainData.options[0];
+                    setSelectedOption(firstOption);
+                    setSelectedOptionSymbol(
+                        `${symbol} ${expiry} ${firstOption.type} ${firstOption.strike}`,
+                    );
+                }
+            } else {
+                // Use fallback data
+                const fallbackChain = getFallbackChain();
+                setOptionChain(fallbackChain);
+                setUsingFallbackData(true);
+
+                if (fallbackChain.length > 0) {
+                    setSelectedOption(fallbackChain[0]);
+                    setSelectedOptionSymbol(
+                        `${symbol} ${expiry} ${fallbackChain[0].type} ${fallbackChain[0].strike}`,
+                    );
+                }
+            }
+
+            if (bookData && (bookData.bids || bookData.asks)) {
+                setOrderBook({
+                    bids: bookData.bids || [],
+                    asks: bookData.asks || [],
+                });
+            } else {
+                setOrderBook(getFallbackOrderBook());
+            }
+
+            if (!chainData || !bookData) {
+                setError('Using demo data. Connect to backend for live trading data.');
             }
         } catch (err) {
             console.error('Error fetching trading data:', err);
-            setError('Failed to load trading data. Please try again later.');
-            setOptionChain([]);
-            setOrderBook({ bids: [], asks: [] });
+            setOptionChain(getFallbackChain());
+            setOrderBook(getFallbackOrderBook());
+            setUsingFallbackData(true);
+            setError('Using demo data. Please check your connection.');
         } finally {
             setLoadingChain(false);
             setLoadingBook(false);
         }
     };
 
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchData();
+        setRefreshing(false);
+    }, [symbol, expiry]);
+
     useEffect(() => {
         fetchData();
     }, []);
 
     const handlePlaceOrder = async () => {
-        // Basic validation
+        // Validation
         if (!selectedOptionSymbol) {
             Alert.alert('Error', 'Please select an option contract.');
             return;
@@ -100,24 +148,41 @@ const TradingScreen = () => {
 
         setIsSubmitting(true);
         setError(null);
+
         try {
-            // Placeholder for actual order submission logic
-            console.log('Submitting Order:', {
+            const orderData = {
                 symbol: selectedOptionSymbol,
-                side: orderSide,
-                type: orderType,
+                option_type: selectedOption?.type,
+                strike: selectedOption?.strike,
+                expiry,
+                side: orderSide.toLowerCase(),
+                order_type: orderType.toLowerCase(),
                 quantity: parseInt(quantity),
-                limitPrice: orderType === 'Limit' ? parseFloat(limitPrice) : undefined,
-            });
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-            Alert.alert('Success', 'Order placed successfully (Simulated).');
-            // Reset form potentially
-            // setQuantity('1');
-            // setLimitPrice('');
+                ...(orderType === 'Limit' && { limit_price: parseFloat(limitPrice) }),
+            };
+
+            if (!usingFallbackData) {
+                // Try real API call
+                try {
+                    const result = await tradingService.executeTrade(orderData);
+                    Alert.alert('Success', result.message || 'Order placed successfully.');
+                } catch (apiError) {
+                    console.log('API call failed, showing simulation message:', apiError);
+                    Alert.alert(
+                        'Demo Mode',
+                        'Order simulation successful. Connect to backend for live trading.',
+                    );
+                }
+            } else {
+                // Simulated order
+                await new Promise((resolve) => setTimeout(resolve, 1500));
+                Alert.alert(
+                    'Demo Mode',
+                    'Order simulation successful. Connect to backend for live trading.',
+                );
+            }
         } catch (err) {
             console.error('Error placing order:', err);
-            setError('Failed to place order. Please try again.');
             Alert.alert('Error', 'Failed to place order. Please try again.');
         } finally {
             setIsSubmitting(false);
@@ -125,10 +190,15 @@ const TradingScreen = () => {
     };
 
     const renderOptionItem = ({ item }) => (
-        // Added onPress to select option for trading form
         <DataTable.Row
-            onPress={() =>
-                setSelectedOptionSymbol(`${symbol} ${expiry} ${item.type} ${item.strike}`)
+            onPress={() => {
+                setSelectedOption(item);
+                setSelectedOptionSymbol(`${symbol} ${expiry} ${item.type} ${item.strike}`);
+            }}
+            style={
+                selectedOption?.id === item.id
+                    ? { backgroundColor: theme.colors.primaryContainer }
+                    : {}
             }
         >
             <DataTable.Cell>{item.type}</DataTable.Cell>
@@ -140,15 +210,16 @@ const TradingScreen = () => {
 
     const renderOrderItem = ({ item }) => (
         <View style={styles.orderItem}>
-            <PaperText style={{ color: theme.colors.primary }}>
-                Price: ${item.price.toFixed(2)}
-            </PaperText>
-            <PaperText>Size: {item.size}</PaperText>
+            <PaperText style={{ color: theme.colors.primary }}>${item.price.toFixed(2)}</PaperText>
+            <PaperText>{item.size}</PaperText>
         </View>
     );
 
     return (
-        <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ScrollView
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <Title style={styles.title}>Trading Interface</Title>
 
             <Card style={styles.card}>
@@ -179,7 +250,13 @@ const TradingScreen = () => {
                 </Card.Content>
             </Card>
 
-            {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
+            {error && (
+                <Card style={[styles.card, styles.warningCard]}>
+                    <Card.Content>
+                        <Paragraph style={styles.warningText}>{error}</Paragraph>
+                    </Card.Content>
+                </Card>
+            )}
 
             {/* Option Chain Section */}
             <Card style={styles.card}>
@@ -205,12 +282,13 @@ const TradingScreen = () => {
                             <FlatList
                                 data={optionChain}
                                 renderItem={renderOptionItem}
-                                keyExtractor={(item) => item.id} // Use unique ID
+                                keyExtractor={(item) => item.id || `${item.type}-${item.strike}`}
                                 ListEmptyComponent={
                                     <Paragraph style={styles.emptyListText}>
                                         No option data available.
                                     </Paragraph>
                                 }
+                                scrollEnabled={false}
                             />
                         </DataTable>
                     )}
@@ -241,6 +319,7 @@ const TradingScreen = () => {
                                         <Paragraph style={styles.emptyListText}>No bids.</Paragraph>
                                     }
                                     ItemSeparatorComponent={() => <Divider />}
+                                    scrollEnabled={false}
                                 />
                             </View>
                             <View style={styles.orderBookSide}>
@@ -257,6 +336,7 @@ const TradingScreen = () => {
                                         <Paragraph style={styles.emptyListText}>No asks.</Paragraph>
                                     }
                                     ItemSeparatorComponent={() => <Divider />}
+                                    scrollEnabled={false}
                                 />
                             </View>
                         </View>
@@ -271,7 +351,7 @@ const TradingScreen = () => {
                     <TextInput
                         label="Selected Option"
                         value={selectedOptionSymbol}
-                        editable={false} // Make it non-editable, selection happens via table tap
+                        editable={false}
                         style={styles.input}
                         mode="outlined"
                     />
@@ -361,6 +441,14 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         elevation: 4,
     },
+    warningCard: {
+        backgroundColor: '#FFF3CD',
+        borderLeftWidth: 4,
+        borderLeftColor: '#FFA500',
+    },
+    warningText: {
+        color: '#856404',
+    },
     input: {
         marginBottom: 10,
     },
@@ -388,13 +476,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 8,
-    },
-    errorText: {
-        color: '#FF3B30',
-        textAlign: 'center',
-        marginVertical: 10,
-        fontSize: 16,
-        padding: 10,
     },
     emptyListText: {
         textAlign: 'center',

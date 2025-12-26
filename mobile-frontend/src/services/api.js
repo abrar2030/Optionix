@@ -1,15 +1,98 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 // Define the base URL for the backend API
-// TODO: Replace with the actual backend URL when deployed or if different locally
-const API_BASE_URL = 'http://localhost:8000';
+// Priority: Environment variable > Constants > Default
+const API_BASE_URL =
+    Constants.expoConfig?.extra?.apiBaseUrl || process.env.API_BASE_URL || 'http://localhost:8000';
+
+const API_TIMEOUT = Constants.expoConfig?.extra?.apiTimeout || process.env.API_TIMEOUT || 30000;
 
 const api = axios.create({
     baseURL: API_BASE_URL,
+    timeout: parseInt(API_TIMEOUT),
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+// Request interceptor for adding auth token
+api.interceptors.request.use(
+    async (config) => {
+        try {
+            // Try to get token from AsyncStorage if available
+            const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+            const token = await AsyncStorage.getItem('authToken');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } catch (error) {
+            // If AsyncStorage is not available or fails, continue without token
+            console.warn('Could not retrieve auth token:', error);
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    },
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            // Handle unauthorized access
+            try {
+                const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+                await AsyncStorage.removeItem('authToken');
+            } catch (e) {
+                console.warn('Could not remove auth token:', e);
+            }
+        }
+        return Promise.reject(error);
+    },
+);
+
+// Authentication services
+export const authService = {
+    login: async (email, password) => {
+        try {
+            const response = await api.post('/auth/login', { email, password });
+            return response.data;
+        } catch (error) {
+            console.error('Error during login:', error);
+            throw error;
+        }
+    },
+    register: async (userData) => {
+        try {
+            const response = await api.post('/auth/register', userData);
+            return response.data;
+        } catch (error) {
+            console.error('Error during registration:', error);
+            throw error;
+        }
+    },
+    logout: async () => {
+        try {
+            const response = await api.post('/auth/logout');
+            return response.data;
+        } catch (error) {
+            console.error('Error during logout:', error);
+            throw error;
+        }
+    },
+    getUserProfile: async () => {
+        try {
+            const response = await api.get('/auth/profile');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            throw error;
+        }
+    },
+};
 
 // Market data services
 export const marketService = {
@@ -22,7 +105,7 @@ export const marketService = {
             throw error;
         }
     },
-    getPriceHistory: async (symbol, timeframe) => {
+    getPriceHistory: async (symbol, timeframe = '1d') => {
         try {
             const response = await api.get(`/market/price-history/${symbol}`, {
                 params: { timeframe },
@@ -55,7 +138,7 @@ export const marketService = {
     },
     predictVolatility: async (data) => {
         try {
-            const response = await api.post('/predict_volatility', data);
+            const response = await api.post('/market/volatility', data);
             return response.data;
         } catch (error) {
             console.error('Error predicting volatility:', error);
@@ -102,7 +185,7 @@ export const portfolioService = {
             throw error;
         }
     },
-    getPerformanceHistory: async (timeframe) => {
+    getPerformanceHistory: async (timeframe = '1M') => {
         try {
             const response = await api.get('/portfolio/performance', {
                 params: { timeframe },
@@ -157,7 +240,7 @@ export const analyticsService = {
             throw error;
         }
     },
-    getVolatilityAnalysis: async (symbol, timeframe) => {
+    getVolatilityAnalysis: async (symbol, timeframe = '1M') => {
         try {
             const response = await api.get('/analytics/volatility', {
                 params: { symbol, timeframe },
@@ -174,6 +257,46 @@ export const analyticsService = {
             return response.data;
         } catch (error) {
             console.error('Error fetching market sentiment:', error);
+            throw error;
+        }
+    },
+};
+
+// Watchlist services
+export const watchlistService = {
+    getWatchlist: async () => {
+        try {
+            const response = await api.get('/watchlist');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching watchlist:', error);
+            throw error;
+        }
+    },
+    addToWatchlist: async (symbol) => {
+        try {
+            const response = await api.post('/watchlist', { symbol });
+            return response.data;
+        } catch (error) {
+            console.error('Error adding to watchlist:', error);
+            throw error;
+        }
+    },
+    removeFromWatchlist: async (symbol) => {
+        try {
+            const response = await api.delete(`/watchlist/${symbol}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error removing from watchlist:', error);
+            throw error;
+        }
+    },
+    getSymbolQuote: async (symbol) => {
+        try {
+            const response = await api.get(`/market/quote/${symbol}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching symbol quote:', error);
             throw error;
         }
     },

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, FlatList } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, ScrollView, View, FlatList, RefreshControl } from 'react-native';
 import {
     ActivityIndicator,
     Card,
@@ -10,65 +10,84 @@ import {
     Text as PaperText,
     useTheme,
 } from 'react-native-paper';
-// Removed unused import: import { analyticsService } from '../services/api';
+import { analyticsService } from '../services/api';
 
 const AnalyticsScreen = () => {
     const [riskAssessment, setRiskAssessment] = useState(null);
     const [volatilityAnalysis, setVolatilityAnalysis] = useState([]);
     const [marketSentiment, setMarketSentiment] = useState(null);
-    const [loadingRisk, setLoadingRisk] = useState(true);
-    const [loadingVolatility, setLoadingVolatility] = useState(true);
-    const [loadingSentiment, setLoadingSentiment] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
     const theme = useTheme();
 
-    useEffect(() => {
-        const fetchAnalyticsData = async () => {
-            setLoadingRisk(true);
-            setLoadingVolatility(true);
-            setLoadingSentiment(true);
-            setError(null);
-            try {
-                // Using placeholder data
-                const placeholderRisk = {
-                    overallScore: 75,
-                    factors: [
-                        { name: 'Market Risk', level: 'High' },
-                        { name: 'Credit Risk', level: 'Low' },
-                        { name: 'Liquidity Risk', level: 'Medium' },
-                    ],
-                    recommendation: 'Consider hedging strategies for market exposure.',
-                };
-                const placeholderVolatility = [
-                    { date: '2025-04-01', impliedVol: 0.25, historicalVol: 0.22 },
-                    { date: '2025-04-15', impliedVol: 0.28, historicalVol: 0.24 },
-                    { date: '2025-04-29', impliedVol: 0.26, historicalVol: 0.25 },
-                ];
-                const placeholderSentiment = {
-                    index: 65, // Example: Fear & Greed Index
-                    status: 'Greed',
-                    summary:
-                        'Market sentiment is leaning towards greed, potentially indicating overvaluation.',
-                };
+    const getFallbackData = () => ({
+        risk: {
+            overallScore: 75,
+            factors: [
+                { name: 'Market Risk', level: 'High' },
+                { name: 'Credit Risk', level: 'Low' },
+                { name: 'Liquidity Risk', level: 'Medium' },
+            ],
+            recommendation: 'Consider hedging strategies for market exposure.',
+        },
+        volatility: [
+            { date: '2025-04-01', impliedVol: 0.25, historicalVol: 0.22 },
+            { date: '2025-04-15', impliedVol: 0.28, historicalVol: 0.24 },
+            { date: '2025-04-29', impliedVol: 0.26, historicalVol: 0.25 },
+        ],
+        sentiment: {
+            index: 65,
+            status: 'Greed',
+            summary:
+                'Market sentiment is leaning towards greed, potentially indicating overvaluation.',
+        },
+    });
 
-                await new Promise((resolve) => setTimeout(resolve, 1300)); // Simulate network delay
+    const fetchAnalyticsData = async () => {
+        setLoading(true);
+        setError(null);
 
-                setRiskAssessment(placeholderRisk);
-                setVolatilityAnalysis(placeholderVolatility);
-                setMarketSentiment(placeholderSentiment);
-            } catch (err) {
-                console.error('Error fetching analytics data:', err);
-                setError('Failed to load analytics data. Please try again later.');
-                setRiskAssessment(null);
-                setVolatilityAnalysis([]);
-                setMarketSentiment(null);
-            } finally {
-                setLoadingRisk(false);
-                setLoadingVolatility(false);
-                setLoadingSentiment(false);
+        try {
+            const [riskData, volatilityData, sentimentData] = await Promise.all([
+                analyticsService.getRiskAssessment().catch(() => null),
+                analyticsService.getVolatilityAnalysis('AAPL').catch(() => null),
+                analyticsService.getMarketSentiment().catch(() => null),
+            ]);
+
+            if (riskData || volatilityData || sentimentData) {
+                setRiskAssessment(riskData);
+                setVolatilityAnalysis(volatilityData?.analysis || volatilityData || []);
+                setMarketSentiment(sentimentData);
+                if (!riskData || !volatilityData || !sentimentData) {
+                    setError('Using demo data. Connect to backend for full analytics.');
+                }
+            } else {
+                const fallback = getFallbackData();
+                setRiskAssessment(fallback.risk);
+                setVolatilityAnalysis(fallback.volatility);
+                setMarketSentiment(fallback.sentiment);
+                setError('Using demo data. Connect to backend for real analytics.');
             }
-        };
+        } catch (err) {
+            console.error('Error fetching analytics data:', err);
+            const fallback = getFallbackData();
+            setRiskAssessment(fallback.risk);
+            setVolatilityAnalysis(fallback.volatility);
+            setMarketSentiment(fallback.sentiment);
+            setError('Using demo data. Please check your connection.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await fetchAnalyticsData();
+        setRefreshing(false);
+    }, []);
+
+    useEffect(() => {
         fetchAnalyticsData();
     }, []);
 
@@ -83,27 +102,35 @@ const AnalyticsScreen = () => {
     const getRiskLevelColor = (level) => {
         switch (level.toLowerCase()) {
             case 'high':
-                return theme.colors.error; // Red
+                return theme.colors.error;
             case 'medium':
-                return '#FFA500'; // Orange (adjust as needed)
+                return '#FFA500';
             case 'low':
-                return '#34C759'; // Green
+                return '#34C759';
             default:
                 return theme.colors.text;
         }
     };
 
     return (
-        <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ScrollView
+            style={[styles.container, { backgroundColor: theme.colors.background }]}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
             <Title style={styles.title}>Analytics & Insights</Title>
 
-            {error && <Paragraph style={styles.errorText}>{error}</Paragraph>}
+            {error && (
+                <Card style={[styles.card, styles.warningCard]}>
+                    <Card.Content>
+                        <Paragraph style={styles.warningText}>{error}</Paragraph>
+                    </Card.Content>
+                </Card>
+            )}
 
-            {/* Risk Assessment Section */}
             <Card style={styles.card}>
                 <Card.Title title="Risk Assessment" />
                 <Card.Content>
-                    {loadingRisk ? (
+                    {loading && !riskAssessment ? (
                         <ActivityIndicator
                             animating={true}
                             size="small"
@@ -137,37 +164,28 @@ const AnalyticsScreen = () => {
                 </Card.Content>
             </Card>
 
-            {/* Volatility Analysis Section */}
             <Card style={styles.card}>
                 <Card.Title title="Volatility Analysis (AAPL - 1M)" />
                 <Card.Content>
-                    {loadingVolatility ? (
-                        <ActivityIndicator
-                            animating={true}
-                            size="large"
-                            style={styles.loadingIndicator}
-                        />
-                    ) : (
-                        <FlatList
-                            data={volatilityAnalysis}
-                            renderItem={renderVolatilityItem}
-                            keyExtractor={(item) => item.date}
-                            ItemSeparatorComponent={() => <Divider />}
-                            ListEmptyComponent={
-                                <Paragraph style={styles.emptyListText}>
-                                    No volatility data available.
-                                </Paragraph>
-                            }
-                        />
-                    )}
+                    <FlatList
+                        data={volatilityAnalysis}
+                        renderItem={renderVolatilityItem}
+                        keyExtractor={(item) => item.date}
+                        ItemSeparatorComponent={() => <Divider />}
+                        ListEmptyComponent={
+                            <Paragraph style={styles.emptyListText}>
+                                No volatility data available.
+                            </Paragraph>
+                        }
+                        scrollEnabled={false}
+                    />
                 </Card.Content>
             </Card>
 
-            {/* Market Sentiment Section */}
             <Card style={styles.card}>
                 <Card.Title title="Market Sentiment" />
                 <Card.Content>
-                    {loadingSentiment ? (
+                    {loading && !marketSentiment ? (
                         <ActivityIndicator
                             animating={true}
                             size="small"
@@ -206,6 +224,14 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         elevation: 4,
     },
+    warningCard: {
+        backgroundColor: '#FFF3CD',
+        borderLeftWidth: 4,
+        borderLeftColor: '#FFA500',
+    },
+    warningText: {
+        color: '#856404',
+    },
     loadingIndicator: {
         marginVertical: 20,
     },
@@ -239,13 +265,6 @@ const styles = StyleSheet.create({
     },
     listItemTitle: {
         fontSize: 16,
-    },
-    errorText: {
-        color: '#FF3B30',
-        textAlign: 'center',
-        marginVertical: 10,
-        fontSize: 16,
-        padding: 10,
     },
     emptyListText: {
         textAlign: 'center',
