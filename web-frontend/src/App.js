@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import styled, { ThemeProvider } from 'styled-components';
 import { AppProvider } from './utils/AppContext';
+import { AuthProvider, useAuth } from './utils/AuthContext';
 
 // Pages
 import Dashboard from './pages/Dashboard';
 import Trading from './pages/Trading';
 import Portfolio from './pages/Portfolio';
 import Analytics from './pages/Analytics';
+import Login from './pages/Login';
 
 // Components
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
 import Footer from './components/common/Footer';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Theme
 const theme = {
@@ -58,7 +61,7 @@ const MainContent = styled.main`
 const ContentArea = styled.div`
     flex: 1;
     padding: 20px;
-    margin-left: 240px;
+    margin-left: ${(props) => (props.hasSidebar ? '240px' : '0')};
 
     @media (max-width: ${(props) => props.theme.breakpoints.tablet}) {
         margin-left: 0;
@@ -66,35 +69,88 @@ const ContentArea = styled.div`
     }
 `;
 
-function App() {
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <AppContainer>
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: '100vh',
+                    }}
+                >
+                    <p>Loading...</p>
+                </div>
+            </AppContainer>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return children;
+};
+
+// Main App Component
+const AppContent = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const { isAuthenticated } = useAuth();
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
     return (
-        <AppProvider>
+        <Router>
+            <Routes>
+                {/* Public Route */}
+                <Route path="/login" element={<Login />} />
+
+                {/* Protected Routes */}
+                <Route
+                    path="/*"
+                    element={
+                        <ProtectedRoute>
+                            <AppContainer>
+                                <Navbar toggleSidebar={toggleSidebar} />
+                                <MainContent>
+                                    <Sidebar isOpen={sidebarOpen} />
+                                    <ContentArea hasSidebar={isAuthenticated && sidebarOpen}>
+                                        <Routes>
+                                            <Route path="/" element={<Dashboard />} />
+                                            <Route path="/trading" element={<Trading />} />
+                                            <Route path="/portfolio" element={<Portfolio />} />
+                                            <Route path="/analytics" element={<Analytics />} />
+                                        </Routes>
+                                    </ContentArea>
+                                </MainContent>
+                                <Footer />
+                            </AppContainer>
+                        </ProtectedRoute>
+                    }
+                />
+            </Routes>
+        </Router>
+    );
+};
+
+function App() {
+    return (
+        <ErrorBoundary>
             <ThemeProvider theme={theme}>
-                <Router>
-                    <AppContainer>
-                        <Navbar toggleSidebar={toggleSidebar} />
-                        <MainContent>
-                            <Sidebar isOpen={sidebarOpen} />
-                            <ContentArea>
-                                <Routes>
-                                    <Route path="/" element={<Dashboard />} />
-                                    <Route path="/trading" element={<Trading />} />
-                                    <Route path="/portfolio" element={<Portfolio />} />
-                                    <Route path="/analytics" element={<Analytics />} />
-                                </Routes>
-                            </ContentArea>
-                        </MainContent>
-                        <Footer />
-                    </AppContainer>
-                </Router>
+                <AuthProvider>
+                    <AppProvider>
+                        <AppContent />
+                    </AppProvider>
+                </AuthProvider>
             </ThemeProvider>
-        </AppProvider>
+        </ErrorBoundary>
     );
 }
 

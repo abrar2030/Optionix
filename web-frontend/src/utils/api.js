@@ -1,12 +1,17 @@
 import axios from 'axios';
 
+// Get API URL from environment variable or use default
+const API_BASE_URL =
+    process.env.REACT_APP_API_URL ||
+    (process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8000');
+
 // Create an axios instance with default config
 const api = axios.create({
-    baseURL: process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:8000',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000,
+    timeout: 15000, // Increased timeout to 15 seconds
 });
 
 // Request interceptor for adding auth token
@@ -35,22 +40,33 @@ api.interceptors.response.use(
                 case 401:
                     // Unauthorized - clear token and redirect to login
                     localStorage.removeItem('auth_token');
-                    window.location.href = '/login';
+                    // Only redirect if we're not already on the login page
+                    if (window.location.pathname !== '/login') {
+                        window.location.href = '/login';
+                    }
                     break;
                 case 403:
                     // Forbidden
-                    console.error('Access forbidden');
+                    console.error('Access forbidden:', error.response.data);
+                    break;
+                case 429:
+                    // Too Many Requests
+                    console.error('Rate limit exceeded. Please try again later.');
                     break;
                 case 500:
                     // Server error
-                    console.error('Server error occurred');
+                    console.error('Server error occurred:', error.response.data);
+                    break;
+                case 503:
+                    // Service unavailable
+                    console.error('Service temporarily unavailable');
                     break;
                 default:
                     console.error('API error:', error.response.data);
             }
         } else if (error.request) {
             // Request made but no response received
-            console.error('No response received from server');
+            console.error('No response received from server. Please check your connection.');
         } else {
             // Error in setting up the request
             console.error('Error setting up request:', error.message);
@@ -58,5 +74,12 @@ api.interceptors.response.use(
         return Promise.reject(error);
     },
 );
+
+// Export API instance and base URL for WebSocket connections
+export const WS_BASE_URL =
+    process.env.REACT_APP_WS_URL ||
+    (process.env.NODE_ENV === 'production'
+        ? 'wss://api.optionix.com/ws'
+        : 'ws://localhost:8000/ws');
 
 export default api;
