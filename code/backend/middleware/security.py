@@ -6,8 +6,11 @@ Provides comprehensive security features including headers, rate limiting, and v
 import logging
 import time
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
 import redis
+
+if TYPE_CHECKING:
+    pass
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -15,6 +18,7 @@ from starlette.types import ASGIApp
 from ..config import settings
 
 logger = logging.getLogger(__name__)
+redis_client: Optional[Any] = None
 try:
     redis_client = redis.from_url(
         settings.redis_url, decode_responses=True, socket_timeout=1
@@ -31,7 +35,7 @@ except Exception as e:
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware to add security headers to all responses"""
 
-    def __init__(self, app: ASGIApp) -> Any:
+    def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
         self.security_headers = {
             "X-Frame-Options": "DENY",
@@ -57,7 +61,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class AdvancedRateLimitMiddleware(BaseHTTPMiddleware):
     """Advanced rate limiting middleware with multiple strategies"""
 
-    def __init__(self, app: ASGIApp) -> Any:
+    def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
         self.default_limit = settings.rate_limit_requests_per_minute
         self.default_window = settings.rate_limit_window_minutes
@@ -145,8 +149,8 @@ class AdvancedRateLimitMiddleware(BaseHTTPMiddleware):
         rate_key = (
             f"rate_limit:{identifier}:{endpoint}:{current_time // window_seconds}"
         )
-        current_requests = redis_client.get(rate_key)
-        current_requests = int(current_requests) if current_requests else 0
+        current_requests_str = redis_client.get(rate_key)
+        current_requests: int = int(current_requests_str) if current_requests_str else 0
         if current_requests >= requests_limit:
             reset_time = (current_time // window_seconds + 1) * window_seconds
             return {
@@ -173,7 +177,7 @@ class AdvancedRateLimitMiddleware(BaseHTTPMiddleware):
 class RequestValidationMiddleware(BaseHTTPMiddleware):
     """Middleware for request validation and sanitization"""
 
-    def __init__(self, app: ASGIApp) -> Any:
+    def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
         self.max_request_size = 10 * 1024 * 1024
         self.suspicious_patterns = [
@@ -250,7 +254,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 class AuditLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware for comprehensive audit logging"""
 
-    def __init__(self, app: ASGIApp) -> Any:
+    def __init__(self, app: ASGIApp) -> None:
         super().__init__(app)
         self.sensitive_endpoints = [
             "/auth/login",
@@ -339,7 +343,7 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
 class IPWhitelistMiddleware(BaseHTTPMiddleware):
     """Middleware for IP whitelisting (optional)"""
 
-    def __init__(self, app: ASGIApp, whitelist: Optional[list] = None) -> Any:
+    def __init__(self, app: ASGIApp, whitelist: Optional[list] = None) -> None:
         super().__init__(app)
         self.whitelist = whitelist or []
         self.enabled = len(self.whitelist) > 0

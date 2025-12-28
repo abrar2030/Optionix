@@ -130,7 +130,6 @@ class Settings(BaseSettings):
     supported_languages: List[str] = ["en", "es", "fr", "de", "zh"]
     default_timezone: str = "UTC"
     mfa_required_for_trading: bool = False
-    kyc_required: bool = True
     real_time_monitoring: bool = True
     advanced_analytics: bool = True
 
@@ -164,6 +163,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        protected_namespaces = ()
 
 
 settings = Settings()

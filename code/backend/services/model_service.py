@@ -21,16 +21,16 @@ logger = logging.getLogger(__name__)
 class ModelService:
     """Service for handling ML model predictions with security and validation"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """Initialize model service and load the volatility prediction model"""
-        self.model = None
-        self.model_metadata = {}
-        self.feature_scaler = None
-        self.model_hash = None
+        self.model: Optional[Any] = None
+        self.model_metadata: Dict[str, Any] = {}
+        self.feature_scaler: Optional[Any] = None
+        self.model_hash: Optional[str] = None
         self._load_model()
         self._load_feature_scaler()
 
-    def _load_model(self) -> Any:
+    def _load_model(self) -> None:
         """Load ML model from file with integrity verification"""
         try:
             model_path = settings.model_path
@@ -61,7 +61,7 @@ class ModelService:
             logger.error(f"Error loading volatility model: {e}")
             self.model = None
 
-    def _load_feature_scaler(self) -> Any:
+    def _load_feature_scaler(self) -> None:
         """Load feature scaler for input normalization"""
         try:
             scaler_path = os.path.join(
@@ -97,7 +97,7 @@ class ModelService:
             logger.error(f"Error verifying model integrity: {e}")
             return False
 
-    def _load_model_metadata(self, model_path: str) -> Any:
+    def _load_model_metadata(self, model_path: str) -> None:
         """Load model metadata from accompanying JSON file"""
         try:
             metadata_path = model_path.replace(".h5", "_metadata.json").replace(
@@ -251,6 +251,7 @@ class ModelService:
         try:
             validated_data = self.validate_market_data(market_data)
             features = self.preprocess_features(validated_data)
+            assert self.model is not None, "Model must be available"
             if hasattr(self.model, "predict"):
                 prediction = self.model.predict(features)
                 volatility = float(prediction[0])
@@ -306,7 +307,7 @@ class ModelService:
         input_data: Dict[str, Any],
         result: Dict[str, Any],
         status: str,
-    ) -> Any:
+    ) -> None:
         """Log prediction for audit trail"""
         try:
             audit_log = AuditLog(

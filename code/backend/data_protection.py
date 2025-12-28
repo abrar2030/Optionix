@@ -15,13 +15,12 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import declarative_base, Session
 from .config import settings
 from .models import AuditLog, User
 
 logger = logging.getLogger(__name__)
-Base = declarative_base()
+Base: Any = declarative_base()
 
 
 class DataClassification(str, Enum):
@@ -54,11 +53,11 @@ class EncryptedField:
 
     def __init__(
         self, classification: DataClassification = DataClassification.CONFIDENTIAL
-    ) -> Any:
+    ) -> None:
         self.classification = classification
-        self.encryption_service = None
+        self.encryption_service: Optional[Any] = None
 
-    def __set_name__(self, owner: Any, name: Any) -> Any:
+    def __set_name__(self, owner: Any, name: Any) -> None:
         self.name = name
         self.private_name = f"_{name}"
 
@@ -76,7 +75,7 @@ class EncryptedField:
             logger.error(f"Failed to decrypt field {self.name}: {e}")
             return None
 
-    def __set__(self, obj: Any, value: Any) -> Any:
+    def __set__(self, obj: Any, value: Any) -> None:
         if value is None:
             setattr(obj, self.private_name, None)
             return
@@ -146,9 +145,9 @@ class DataSubjectRequest(Base):
 class DataProtectionService:
     """Service for data protection, encryption, and GDPR compliance"""
 
-    def __init__(self) -> Any:
-        self._field_encryption_key = None
-        self._document_encryption_key = None
+    def __init__(self) -> None:
+        self._field_encryption_key: Optional[Fernet] = None
+        self._document_encryption_key: Optional[Fernet] = None
         self._load_encryption_keys()
         self.pii_patterns = {
             PIIType.EMAIL: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
@@ -158,7 +157,7 @@ class DataProtectionService:
             PIIType.IP_ADDRESS: "\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b",
         }
 
-    def _load_encryption_keys(self) -> Any:
+    def _load_encryption_keys(self) -> None:
         """Load encryption keys for different purposes"""
         try:
             field_key_material = (settings.secret_key + "_field").encode()
@@ -186,6 +185,7 @@ class DataProtectionService:
     def encrypt_field(self, data: str) -> str:
         """Encrypt a single field"""
         try:
+            assert self._field_encryption_key is not None
             encrypted_data = self._field_encryption_key.encrypt(data.encode())
             return base64.urlsafe_b64encode(encrypted_data).decode()
         except Exception as e:
@@ -195,6 +195,7 @@ class DataProtectionService:
     def decrypt_field(self, encrypted_data: str) -> str:
         """Decrypt a single field"""
         try:
+            assert self._field_encryption_key is not None
             encrypted_bytes = base64.urlsafe_b64decode(encrypted_data.encode())
             decrypted_data = self._field_encryption_key.decrypt(encrypted_bytes)
             return decrypted_data.decode()
@@ -205,6 +206,7 @@ class DataProtectionService:
     def encrypt_document(self, document: Dict[str, Any]) -> str:
         """Encrypt an entire document"""
         try:
+            assert self._document_encryption_key is not None
             document_json = json.dumps(document, default=str)
             encrypted_data = self._document_encryption_key.encrypt(
                 document_json.encode()
@@ -217,6 +219,7 @@ class DataProtectionService:
     def decrypt_document(self, encrypted_document: str) -> Dict[str, Any]:
         """Decrypt an entire document"""
         try:
+            assert self._document_encryption_key is not None
             encrypted_bytes = base64.urlsafe_b64decode(encrypted_document.encode())
             decrypted_data = self._document_encryption_key.decrypt(encrypted_bytes)
             return json.loads(decrypted_data.decode())

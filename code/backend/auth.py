@@ -323,7 +323,7 @@ class MFAService:
 class RBACService:
     """Role-based access control service"""
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         self.auth_service = auth_service
 
     def check_permission(self, user_role: str, permission: str) -> bool:
