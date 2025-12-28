@@ -20,7 +20,7 @@ Optionix is a comprehensive options trading and analytics platform that combines
 - [Features](#features)
 - [Architecture](#architecture)
 - [Technology Stack](#technology-stack)
-- [Enhanced Security and Compliance](#enhanced-security-and-compliance)
+- [Security and Compliance](#security-and-compliance)
 - [Getting Started](#getting-started)
 - [Testing](#testing)
 - [CI/CD Pipeline](#cicd-pipeline)

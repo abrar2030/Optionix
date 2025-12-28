@@ -320,7 +320,7 @@ class ComplianceService:
                     "report_type": "SAR",
                 },
                 "recommended_actions": [
-                    "Enhanced monitoring",
+                    "Monitoring",
                     "Account review",
                     "Possible account restriction",
                 ],

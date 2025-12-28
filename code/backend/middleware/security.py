@@ -1,5 +1,5 @@
 """
-Enhanced security middleware for Optionix backend.
+Security middleware for Optionix backend.
 Provides comprehensive security features including headers, rate limiting, and validation.
 """
 

@@ -41,7 +41,7 @@ Optionix is a comprehensive financial trading system with robust security, compl
 | **Market Data**          | Real-time market data integration                       |
 | **Portfolio Management** | Advanced portfolio optimization algorithms              |
 
-### Infrastructure Enhancements
+### Infrastructure
 
 | Feature                  | Description                                                |
 | :----------------------- | :--------------------------------------------------------- |
@@ -64,7 +64,7 @@ Optionix is a comprehensive financial trading system with robust security, compl
 | `│   ├── monitoring.py`           | Compliance and monitoring             |
 | `│   └── config.py`               | Configuration management              |
 | `├── quantitative/`               | Quantitative models                   |
-| `│   └── black_scholes.py`        | Enhanced Black-Scholes implementation |
+| `│   └── black_scholes.py`        | Black-Scholes implementation          |
 | `├── ai_models/`                  | AI/ML models                          |
 | `│   └── create_model.py`         | Model creation and management         |
 | `├── blockchain/`                 | Blockchain integration                |

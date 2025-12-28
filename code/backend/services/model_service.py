@@ -1,5 +1,5 @@
 """
-Enhanced ML model service module for Optionix platform.
+ML model service module for Optionix platform.
 Handles machine learning model interactions with robust validation and security.
 """
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelService:
-    """Enhanced service for handling ML model predictions with security and validation"""
+    """Service for handling ML model predictions with security and validation"""
 
     def __init__(self) -> Any:
         """Initialize model service and load the volatility prediction model"""

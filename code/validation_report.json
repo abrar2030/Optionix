@@ -461,7 +461,7 @@
     },
     "recommendations": [
         "Improve Compliance: 2 out of 8 tests failed",
-        "Enhance security features: Implement missing authentication, encryption, and input validation",
+        "Security features: Implement missing authentication, encryption, and input validation",
         "Strengthen compliance: Add missing AML, KYC, and regulatory reporting features"
     ]
 }

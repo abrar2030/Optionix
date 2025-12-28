@@ -1,5 +1,5 @@
 """
-Enhanced Data Validation and Handling Service for Optionix Platform
+Data Validation and Handling Service for Optionix Platform
 Implements comprehensive data validation and handling with:
 - Input validation and sanitization
 - Data encryption and decryption
@@ -221,8 +221,8 @@ class DataQualityMetrics(Base):
     metadata = Column(JSON, nullable=True)
 
 
-class EnhancedDataHandler:
-    """Enhanced data validation and handling service"""
+class DataHandler:
+    """Data validation and handling service"""
 
     def __init__(self, config: Dict[str, Any]) -> None:
         """Initialize data handler"""
@@ -747,9 +747,9 @@ class EnhancedDataHandler:
 data_handler = None
 
 
-def get_data_handler(config: Optional[Dict[str, Any]] = None) -> EnhancedDataHandler:
+def get_data_handler(config: Optional[Dict[str, Any]] = None) -> DataHandler:
     """Get global data handler instance"""
     global data_handler
     if data_handler is None:
-        data_handler = EnhancedDataHandler(config or {})
+        data_handler = DataHandler(config or {})
     return data_handler

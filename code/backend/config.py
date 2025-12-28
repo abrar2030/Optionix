@@ -1,5 +1,5 @@
 """
-Enhanced configuration management for Optionix platform.
+Configuration management for Optionix platform.
 Includes security, compliance, and financial standards settings.
 """
 
@@ -10,17 +10,17 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Enhanced application settings with comprehensive configuration"""
+    """Application settings with comprehensive configuration"""
 
-    app_name: str = "Optionix Enhanced Trading Platform"
-    app_version: str = "2.0.0-enhanced"
+    app_name: str = "OptionixTrading Platform"
+    app_version: str = "2.0.0"
     debug: bool = False
     testing: bool = False
     environment: str = "production"
     host: str = "0.0.0.0"
     port: int = 8000
     workers: int = 4
-    database_url: str = "postgresql://user:password@localhost/optionix_enhanced"
+    database_url: str = "postgresql://user:password@localhost/optionix"
     database_pool_size: int = 20
     database_max_overflow: int = 30
     database_pool_timeout: int = 30
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
     supported_languages: List[str] = ["en", "es", "fr", "de", "zh"]
     default_timezone: str = "UTC"
     mfa_required_for_trading: bool = False
-    enhanced_kyc_required: bool = True
+    kyc_required: bool = True
     real_time_monitoring: bool = True
     advanced_analytics: bool = True
 

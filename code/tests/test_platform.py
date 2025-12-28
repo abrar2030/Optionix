@@ -1,6 +1,6 @@
 """
-Comprehensive Test Suite for Enhanced Optionix Platform
-Tests all enhanced components including:
+Comprehensive Test Suite for Optionix Platform
+Tests all components including:
 - Backend security and compliance
 - AI models validation
 - Quantitative calculations
@@ -18,44 +18,44 @@ import pytest
 from core.logging import get_logger
 
 logger = get_logger(__name__)
-sys.path.append("/home/ubuntu/Optionix/code/backend")
-sys.path.append("/home/ubuntu/Optionix/code/quantitative")
-sys.path.append("/home/ubuntu/Optionix/code/ai_models")
+sys.path.append("/Optionix/code/backend")
+sys.path.append("/Optionix/code/quantitative")
+sys.path.append("/Optionix/code/ai_models")
 try:
-    from auth_enhanced import EnhancedAuthService
-    from black_scholes import EnhancedBlackScholesModel, OptionParameters, OptionType
-    from compliance_enhanced import EnhancedComplianceService
-    from data_handler_enhanced import (
+    from auth import AuthService
+    from black_scholes import BlackScholesModel, OptionParameters, OptionType
+    from compliance import ComplianceService
+    from data_handler import (
         DataClassification,
-        EnhancedDataHandler,
+        DataHandler,
         ValidationResult,
     )
-    from enhanced_ai_models import EnhancedAIModelService
-    from monitoring_enhanced import EnhancedMonitoringService
+    from ai_models import AIModelService
+    from monitoring import MonitoringService
     from monte_carlo import (
-        EnhancedMonteCarloSimulator,
+        MonteCarloSimulator,
         ProcessType,
         SimulationParameters,
     )
-    from security_enhanced import EnhancedSecurityService
+    from security import SecurityService
 except ImportError as e:
     logger.info(f"Import error: {e}")
 
     class MockClass:
         pass
 
-    EnhancedSecurityService = MockClass
-    EnhancedComplianceService = MockClass
-    EnhancedAuthService = MockClass
-    EnhancedMonitoringService = MockClass
-    EnhancedDataHandler = MockClass
-    EnhancedBlackScholesModel = MockClass
-    EnhancedMonteCarloSimulator = MockClass
-    EnhancedAIModelService = MockClass
+    SecurityService = MockClass
+    ComplianceService = MockClass
+    AuthService = MockClass
+    MonitoringService = MockClass
+    DataHandler = MockClass
+    BlackScholesModel = MockClass
+    MonteCarloSimulator = MockClass
+    AIModelService = MockClass
 
 
-class TestEnhancedSecurity(unittest.TestCase):
-    """Test enhanced security features"""
+class TestSecurity(unittest.TestCase):
+    """Test security features"""
 
     def setUp(self) -> Any:
         """Set up test environment"""
@@ -66,7 +66,7 @@ class TestEnhancedSecurity(unittest.TestCase):
             "rate_limit_window": 3600,
         }
         try:
-            self.security_service = EnhancedSecurityService(self.config)
+            self.security_service = SecurityService(self.config)
         except:
             self.security_service = Mock()
 
@@ -109,8 +109,8 @@ class TestEnhancedSecurity(unittest.TestCase):
             self.assertNotIn("alert", sanitized)
 
 
-class TestEnhancedCompliance(unittest.TestCase):
-    """Test enhanced compliance features"""
+class TestCompliance(unittest.TestCase):
+    """Test compliance features"""
 
     def setUp(self) -> Any:
         """Set up test environment"""
@@ -120,7 +120,7 @@ class TestEnhancedCompliance(unittest.TestCase):
             "sanctions_list_url": "https://test.sanctions.com",
         }
         try:
-            self.compliance_service = EnhancedComplianceService(self.config)
+            self.compliance_service = ComplianceService(self.config)
         except:
             self.compliance_service = Mock()
 
@@ -172,8 +172,8 @@ class TestEnhancedCompliance(unittest.TestCase):
                 self.assertFalse(result)
 
 
-class TestEnhancedDataHandler(unittest.TestCase):
-    """Test enhanced data handling and validation"""
+class TestDataHandler(unittest.TestCase):
+    """Test data handling and validation"""
 
     def setUp(self) -> Any:
         """Set up test environment"""
@@ -183,7 +183,7 @@ class TestEnhancedDataHandler(unittest.TestCase):
             "encryption_key": "test_key_12345678901234567890123456789012",
         }
         try:
-            self.data_handler = EnhancedDataHandler(self.config)
+            self.data_handler = DataHandler(self.config)
         except:
             self.data_handler = Mock()
 
@@ -272,13 +272,13 @@ class TestEnhancedDataHandler(unittest.TestCase):
                 self.assertEqual(anonymized.get("amount"), personal_data["amount"])
 
 
-class TestEnhancedBlackScholes(unittest.TestCase):
-    """Test enhanced Black-Scholes implementation"""
+class TestBlackScholes(unittest.TestCase):
+    """Test Black-Scholes implementation"""
 
     def setUp(self) -> Any:
         """Set up test environment"""
         try:
-            self.bs_model = EnhancedBlackScholesModel()
+            self.bs_model = BlackScholesModel()
         except:
             self.bs_model = Mock()
 
@@ -360,8 +360,8 @@ class TestEnhancedBlackScholes(unittest.TestCase):
                     self.assertEqual(iv, 0.25)
 
 
-class TestEnhancedMonteCarlo(unittest.TestCase):
-    """Test enhanced Monte Carlo implementation"""
+class TestMonteCarlo(unittest.TestCase):
+    """Test Monte Carlo implementation"""
 
     def setUp(self) -> Any:
         """Set up test environment"""
@@ -375,7 +375,7 @@ class TestEnhancedMonteCarlo(unittest.TestCase):
                 num_simulations=1000,
                 process_type=ProcessType.GEOMETRIC_BROWNIAN_MOTION,
             )
-            self.mc_simulator = EnhancedMonteCarloSimulator(self.params)
+            self.mc_simulator = MonteCarloSimulator(self.params)
         except:
             self.mc_simulator = Mock()
 
@@ -450,8 +450,8 @@ class TestEnhancedMonteCarlo(unittest.TestCase):
                     self.assertEqual(var_result["var"], 50000)
 
 
-class TestEnhancedMonitoring(unittest.TestCase):
-    """Test enhanced monitoring and compliance"""
+class TestMonitoring(unittest.TestCase):
+    """Test monitoring and compliance"""
 
     def setUp(self) -> Any:
         """Set up test environment"""
@@ -461,7 +461,7 @@ class TestEnhancedMonitoring(unittest.TestCase):
             "large_transaction_threshold": 10000,
         }
         try:
-            self.monitoring_service = EnhancedMonitoringService(self.config)
+            self.monitoring_service = MonitoringService(self.config)
         except:
             self.monitoring_service = Mock()
 
@@ -484,7 +484,7 @@ class TestEnhancedMonitoring(unittest.TestCase):
                     self.assertIsNotNone(alert.alert_id)
                     self.assertIn("user123", alert.user_id)
             except:
-                from monitoring_enhanced import AlertSeverity, ComplianceAlert
+                from monitoring import AlertSeverity, ComplianceAlert
 
                 mock_alert = ComplianceAlert(
                     alert_id="alert123",
@@ -519,7 +519,7 @@ class TestEnhancedMonitoring(unittest.TestCase):
                 self.assertEqual(report.report_type, "MIFID_II")
                 self.assertIn("total_transactions", report.data)
             except:
-                from monitoring_enhanced import RegulatoryReport
+                from monitoring import RegulatoryReport
 
                 mock_report = RegulatoryReport(
                     report_id="rep123",
@@ -554,7 +554,7 @@ class TestIntegration(unittest.TestCase):
     def test_end_to_end_option_pricing(self) -> Any:
         """Test end-to-end option pricing workflow"""
         try:
-            data_handler = EnhancedDataHandler(self.config)
+            data_handler = DataHandler(self.config)
             option_data = {
                 "option_id": "opt123",
                 "underlying_asset": "AAPL",
@@ -566,7 +566,7 @@ class TestIntegration(unittest.TestCase):
             }
             validation_result = data_handler.validate_data(option_data, "option")
             self.assertTrue(validation_result.is_valid)
-            bs_model = EnhancedBlackScholesModel()
+            bs_model = BlackScholesModel()
             params = OptionParameters(
                 spot_price=145.0,
                 strike_price=150.0,
@@ -577,7 +577,7 @@ class TestIntegration(unittest.TestCase):
             )
             price = bs_model.black_scholes_price(params)
             self.assertGreater(price, 0)
-            EnhancedMonitoringService(self.config)
+            MonitoringService(self.config)
             transaction_data = {
                 "transaction_id": "tx123",
                 "user_id": "user123",
@@ -591,7 +591,7 @@ class TestIntegration(unittest.TestCase):
     def test_compliance_workflow(self) -> Any:
         """Test compliance workflow"""
         try:
-            compliance_service = EnhancedComplianceService(self.config)
+            compliance_service = ComplianceService(self.config)
             user_data = {
                 "user_id": "user123",
                 "first_name": "John",
@@ -602,7 +602,7 @@ class TestIntegration(unittest.TestCase):
             with patch.object(compliance_service, "verify_kyc", return_value=True):
                 kyc_result = compliance_service.verify_kyc(user_data)
                 self.assertTrue(kyc_result)
-            EnhancedMonitoringService(self.config)
+            MonitoringService(self.config)
             transaction_data = {
                 "transaction_id": "tx123",
                 "user_id": "user123",
@@ -622,7 +622,7 @@ class TestPerformance(unittest.TestCase):
         try:
             import time
 
-            bs_model = EnhancedBlackScholesModel()
+            bs_model = BlackScholesModel()
             params = OptionParameters(
                 spot_price=100.0,
                 strike_price=105.0,
@@ -654,7 +654,7 @@ class TestPerformance(unittest.TestCase):
                 num_simulations=10000,
                 process_type=ProcessType.GEOMETRIC_BROWNIAN_MOTION,
             )
-            mc_simulator = EnhancedMonteCarloSimulator(params)
+            mc_simulator = MonteCarloSimulator(params)
             start_time = time.time()
             mc_simulator.generate_paths()
             end_time = time.time()
@@ -667,12 +667,12 @@ class TestPerformance(unittest.TestCase):
 def run_all_tests() -> Any:
     """Run all test suites"""
     test_classes = [
-        TestEnhancedSecurity,
-        TestEnhancedCompliance,
-        TestEnhancedDataHandler,
-        TestEnhancedBlackScholes,
-        TestEnhancedMonteCarlo,
-        TestEnhancedMonitoring,
+        TestSecurity,
+        TestCompliance,
+        TestDataHandler,
+        TestBlackScholes,
+        TestMonteCarlo,
+        TestMonitoring,
         TestIntegration,
         TestPerformance,
     ]
@@ -687,7 +687,7 @@ def run_all_tests() -> Any:
 
 
 if __name__ == "__main__":
-    logger.info("Running Enhanced Optionix Platform Test Suite...")
+    logger.info("Running Optionix Platform Test Suite...")
     logger.info("=" * 60)
     result = run_all_tests()
     logger.info("\n" + "=" * 60)

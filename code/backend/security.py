@@ -1,5 +1,5 @@
 """
-Enhanced Security Service for Optionix Platform
+Security Service for Optionix Platform
 Implements comprehensive financial industry security standards including:
 - GDPR/UK-GDPR compliance
 - SOX compliance
@@ -85,11 +85,11 @@ class EncryptionResult:
     checksum: str
 
 
-class EnhancedSecurityService:
-    """Enhanced security service implementing financial industry standards"""
+class SecurityService:
+    """Security service implementing financial industry standards"""
 
     def __init__(self) -> None:
-        """Initialize enhanced security service"""
+        """Initialize security service"""
         self._master_key: Optional[bytes] = None
         self._encryption_keys: Dict[str, bytes] = {}
         self._session_store: Dict[str, Dict[str, Any]] = {}
@@ -102,7 +102,7 @@ class EnhancedSecurityService:
         try:
             self._load_master_key()
             self._initialize_encryption_keys()
-            logger.info("Enhanced security service initialized successfully")
+            logger.info("Security service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize security service: {e}")
             raise
@@ -230,4 +230,4 @@ class EnhancedSecurityService:
             return False
 
 
-security_service = EnhancedSecurityService()
+security_service = SecurityService()

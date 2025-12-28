@@ -1,5 +1,5 @@
 """
-Enhanced data protection module for Optionix.
+Data protection module for Optionix.
 Provides field-level encryption, data masking, and GDPR compliance features.
 """
 

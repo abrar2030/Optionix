@@ -1,5 +1,5 @@
 """
-Enhanced Pydantic schemas for Optionix platform.
+Pydantic schemas for Optionix platform.
 Includes schemas for security, compliance, and financial standards features.
 """
 
@@ -65,7 +65,7 @@ class HealthCheckResponse(BaseResponse):
 
 
 class UserCreate(BaseModel):
-    """User creation schema with enhanced validation"""
+    """User creation schema with alidation"""
 
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
@@ -213,7 +213,7 @@ class AccountResponse(BaseModel):
 
 
 class TradeRequest(BaseModel):
-    """Trade request schema with enhanced validation"""
+    """Trade request schema with validation"""
 
     account_id: int
     symbol: str = Field(..., min_length=3, max_length=20)

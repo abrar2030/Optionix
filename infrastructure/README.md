@@ -17,7 +17,7 @@ This infrastructure directory provides a secure, production-ready foundation for
 7. **CI/CD Pipeline** - Added comprehensive validation steps (terraform, kubernetes, ansible)
 8. **Secret Management** - All secrets moved to example files with documentation
 
-### 🔒 Security Enhancements
+### 🔒 Security
 
 - **No Hard-Coded Secrets**: All sensitive values in `.example` files
 - **Terraform State Encryption**: KMS encryption for state files

@@ -1,4 +1,4 @@
-# Enhanced Dockerfile for Optionix Platform
+# Dockerfile for Optionix Platform
 # Multi-stage build for production-ready container with security hardening
 
 # Build stage
@@ -13,7 +13,7 @@ ARG VERSION
 LABEL maintainer="Optionix Team <team@optionix.com>" \
       org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="optionix-platform" \
-      org.label-schema.description="Enhanced Options Trading Platform" \
+      org.label-schema.description="Options Trading Platform" \
       org.label-schema.url="https://optionix.com" \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.vcs-url="https://github.com/optionix/platform" \

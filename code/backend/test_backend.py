@@ -1,5 +1,5 @@
 """
-Comprehensive test suite for enhanced Optionix backend.
+Comprehensive test suite for Optionix backend.
 Tests security, compliance, and financial standards features.
 """
 
@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from app import app
 from auth import auth_service
-from compliance_enhanced import enhanced_compliance_service
+from compliance import compliance_service
 from data_protection import data_protection_service
 from database import Base, get_db
 from fastapi.testclient import TestClient
@@ -242,7 +242,7 @@ class TestCompliance:
             "document_country": "US",
             "document_expiry": "2030-01-01",
         }
-        result = enhanced_compliance_service.enhanced_kyc_verification(
+        result = compliance_service.kyc_verification(
             user_id=test_user.id, kyc_data=kyc_data, db=db_session
         )
         assert "verification_id" in result
@@ -269,7 +269,7 @@ class TestCompliance:
             "document_country": "AF",
             "document_expiry": "2030-01-01",
         }
-        result = enhanced_compliance_service.enhanced_kyc_verification(
+        result = compliance_service.kyc_verification(
             user_id=test_user.id, kyc_data=kyc_data, db=db_session
         )
         assert result["risk_level"] in ["high", "critical"]
@@ -286,7 +286,7 @@ class TestCompliance:
             "price": Decimal("50000.0"),
             "total_value": Decimal("50000.0"),
         }
-        result = enhanced_compliance_service.advanced_transaction_monitoring(
+        result = compliance_service.advanced_transaction_monitoring(
             user_id=test_user.id, trade_data=trade_data, db=db_session
         )
         assert "monitoring_passed" in result
@@ -299,7 +299,7 @@ class TestCompliance:
     ) -> Any:
         """Test sanctions screening"""
         kyc_data = {"full_name": "John Doe", "nationality": "US"}
-        result = enhanced_compliance_service._comprehensive_sanctions_screening(
+        result = compliance_service._comprehensive_sanctions_screening(
             kyc_data=kyc_data, db=db_session, user_id=test_user.id
         )
         assert "matches_found" in result
@@ -455,7 +455,7 @@ class TestDataProtection:
 
 
 class TestTrading:
-    """Test trading functionality with enhanced security"""
+    """Test trading functionality with security"""
 
     def test_create_trade_success(
         self, setup_database: Any, test_user: Any, test_account: Any, auth_headers: Any
@@ -470,7 +470,7 @@ class TestTrading:
             "price": "50000.0",
         }
         with patch.object(
-            enhanced_compliance_service, "advanced_transaction_monitoring"
+            compliance_service, "advanced_transaction_monitoring"
         ) as mock_monitoring:
             mock_monitoring.return_value = {
                 "monitoring_passed": True,
@@ -507,7 +507,7 @@ class TestTrading:
             "price": "50000.0",
         }
         with patch.object(
-            enhanced_compliance_service, "advanced_transaction_monitoring"
+            compliance_service, "advanced_transaction_monitoring"
         ) as mock_monitoring:
             mock_monitoring.return_value = {
                 "monitoring_passed": False,

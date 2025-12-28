@@ -1,5 +1,5 @@
 """
-Enhanced Monitoring and Compliance Service for Optionix Platform
+Monitoring and Compliance Service for Optionix Platform
 Implements comprehensive monitoring and compliance features:
 - Real-time transaction monitoring
 - Regulatory reporting (MiFID II, EMIR, Dodd-Frank)
@@ -150,12 +150,11 @@ class UserComplianceProfile(Base):
     compliance_flags = Column(JSON, nullable=True)
     sanctions_check = Column(Boolean, nullable=False, default=False)
     pep_status = Column(Boolean, nullable=False, default=False)
-    enhanced_due_diligence = Column(Boolean, nullable=False, default=False)
+    due_diligence = Column(Boolean, nullable=False, default=False)
 
 
-class EnhancedMonitoringService:
-    """Enhanced monitoring and compliance service"""
-
+class MonitoringService:
+    """Monitoring and compliance service"""
     def __init__(self, config: Dict[str, Any]) -> None:
         """Initialize monitoring service"""
         self.config = config
@@ -235,7 +234,7 @@ class EnhancedMonitoringService:
                 risk_score += user_profile.risk_score * 0.3
                 if user_profile.pep_status:
                     risk_score += 20.0
-                if user_profile.enhanced_due_diligence:
+                if user_profile.due_diligence:
                     risk_score += 15.0
             recent_transactions = (
                 self.db_session.query(TransactionLog)
@@ -434,6 +433,6 @@ class EnhancedMonitoringService:
         }
 
 
-def create_monitoring_service(config: Dict[str, Any]) -> EnhancedMonitoringService:
+def create_monitoring_service(config: Dict[str, Any]) -> dMonitoringService:
     """Create monitoring service instance"""
-    return EnhancedMonitoringService(config)
+    return MonitoringService(config)

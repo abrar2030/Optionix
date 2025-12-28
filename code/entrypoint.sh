@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Enhanced Entrypoint Script for Optionix Platform
+# Entrypoint Script for Optionix Platform
 # Implements comprehensive startup procedures with security and compliance checks
 
 set -euo pipefail

@@ -1,5 +1,5 @@
 """
-Enhanced Authentication and Authorization Service for Optionix Platform
+Authentication and Authorization Service for Optionix Platform
 Implements comprehensive security features including:
 - Multi-factor authentication (MFA)
 - Role-based access control (RBAC)
@@ -108,11 +108,11 @@ class AuthenticationResult:
     message: str
 
 
-class EnhancedAuthService:
-    """Enhanced authentication and authorization service"""
+class AuthService:
+    """Authentication and authorization service"""
 
     def __init__(self) -> None:
-        """Initialize enhanced auth service"""
+        """Initialize auth service"""
         self._jwt_private_key: Optional[bytes] = None
         self._jwt_public_key: Optional[bytes] = None
         self._role_permissions: Dict[UserRole, List[str]] = {}
@@ -125,7 +125,7 @@ class EnhancedAuthService:
         try:
             self._generate_jwt_keys()
             self._initialize_role_permissions()
-            logger.info("Enhanced auth service initialized successfully")
+            logger.info("Auth service initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize auth service: {e}")
             raise
@@ -282,7 +282,7 @@ class EnhancedAuthService:
         return permission in self._role_permissions.get(user_role, [])
 
 
-auth_service = EnhancedAuthService()
+auth_service = AuthService()
 
 
 class MFAService:

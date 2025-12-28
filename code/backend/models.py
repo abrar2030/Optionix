@@ -1,5 +1,5 @@
 """
-Enhanced database models for Optionix platform.
+Database models for Optionix platform.
 Includes all models for security, compliance, and financial standards.
 """
 
@@ -25,7 +25,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    """Enhanced user account information with security features"""
+    """User account information with security features"""
 
     __tablename__ = "users"
 
@@ -95,7 +95,7 @@ class User(Base):
 
 
 class Account(Base):
-    """Enhanced user trading accounts with compliance features"""
+    """User trading accounts with compliance features"""
 
     __tablename__ = "accounts"
 
@@ -152,7 +152,7 @@ class Account(Base):
 
 
 class Position(Base):
-    """Enhanced trading positions with risk metrics"""
+    """Trading positions with risk metrics"""
 
     __tablename__ = "positions"
 
@@ -210,7 +210,7 @@ class Position(Base):
 
 
 class Trade(Base):
-    """Enhanced trade execution records with compliance tracking"""
+    """Trade execution records with compliance tracking"""
 
     __tablename__ = "trades"
 
@@ -293,7 +293,7 @@ class Trade(Base):
 
 
 class AuditLog(Base):
-    """Enhanced audit trail for all critical operations"""
+    """Audit trail for all critical operations"""
 
     __tablename__ = "audit_logs"
 
@@ -353,7 +353,7 @@ class AuditLog(Base):
 
 
 class APIKey(Base):
-    """Enhanced API keys for external integrations"""
+    """API keys for external integrations"""
 
     __tablename__ = "api_keys"
 

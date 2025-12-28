@@ -1,5 +1,5 @@
 """
-Enhanced AI Model Service for Optionix Platform
+AI Model Service for Optionix Platform
 Implements robust financial AI models with:
 - Advanced volatility prediction models
 - Risk assessment models
@@ -126,8 +126,8 @@ class ModelValidationResult:
     validation_date: datetime
 
 
-class EnhancedVolatilityModel:
-    """Enhanced volatility prediction model with financial robustness"""
+class VolatilityModel:
+    """Volatility prediction model with financial robustness"""
 
     def __init__(self, model_id: str = "volatility_v2") -> Any:
         self.model_id = model_id
@@ -201,7 +201,7 @@ class EnhancedVolatilityModel:
             self.is_trained = True
             self.metadata = ModelMetadata(
                 model_id=self.model_id,
-                model_name="Enhanced Volatility Prediction Model",
+                model_name="Volatility Prediction Model",
                 model_type=ModelType.VOLATILITY_PREDICTION,
                 version="2.0",
                 created_by="system",
@@ -312,8 +312,8 @@ class EnhancedVolatilityModel:
         return explanation
 
 
-class EnhancedFraudDetectionModel:
-    """Enhanced fraud detection model for financial transactions"""
+class FraudDetectionModel:
+    """Fraud detection model for financial transactions"""
 
     def __init__(self, model_id: str = "fraud_detection_v2") -> Any:
         self.model_id = model_id
@@ -386,7 +386,7 @@ class EnhancedFraudDetectionModel:
             self.is_trained = True
             self.metadata = ModelMetadata(
                 model_id=self.model_id,
-                model_name="Enhanced Fraud Detection Model",
+                model_name="Fraud Detection Model",
                 model_type=ModelType.FRAUD_DETECTION,
                 version="2.0",
                 created_by="system",
@@ -438,8 +438,8 @@ class EnhancedFraudDetectionModel:
             raise
 
 
-class EnhancedModelService:
-    """Enhanced model service for managing AI models"""
+class ModelService:
+    """Model service for managing AI models"""
 
     def __init__(self) -> Any:
         self.models = {}
@@ -449,9 +449,9 @@ class EnhancedModelService:
         """Register a new model"""
         try:
             if model_type == ModelType.VOLATILITY_PREDICTION:
-                model = EnhancedVolatilityModel(model_id)
+                model = VolatilityModel(model_id)
             elif model_type == ModelType.FRAUD_DETECTION:
-                model = EnhancedFraudDetectionModel(model_id)
+                model = FraudDetectionModel(model_id)
             else:
                 raise ValueError(f"Unsupported model type: {model_type}")
             self.models[model_id] = model
@@ -494,4 +494,4 @@ class EnhancedModelService:
         return self.model_registry
 
 
-enhanced_model_service = EnhancedModelService()
+model_service = ModelService()

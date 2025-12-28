@@ -1,5 +1,5 @@
 """
-Enhanced blockchain service module for Optionix platform.
+Blockchain service module for Optionix platform.
 Handles all blockchain interactions with robust security and error handling.
 """
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class BlockchainService:
-    """Enhanced service for interacting with blockchain contracts and wallets"""
+    """Service for interacting with blockchain contracts and wallets"""
 
     def __init__(self) -> None:
         """Initialize blockchain service with Web3 provider"""
@@ -65,7 +65,7 @@ class BlockchainService:
                     return
 
     def _load_contract_abi(self) -> None:
-        """Load contract ABI from file with enhanced error handling"""
+        """Load contract ABI from file with error handling"""
         try:
             abi_path = os.path.join(
                 os.path.dirname(os.path.dirname(__file__)),
@@ -288,7 +288,7 @@ class BlockchainService:
         self, user_address: str, amount: Decimal, private_key: str
     ) -> Dict[str, Any]:
         """
-        Enhanced function to deposit margin to the futures contract.
+        Function to deposit margin to the futures contract.
 
         Args:
             user_address (str): The user's Ethereum address.
@@ -343,7 +343,7 @@ class BlockchainService:
         self, user_address: str, amount: Decimal, private_key: str
     ) -> Dict[str, Any]:
         """
-        Enhanced function to withdraw margin from the futures contract.
+        Function to withdraw margin from the futures contract.
 
         Args:
             user_address (str): The user's Ethereum address.

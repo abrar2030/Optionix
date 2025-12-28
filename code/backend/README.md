@@ -11,7 +11,7 @@ A comprehensive, enterprise-grade backend for options trading platform with adva
 - **Risk Management**: Real-time risk monitoring and position management
 - **Market Data**: Live market data integration and volatility modeling
 
-### 🔒 Enhanced Security
+### 🔒 Security
 
 - **Multi-Factor Authentication (MFA)**: TOTP-based 2FA with backup codes
 - **Role-Based Access Control (RBAC)**: Granular permission system
@@ -24,7 +24,7 @@ A comprehensive, enterprise-grade backend for options trading platform with adva
 
 ### 📋 Compliance & Regulatory
 
-- **KYC/AML**: Enhanced Know Your Customer and Anti-Money Laundering
+- **KYC/AML**: Know Your Customer and Anti-Money Laundering
 - **Sanctions Screening**: Real-time sanctions list checking
 - **Transaction Monitoring**: Advanced transaction monitoring and alerting
 - **GDPR Compliance**: Data protection and privacy rights management
@@ -129,8 +129,8 @@ A comprehensive, enterprise-grade backend for options trading platform with adva
 1. **Clone the repository**
 
     ```bash
-    git clone https://github.com/your-org/optionix-enhanced.git
-    cd optionix-enhanced/code/backend
+    git clone https://github.com/abrar2030/optionix.git
+    cd optionix/code/backend
     ```
 
 2. **Create virtual environment**
@@ -143,7 +143,7 @@ A comprehensive, enterprise-grade backend for options trading platform with adva
 3. **Install dependencies**
 
     ```bash
-    pip install -r requirements_enhanced.txt
+    pip install -r requirements.txt
     ```
 
 4. **Set up environment variables**
@@ -161,7 +161,7 @@ A comprehensive, enterprise-grade backend for options trading platform with adva
 
 6. **Run the application**
     ```bash
-    uvicorn app_enhanced:app --host 0.0.0.0 --port 8000 --reload
+    uvicorn app:app --host 0.0.0.0 --port 8000 --reload
     ```
 
 ### Docker Setup
@@ -179,13 +179,13 @@ Create a `.env` file with the following variables:
 
 ```env
 # Application
-APP_NAME=Optionix Enhanced Trading Platform
-APP_VERSION=2.0.0-enhanced
+APP_NAME=Optionix Trading Platform
+APP_VERSION=2.0.0
 ENVIRONMENT=production
 DEBUG=false
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost/optionix_enhanced
+DATABASE_URL=postgresql://user:password@localhost/optionix
 REDIS_URL=redis://localhost:6379/0
 
 # Security
@@ -244,7 +244,7 @@ SMS_SERVICE_API_KEY=your-sms-service-api-key
 
 ### KYC/AML
 
-- Enhanced customer verification
+- Customer verification
 - Document verification
 - Risk scoring
 - Ongoing monitoring
@@ -375,7 +375,7 @@ pytest -m "performance"
 
 ```bash
 # Install development dependencies
-pip install -r requirements_enhanced.txt
+pip install -r requirements.txt
 
 # Set up pre-commit hooks
 pre-commit install
@@ -411,14 +411,14 @@ safety check
 
 3. **Application Deployment**
     ```bash
-    gunicorn app_enhanced:app -w 4 -k uvicorn.workers.UvicornWorker
+    gunicorn app:app -w 4 -k uvicorn.workers.UvicornWorker
     ```
 
 ### Docker Deployment
 
 ```bash
 # Build production image
-docker build -t optionix-enhanced:latest .
+docker build -t optionix:latest .
 
 # Run with Docker Compose
 docker-compose -f docker-compose.prod.yml up -d

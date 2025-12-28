@@ -53,11 +53,11 @@ This directory contains quantitative models for the Optionix platform, providing
 
 ## Usage
 
-These enhanced models can be imported and used as follows:
+These models can be imported and used as follows:
 
 ```python
 # Example for Heston model
-from enhanced.stochastic_volatility import HestonModel
+from stochastic_volatility import HestonModel
 
 # Initialize model
 heston = HestonModel()

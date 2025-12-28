@@ -1,5 +1,5 @@
 """
-Comprehensive Test Suite for Enhanced Optionix Platform
+Comprehensive Test Suite for Optionix Platform
 Tests security, compliance, and financial standards implementation
 """
 
@@ -11,14 +11,14 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.append("/home/ubuntu/Optionix/code/backend")
-sys.path.append("/home/ubuntu/Optionix/code/quantitative")
-sys.path.append("/home/ubuntu/Optionix/code/ai_models")
+sys.path.append("/Optionix/code/backend")
+sys.path.append("/Optionix/code/quantitative")
+sys.path.append("/Optionix/code/ai_models")
 from app import app
 from auth import AuthService, UserRole
-from black_scholes import EnhancedBlackScholesModel, OptionParameters, OptionType
-from create_model import EnhancedModelService, ModelType
-from monitoring import EnhancedMonitoringService
+from black_scholes import BlackScholesModel, OptionParameters, OptionType
+from create_model import ModelService, ModelType
+from monitoring import MonitoringService
 from security import SecurityService
 
 client = TestClient(app)
@@ -114,7 +114,7 @@ class TestFinancialCompliance:
 
     def setup_method(self) -> Any:
         """Setup test environment"""
-        self.monitoring_service = EnhancedMonitoringService(
+        self.monitoring_service = MonitoringService(
             {
                 "database_url": "sqlite:///test.db",
                 "redis_host": "localhost",
@@ -194,7 +194,7 @@ class TestQuantitativeModels:
 
     def setup_method(self) -> Any:
         """Setup test environment"""
-        self.bs_model = EnhancedBlackScholesModel()
+        self.bs_model = BlackScholesModel()
 
     def test_black_scholes_calculation(self) -> Any:
         """Test Black-Scholes option pricing"""
@@ -277,7 +277,7 @@ class TestAIModels:
 
     def setup_method(self) -> Any:
         """Setup test environment"""
-        self.model_service = EnhancedModelService()
+        self.model_service = ModelService()
 
     def test_model_registration(self) -> Any:
         """Test model registration"""
@@ -363,7 +363,7 @@ class TestPerformance:
         """Test Black-Scholes calculation performance"""
         import time
 
-        bs_model = EnhancedBlackScholesModel()
+        bs_model = BlackScholesModel()
         params = OptionParameters(
             spot_price=100.0,
             strike_price=100.0,

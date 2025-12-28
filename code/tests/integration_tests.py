@@ -1,15 +1,15 @@
 """
-Integration tests for the enhanced Optionix platform.
+Integration tests for the Optionix platform.
 
 This module provides tests for validating the integration between
-the enhanced pricing models, trade execution engine, circuit breakers,
+the pricing models, trade execution engine, circuit breakers,
 and risk management tools.
 """
 
 import sys
 import unittest
 
-sys.path.append("/home/ubuntu/Optionix/code")
+sys.path.append("/Optionix/code")
 from backend.services.risk_management.risk_engine import RiskEngine, RiskMetricType
 from backend.services.trade_execution.circuit_breaker import (
     CircuitBreaker,
@@ -20,14 +20,14 @@ from backend.services.trade_execution.execution_engine import (
     OrderSide,
     OrderType,
 )
-from quantitative.enhanced.calibration_engine import CalibrationEngine
-from quantitative.enhanced.local_volatility import DupireLocalVolModel
-from quantitative.enhanced.stochastic_volatility import HestonModel, SabrModel
-from quantitative.enhanced.volatility_surface import VolatilitySurface
+from quantitative.calibration_engine import CalibrationEngine
+from quantitative.local_volatility import DupireLocalVolModel
+from quantitative.stochastic_volatility import HestonModel, SabrModel
+from quantitative.volatility_surface import VolatilitySurface
 
 
 class IntegrationTests(unittest.TestCase):
-    """Integration tests for the enhanced Optionix platform."""
+    """Integration tests for the Optionix platform."""
 
     def setUp(self) -> Any:
         """Set up test environment."""
@@ -147,8 +147,8 @@ class IntegrationTests(unittest.TestCase):
                 }
             )
 
-    def test_enhanced_pricing_models(self) -> Any:
-        """Test enhanced pricing models."""
+    def test_pricing_models(self) -> Any:
+        """Test pricing models."""
         heston = HestonModel()
         heston_price = heston.price_option(
             spot=self.market_data["SPY"]["price"],

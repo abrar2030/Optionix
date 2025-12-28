@@ -123,10 +123,3 @@ Optionix is built as a modern web application with a microservices architecture.
 - Automated testing
 - Blue-green deployment support
 
-## Future Considerations
-
-- Additional blockchain network support
-- Enhanced AI model capabilities
-- Mobile application development
-- Advanced analytics features
-- Integration with external trading platforms

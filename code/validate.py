@@ -38,7 +38,7 @@ class ValidationResult:
         self.timestamp = datetime.utcnow()
 
 
-class EnhancedValidator:
+class Validator:
     """validation for Optionix platform"""
 
     def __init__(self, code_directory: str) -> Any:
@@ -438,7 +438,7 @@ class EnhancedValidator:
             security_data = categories.get("Security", {})
             if security_data.get("failed", 0) > 0:
                 recommendations.append(
-                    "Enhance security features: Implement missing authentication, encryption, and input validation"
+                    "Security features: Implement missing authentication, encryption, and input validation"
                 )
         if any(("Compliance" in cat for cat in categories)):
             compliance_data = categories.get("Compliance", {})
@@ -450,7 +450,7 @@ class EnhancedValidator:
             financial_data = categories.get("Financial Standards", {})
             if financial_data.get("failed", 0) > 0:
                 recommendations.append(
-                    "Enhance financial models: Improve option pricing, risk management, and AI models"
+                    "Financial models: Improve option pricing, risk management, and AI models"
                 )
         return recommendations
 
@@ -458,13 +458,13 @@ class EnhancedValidator:
 def main() -> Any:
     """Main validation function"""
     if len(sys.argv) != 2:
-        logger.info("Usage: python validate_enhanced.py <code_directory>")
+        logger.info("Usage: python validate.py <code_directory>")
         sys.exit(1)
     code_directory = sys.argv[1]
     if not os.path.exists(code_directory):
         logger.info(f"Error: Directory {code_directory} does not exist")
         sys.exit(1)
-    validator = EnhancedValidator(code_directory)
+    validator = Validator(code_directory)
     report = validator.validate_all()
     logger.info("\n" + "=" * 80)
     logger.info("OPTIONIX PLATFORM VALIDATION REPORT")
@@ -492,7 +492,7 @@ def main() -> Any:
         json.dump(report, f, indent=2)
     logger.info(f"\nDetailed report saved to: {report_file}")
     if report["summary"]["success_rate"] >= 80:
-        logger.info("\n✅ Validation PASSED - Platform meets enhanced standards")
+        logger.info("\n✅ Validation PASSED - Platform meets standards")
         sys.exit(0)
     else:
         logger.info("\n❌ Validation FAILED - Platform needs improvements")

@@ -1,5 +1,5 @@
 """
-Enhanced Compliance Service for Optionix Platform
+Compliance Service for Optionix Platform
 Implements comprehensive financial regulatory compliance including:
 - KYC (Know Your Customer) and AML (Anti-Money Laundering)
 - SOX (Sarbanes-Oxley Act) compliance
@@ -24,7 +24,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from security_enhanced import ComplianceFramework, SecurityContext, security_service
+from security import ComplianceFramework, SecurityContext, security_service
 from sqlalchemy import Boolean, Column, DateTime, Index, Integer, Numeric, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
@@ -251,11 +251,11 @@ class RiskAssessment(Base):
     __table_args__ = (Index("idx_risk_user_date", "user_id", "assessment_date"),)
 
 
-class EnhancedComplianceService:
-    """Enhanced compliance service implementing comprehensive financial regulations"""
+class ComplianceService:
+    """Compliance service implementing comprehensive financial regulations"""
 
     def __init__(self) -> Any:
-        """Initialize enhanced compliance service"""
+        """Initialize compliance service"""
         self._sanctions_lists = {}
         self._monitoring_rules = {}
         self._risk_models = {}
@@ -712,7 +712,7 @@ class EnhancedComplianceService:
             },
             "customer_due_diligence": {
                 "new_customers_onboarded": 0,
-                "enhanced_due_diligence_cases": 0,
+                "due_diligence_cases": 0,
             },
             "transaction_monitoring": {
                 "total_transactions_monitored": 0,
@@ -773,4 +773,4 @@ class EnhancedComplianceService:
             return RiskLevel.LOW.value
 
 
-enhanced_compliance_service = EnhancedComplianceService()
+compliance_service = ComplianceService()

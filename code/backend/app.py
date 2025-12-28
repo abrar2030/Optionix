@@ -1,5 +1,5 @@
 """
-Enhanced main FastAPI application for Optionix platform.
+Main FastAPI application for Optionix platform.
 Integrates comprehensive security, compliance, and financial standards.
 """
 
@@ -16,17 +16,17 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
-# Import enhanced authentication and authorization
+# Import authentication and authorization
 from .auth import UserRole, auth_service, log_auth_event
 
 # Import configuration and database
 from .config import settings
 
-# Import enhanced compliance and security
+# Import compliance and security
 from .data_protection import data_protection_service
 from .database import create_tables, get_db
 
-# Import enhanced middleware
+# Import middleware
 from .middleware.security import (
     AdvancedRateLimitMiddleware,
     AuditLoggingMiddleware,
@@ -34,10 +34,10 @@ from .middleware.security import (
     SecurityHeadersMiddleware,
 )
 
-# Import enhanced models
+# Import models
 from .models import User
 
-# Import enhanced schemas
+# Import schemas
 from .schemas import (
     HealthCheckResponse,
     MarketDataRequest,
@@ -62,9 +62,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager with enhanced initialization"""
+    """Application lifespan manager with initialization"""
     # Startup
-    logger.info("Starting Enhanced Optionix API...")
+    logger.info("Starting Optionix API...")
     try:
         create_tables()
         logger.info("Database tables created/verified")
@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
         # Initialize financial standards
         logger.info("Initializing financial standards...")
 
-        logger.info("Enhanced Optionix API started successfully")
+        logger.info("Optionix API started successfully")
     except Exception as e:
         logger.error(f"Startup failed: {e}")
         raise
@@ -86,20 +86,20 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    logger.info("Shutting down Enhanced Optionix API...")
+    logger.info("Shutting down Optionix API...")
 
 
-# Create FastAPI app with enhanced configuration
+# Create FastAPI app with configuration
 app = FastAPI(
-    title=f"Enhanced {settings.app_name}",
+    title=f"{settings.app_name}",
     description="Comprehensive API for options trading platform with advanced security, compliance, and financial standards",
-    version=f"{settings.app_version}-enhanced",
+    version=f"{settings.app_version}",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
 )
 
-# Add enhanced security middleware
+# Add security middleware
 app.add_middleware(
     TrustedHostMiddleware, allowed_hosts=["*"]
 )  # Configure for production
@@ -111,7 +111,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add custom enhanced middleware
+# Add custom middleware
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(AdvancedRateLimitMiddleware)
 app.add_middleware(RequestValidationMiddleware)
@@ -126,10 +126,10 @@ financial_service = FinancialCalculationService()
 security = HTTPBearer()
 
 
-# Enhanced exception handlers
+# Exception handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    """Enhanced HTTP exception handler with security logging"""
+    """HTTP exception handler with security logging"""
     # Log security-relevant exceptions
     if exc.status_code in [401, 403, 429]:
         logger.warning(
@@ -154,10 +154,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-# Enhanced health check endpoint
+# Health check endpoint
 @app.get("/health", response_model=HealthCheckResponse, tags=["System"])
-async def enhanced_health_check():
-    """Enhanced system health check with security and compliance status"""
+async def health_check():
+    """System health check with security and compliance status"""
     services_status = {
         "database": "healthy",
         "blockchain": "healthy" if blockchain_service.is_connected() else "unhealthy",
@@ -176,7 +176,7 @@ async def enhanced_health_check():
 
     return HealthCheckResponse(
         status=overall_status,
-        version=f"{settings.app_version}-enhanced",
+        version=f"{settings.app_version}",
         services=services_status,
         security_features={
             "mfa_enabled": True,
@@ -188,7 +188,7 @@ async def enhanced_health_check():
     )
 
 
-# Enhanced market data and model endpoints
+# Market data and model endpoints
 @app.post(
     "/market/volatility",
     response_model=VolatilityResponse,
@@ -228,12 +228,12 @@ async def get_volatility_prediction(
         )
 
 
-# Enhanced authentication endpoints
+# Authentication endpoints
 @app.post("/auth/register", response_model=UserResponse, tags=["Authentication"])
-async def enhanced_register_user(
+async def register_user(
     user_data: UserCreate, request: Request, db: Session = Depends(get_db)
 ):
-    """Enhanced user registration with comprehensive security checks"""
+    """User registration with comprehensive security checks"""
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "")
 
@@ -255,7 +255,7 @@ async def enhanced_register_user(
                 detail="Email already registered",
             )
 
-        # Enhanced password validation
+        # Password validation
         password_validation = security_service.validate_password_strength(
             user_data.password
         )
@@ -269,7 +269,7 @@ async def enhanced_register_user(
         # Sanitize input data
         sanitized_data = security_service.sanitize_input(user_data.dict())
 
-        # Create user with enhanced security
+        # Create user with security
         hashed_password = auth_service.get_password_hash(user_data.password)
 
         user = User(
