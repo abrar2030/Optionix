@@ -74,7 +74,7 @@ validate_ansible() {
 
     # Check playbook syntax
     test_start "Ansible Playbook Syntax"
-    local ansible_dir="/home/ubuntu/Optionix/infrastructure/ansible"
+    local ansible_dir="/Optionix/infrastructure/ansible"
     if [ -d "$ansible_dir" ]; then
         local syntax_errors=0
         find "$ansible_dir" -name "*.yml" -o -name "*.yaml" | while read -r playbook; do
@@ -143,7 +143,7 @@ validate_kubernetes() {
 
     # Validate YAML syntax
     test_start "Kubernetes YAML Syntax"
-    local k8s_dir="/home/ubuntu/Optionix/infrastructure/kubernetes"
+    local k8s_dir="/Optionix/infrastructure/kubernetes"
     if [ -d "$k8s_dir" ]; then
         local yaml_errors=0
         find "$k8s_dir" -name "*.yaml" -o -name "*.yml" | while read -r yaml_file; do
@@ -215,7 +215,7 @@ validate_terraform() {
 
     # Validate Terraform syntax
     test_start "Terraform Syntax Validation"
-    local tf_dir="/home/ubuntu/Optionix/infrastructure/terraform"
+    local tf_dir="/Optionix/infrastructure/terraform"
     if [ -d "$tf_dir" ]; then
         cd "$tf_dir"
         if terraform validate >/dev/null 2>&1; then
@@ -278,8 +278,8 @@ validate_security() {
     # Check security scripts
     test_start "Security Scripts Presence"
     local security_scripts=(
-        "/home/ubuntu/Optionix/infrastructure/scripts/security_monitor.sh"
-        "/home/ubuntu/Optionix/infrastructure/scripts/backup_recovery.sh"
+        "/Optionix/infrastructure/scripts/security_monitor.sh"
+        "/Optionix/infrastructure/scripts/backup_recovery.sh"
     )
 
     local missing_scripts=0
@@ -302,9 +302,9 @@ validate_security() {
     # Validate Ansible security templates
     test_start "Security Configuration Templates"
     local security_templates=(
-        "/home/ubuntu/Optionix/infrastructure/ansible/roles/common/templates/sshd_config.j2"
-        "/home/ubuntu/Optionix/infrastructure/ansible/roles/common/templates/jail.local.j2"
-        "/home/ubuntu/Optionix/infrastructure/ansible/roles/common/templates/audit.rules.j2"
+        "/Optionix/infrastructure/ansible/roles/common/templates/sshd_config.j2"
+        "/Optionix/infrastructure/ansible/roles/common/templates/jail.local.j2"
+        "/Optionix/infrastructure/ansible/roles/common/templates/audit.rules.j2"
     )
 
     local missing_templates=0
@@ -333,7 +333,7 @@ validate_security() {
 
     local secrets_found=0
     for pattern in "${secret_patterns[@]}"; do
-        if grep -r -i "$pattern" /home/ubuntu/Optionix/infrastructure/ --include="*.yml" --include="*.yaml" --include="*.tf" | grep -v "password_file\|secret_name\|key_name" >/dev/null 2>&1; then
+        if grep -r -i "$pattern" /Optionix/infrastructure/ --include="*.yml" --include="*.yaml" --include="*.tf" | grep -v "password_file\|secret_name\|key_name" >/dev/null 2>&1; then
             ((secrets_found++))
         fi
     done
@@ -351,7 +351,7 @@ validate_compliance() {
 
     # Check audit logging configuration
     test_start "Audit Logging Configuration"
-    local audit_config="/home/ubuntu/Optionix/infrastructure/ansible/roles/common/templates/audit.rules.j2"
+    local audit_config="/Optionix/infrastructure/ansible/roles/common/templates/audit.rules.j2"
     if [ -f "$audit_config" ]; then
         # Check for required audit rules
         local required_rules=(
@@ -384,17 +384,17 @@ validate_compliance() {
     local encryption_configs=0
 
     # Check Terraform encryption
-    if grep -r "encryption" /home/ubuntu/Optionix/infrastructure/terraform/ >/dev/null 2>&1; then
+    if grep -r "encryption" /Optionix/infrastructure/terraform/ >/dev/null 2>&1; then
         ((encryption_configs++))
     fi
 
     # Check Kubernetes secrets
-    if grep -r "kind: Secret" /home/ubuntu/Optionix/infrastructure/kubernetes/ >/dev/null 2>&1; then
+    if grep -r "kind: Secret" /Optionix/infrastructure/kubernetes/ >/dev/null 2>&1; then
         ((encryption_configs++))
     fi
 
     # Check database encryption
-    if grep -r "ssl\|tls\|encryption" /home/ubuntu/Optionix/infrastructure/ansible/roles/database/ >/dev/null 2>&1; then
+    if grep -r "ssl\|tls\|encryption" /Optionix/infrastructure/ansible/roles/database/ >/dev/null 2>&1; then
         ((encryption_configs++))
     fi
 
@@ -406,7 +406,7 @@ validate_compliance() {
 
     # Check backup and recovery
     test_start "Backup and Recovery Configuration"
-    local backup_script="/home/ubuntu/Optionix/infrastructure/scripts/backup_recovery.sh"
+    local backup_script="/Optionix/infrastructure/scripts/backup_recovery.sh"
     if [ -f "$backup_script" ] && [ -x "$backup_script" ]; then
         # Check for encryption in backup script
         if grep -q "gpg\|encryption" "$backup_script"; then
@@ -421,8 +421,8 @@ validate_compliance() {
     # Check monitoring configuration
     test_start "Monitoring Configuration"
     local monitoring_files=(
-        "/home/ubuntu/Optionix/infrastructure/kubernetes/base/monitoring-stack.yaml"
-        "/home/ubuntu/Optionix/infrastructure/scripts/security_monitor.sh"
+        "/Optionix/infrastructure/kubernetes/base/monitoring-stack.yaml"
+        "/Optionix/infrastructure/scripts/security_monitor.sh"
     )
 
     local monitoring_configured=0
@@ -445,7 +445,7 @@ validate_network_security() {
 
     # Check network policies
     test_start "Kubernetes Network Policies"
-    local network_policies="/home/ubuntu/Optionix/infrastructure/kubernetes/base/network-policies.yaml"
+    local network_policies="/Optionix/infrastructure/kubernetes/base/network-policies.yaml"
     if [ -f "$network_policies" ]; then
         # Check for default deny policy
         if grep -q "default-deny-all" "$network_policies"; then
@@ -462,12 +462,12 @@ validate_network_security() {
     local firewall_configs=0
 
     # Check Ansible firewall tasks
-    if grep -r "ufw\|firewall" /home/ubuntu/Optionix/infrastructure/ansible/ >/dev/null 2>&1; then
+    if grep -r "ufw\|firewall" /Optionix/infrastructure/ansible/ >/dev/null 2>&1; then
         ((firewall_configs++))
     fi
 
     # Check Terraform security groups
-    if grep -r "security_group" /home/ubuntu/Optionix/infrastructure/terraform/ >/dev/null 2>&1; then
+    if grep -r "security_group" /Optionix/infrastructure/terraform/ >/dev/null 2>&1; then
         ((firewall_configs++))
     fi
 
@@ -482,12 +482,12 @@ validate_network_security() {
     local ssl_configs=0
 
     # Check Nginx SSL configuration
-    if grep -r "ssl\|tls" /home/ubuntu/Optionix/infrastructure/ansible/roles/webserver/ >/dev/null 2>&1; then
+    if grep -r "ssl\|tls" /Optionix/infrastructure/ansible/roles/webserver/ >/dev/null 2>&1; then
         ((ssl_configs++))
     fi
 
     # Check database SSL
-    if grep -r "ssl\|tls" /home/ubuntu/Optionix/infrastructure/ansible/roles/database/ >/dev/null 2>&1; then
+    if grep -r "ssl\|tls" /Optionix/infrastructure/ansible/roles/database/ >/dev/null 2>&1; then
         ((ssl_configs++))
     fi
 
