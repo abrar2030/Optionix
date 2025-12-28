@@ -122,4 +122,3 @@ Optionix is built as a modern web application with a microservices architecture.
 - CI/CD pipeline
 - Automated testing
 - Blue-green deployment support
-

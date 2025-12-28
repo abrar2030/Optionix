@@ -65,7 +65,7 @@ class HealthCheckResponse(BaseResponse):
 
 
 class UserCreate(BaseModel):
-    """User creation schema with alidation"""
+    """User creation schema with validation"""
 
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)

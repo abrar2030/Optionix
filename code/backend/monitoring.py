@@ -155,6 +155,7 @@ class UserComplianceProfile(Base):
 
 class MonitoringService:
     """Monitoring and compliance service"""
+
     def __init__(self, config: Dict[str, Any]) -> None:
         """Initialize monitoring service"""
         self.config = config

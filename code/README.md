@@ -54,29 +54,29 @@ Optionix is a comprehensive financial trading system with robust security, compl
 
 ## 📁 Directory Structure
 
-| Path                              | Description                           |
-| :-------------------------------- | :------------------------------------ |
-| `code/`                           | Root directory for all source code    |
-| `├── backend/`                    | Backend API services                  |
-| `│   ├── app.py`                  | Main FastAPI application              |
-| `│   ├── auth.py`                 | Authentication and authorization      |
-| `│   ├── security.py`             | Security services and utilities       |
-| `│   ├── monitoring.py`           | Compliance and monitoring             |
-| `│   └── config.py`               | Configuration management              |
-| `├── quantitative/`               | Quantitative models                   |
-| `│   └── black_scholes.py`        | Black-Scholes implementation          |
-| `├── ai_models/`                  | AI/ML models                          |
-| `│   └── create_model.py`         | Model creation and management         |
-| `├── blockchain/`                 | Blockchain integration                |
-| `│   └── contracts/`              | Smart contracts directory             |
-| `│       └── OptionsContract.sol` | Smart contract for options            |
-| `├── tests/`                      | Comprehensive test suite              |
-| `│   └── test_comprehensive.py`   | All tests                             |
-| `├── requirements.txt`            | Python dependencies                   |
-| `├── Dockerfile`                  | Production Docker image               |
-| `├── docker-compose.yml`          | Multi-service orchestration           |
-| `├── entrypoint.sh`               | Container startup script              |
-| `└── validate.py`                 | Validation script                     |
+| Path                              | Description                        |
+| :-------------------------------- | :--------------------------------- |
+| `code/`                           | Root directory for all source code |
+| `├── backend/`                    | Backend API services               |
+| `│   ├── app.py`                  | Main FastAPI application           |
+| `│   ├── auth.py`                 | Authentication and authorization   |
+| `│   ├── security.py`             | Security services and utilities    |
+| `│   ├── monitoring.py`           | Compliance and monitoring          |
+| `│   └── config.py`               | Configuration management           |
+| `├── quantitative/`               | Quantitative models                |
+| `│   └── black_scholes.py`        | Black-Scholes implementation       |
+| `├── ai_models/`                  | AI/ML models                       |
+| `│   └── create_model.py`         | Model creation and management      |
+| `├── blockchain/`                 | Blockchain integration             |
+| `│   └── contracts/`              | Smart contracts directory          |
+| `│       └── OptionsContract.sol` | Smart contract for options         |
+| `├── tests/`                      | Comprehensive test suite           |
+| `│   └── test_comprehensive.py`   | All tests                          |
+| `├── requirements.txt`            | Python dependencies                |
+| `├── Dockerfile`                  | Production Docker image            |
+| `├── docker-compose.yml`          | Multi-service orchestration        |
+| `├── entrypoint.sh`               | Container startup script           |
+| `└── validate.py`                 | Validation script                  |
 
 ## 🛠 Installation and Setup
 
